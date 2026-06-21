@@ -1265,6 +1265,31 @@ static ok64 weave_gather_group(u8b dst, wedec const *d, u32 run_lo, u32 run_hi,
     done;
 }
 
+//  DIS-046: longest consecutive `<`/`|`/`>` run in a CONTIGUOUS slice.
+//  Conflict fences are sized one past the longest such run in the whole
+//  merged output (>= 4), so a region that quotes the markers can never
+//  collide with — nor abut — a fence (content-derived, git-style
+//  variable-length frames).  See the graf/WEAVE.c twin for the rationale.
+static u32 weave_fence_run_max(u8cs bytes) {
+    u8cp p = bytes[0], e = bytes[1];
+    u32 longest = 0;
+    while (p < e) {
+        u8 c = *p;
+        if (c != '<' && c != '|' && c != '>') { p++; continue; }
+        u32 cur = 0;
+        while (p < e && *p == c) { p++; cur++; }
+        if (cur > longest) longest = cur;
+    }
+    return longest;
+}
+
+//  Feed `n` copies of byte `c` into `out`.
+static ok64 weave_feed_rep(u8b out, u8 c, u32 n) {
+    sane(out);
+    for (u32 i = 0; i < n; i++) call(u8bFeed1, out, c);
+    done;
+}
+
 //  Conflict-aware render: walk the merged weave's alive tokens; a run
 //  whose membership masks disagree across groups is framed with render-
 //  time `<<<<`/`||||`/`>>>>` markers (never stored).  Byte-equal groups
@@ -1290,12 +1315,22 @@ ok64 WEAVEEmitMerged(weave const *w, weavescope const *groups, u32 ngroups,
 
     a_carve(u8, cgA, u8csLen(d.text) + 1);
     a_carve(u8, cgB, u8csLen(d.text) + 1);
-    a_cstr(mk_open,  "<<<<");
-    a_cstr(mk_mid,   "||||");
-    a_cstr(mk_close, ">>>>");
 
     #define EMITTOK(i) do { a_part(u8c, _tb, d.text, we_lo(&d,(i)),       \
         we_hi(&d,(i)) - we_lo(&d,(i))); call(u8bFeed, out, _tb); } while (0)
+
+    //  DIS-046: size conflict fences past the longest `<`/`|`/`>` run in
+    //  the entire merged output, so a quoted-marker line never collides
+    //  with (or abuts) a fence.  Gather the alive bytes contiguously
+    //  (cgA is free until the per-run collapse below) and scan once.
+    u8bReset(cgA);
+    for (u32 j = 0; j < ntok; j++) {
+        if (d.rlen[j] != 0) continue;
+        a_part(u8c, tb, d.text, we_lo(&d, j), we_hi(&d, j) - we_lo(&d, j));
+        call(u8bFeed, cgA, tb);
+    }
+    u32 flen = weave_fence_run_max(u8bDataC(cgA)) + 1;
+    if (flen < 4) flen = 4;
 
     u32 i = 0;
     while (i < ntok) {
@@ -1363,9 +1398,9 @@ ok64 WEAVEEmitMerged(weave const *w, weavescope const *groups, u32 ngroups,
                 continue;
             }
         }
-        call(u8bFeed, out, mk_open);
+        call(weave_feed_rep, out, '<', flen);
         for (u32 g = 0; g < ngseen; g++) {
-            if (g > 0) call(u8bFeed, out, mk_mid);
+            if (g > 0) call(weave_feed_rep, out, '|', flen);
             for (u32 j = run_lo; j < run_hi; j++) {
                 if (d.rlen[j] != 0) continue;
                 if (weave_emit_membership(&d, j, groups, ngroups) != groups_seen[g])
@@ -1373,7 +1408,7 @@ ok64 WEAVEEmitMerged(weave const *w, weavescope const *groups, u32 ngroups,
                 EMITTOK(j);
             }
         }
-        call(u8bFeed, out, mk_close);
+        call(weave_feed_rep, out, '>', flen);
         i = run_hi;
     }
     #undef EMITTOK
