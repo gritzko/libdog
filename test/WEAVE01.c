@@ -54,11 +54,11 @@ static ok64 prod_check(char const *lbl, weave *w, u64cs active, u8csc want) {
     //  would free the acquisition (api.mkd hazard), so `out` below would alias
     //  this scope and clobber it mid-produce.
     u1b sc = {};
-    ok64 ar = u1bAcquire(ABC_BASS, &sc, (size_t)$len(w->commits) + 1);
+    ok64 ar = u1bAcquire(ABC_BASS, sc, (size_t)$len(w->commits) + 1);
     if (ar != OK) return ar;
-    call(WEAVEScope, &sc, w, active);
+    call(WEAVEScope, sc, w, active);
     a_carve(u8, out, 1UL << 16);
-    call(WEAVEProduce, w, u1bDataC(&sc), out);
+    call(WEAVEProduce, w, u1bDataC(sc), out);
     if (u8bDataLen(out) != (size_t)$len(want) ||
         ($len(want) && memcmp(u8bDataHead(out), want[0], (size_t)$len(want)))) {
         fprintf(stderr, " %s mismatch (%zu vs %ld)\n", lbl,
@@ -335,7 +335,7 @@ static ok64 dag_verify(weave const *W, dagnode const *nd, u32 n, u32 i) {
     sane(1);
     u8 anc_i[DAG_MAX]; memset(anc_i, 0, n);
     dag_closure(nd, n, i, anc_i);
-    u1b sc = {}; ok64 ar = u1bAcquire(ABC_BASS, &sc, (size_t)n + 1); if (ar != OK) return ar;
+    u1b sc = {}; ok64 ar = u1bAcquire(ABC_BASS, sc, (size_t)n + 1); if (ar != OK) return ar;
     a_carve(u8, out, 1UL << 16);
     a_carve(u8, exp, 1UL << 16);
     a_carve(u64, active, (size_t)n + 1);
@@ -345,8 +345,8 @@ static ok64 dag_verify(weave const *W, dagnode const *nd, u32 n, u32 i) {
         dag_closure(nd, n, a, anc_a);
         u64bReset(active);
         for (u32 j = 0; j < n; j++) if (anc_a[j]) call(u64bFeed1, active, dag_cid(j));
-        call(WEAVEScope, &sc, &W[i], u64bDataC(active));
-        call(WEAVEProduce, &W[i], u1bDataC(&sc), out);
+        call(WEAVEScope, sc, &W[i], u64bDataC(active));
+        call(WEAVEProduce, &W[i], u1bDataC(sc), out);
         call(dag_lineform, exp, nd[a].content);
         size_t gl = u8bDataLen(out), wl = u8bDataLen(exp);
         if (gl != wl || (wl && memcmp(u8bDataHead(out), u8bDataHead(exp), wl))) {

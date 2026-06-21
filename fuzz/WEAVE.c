@@ -206,7 +206,7 @@ static ok64 w2_verify(weave const *w, w2_line const *lines, u32 n, u32 i) {
     //  snapshot+rewind BASS and free it — api.mkd hazard).  out/exp/active
     //  are reused across ancestors (Scope/Produce/lineform reset on entry).
     u1b sc = {};
-    ok64 ar = u1bAcquire(ABC_BASS, &sc, (size_t)n + 1);
+    ok64 ar = u1bAcquire(ABC_BASS, sc, (size_t)n + 1);
     if (ar != OK) return ar;
     a_carve(u8,  out, W2_LINE_CAP);
     a_carve(u8,  exp, W2_LINE_CAP);
@@ -220,8 +220,8 @@ static ok64 w2_verify(weave const *w, w2_line const *lines, u32 n, u32 i) {
         u64bReset(active);
         for (u32 j = 0; j < n; j++)
             if (anc_a[j]) call(u64bFeed1, active, w2_cid(j));
-        call(WEAVEScope, &sc, w, u64bDataC(active));
-        call(WEAVEProduce, w, u1bDataC(&sc), out);
+        call(WEAVEScope, sc, w, u64bDataC(active));
+        call(WEAVEProduce, w, u1bDataC(sc), out);
         call(w2_lineform, exp, lines[a].content);
         size_t gl = u8bDataLen(out), wl = u8bDataLen(exp);
         b8 okrec = (gl == wl) &&

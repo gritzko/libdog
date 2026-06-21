@@ -132,7 +132,7 @@ typedef u1cs weavescope;
 //  Fill `into` (caller-acquired, >= ncommits bits) so bit i = (i==0 ||
 //  commits[i] in `active`).  `active` is a rev's reachable commit-id set,
 //  supplied by graf's DAG (the weave stores no parent edges).
-ok64 WEAVEScope(u1b *into, weave const *w, u64cs active);
+ok64 WEAVEScope(u1b into, weave const *w, u64cs active);
 
 // --- produce / emit over scopes --------------------------------------
 ok64 WEAVEAlive  (weave const *w, u8b out);                   // tip (rm-clear)

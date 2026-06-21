@@ -55,8 +55,8 @@ static ok64 cap_cb(hunkc *hk, void *vctx) {
 //  Fill an already-acquired scope `into` from a list of active commit
 //  ids.  `into` must be acquired by the CALLER directly (never via call()
 //  — call() rewinds BASS and frees a fresh acquisition; api.mkd hazard).
-static ok64 fill_scope(u1b *into, weave const *w, u64 const *ids, u32 nid) {
-    sane(into && w);
+static ok64 fill_scope(u1b into, weave const *w, u64 const *ids, u32 nid) {
+    sane(w);
     a_carve(u64, act, (size_t)nid + 1);
     for (u32 k = 0; k < nid; k++) call(u64bFeed1, act, ids[k]);
     call(WEAVEScope, into, w, u64bDataC(act));
@@ -106,28 +106,28 @@ static ok64 emit_singlewin(void) {
     weave w2 = {}; call(WEAVEParse, &w2, u8bDataC(w2b));
     u1b from = {}, to = {};
     u64 idf[] = {1}, idt[] = {1, 2};
-    MK_SCOPE(&from, &w2, idf, 1);
-    MK_SCOPE(&to, &w2, idt, 2);
+    MK_SCOPE(from, &w2, idf, 1);
+    MK_SCOPE(to, &w2, idt, 2);
 
     char const *wantsides = "=1 =1 =1 =1 =1 =1 +1 -1 =1 =1 =1 =1 =1 =1 =1 ";
     char const *wanttext  = "a\nb\nc\nXd\ne\nf\ng\n";
 
     capctx cd = {};
-    call(WEAVEEmitDiff, &w2, name, nav, u1bDataC(&from), u1bDataC(&to), cap_cb, &cd);
+    call(WEAVEEmitDiff, &w2, name, nav, u1bDataC(from), u1bDataC(to), cap_cb, &cd);
     if (cd.n != 1) { fprintf(stderr, " diff want 1 hunk got %u\n", cd.n); fail(TESTFAIL); }
     call(expect, "Diff", &cd.h[0], NO, "diff:foo.c?deadbeef#L1",
          "a\nb\nc\nXd\ne\nf\ng\n", wantsides);
 
     capctx cf = {};
     a_cstr(dsch, "diff:");
-    call(WEAVEEmitFull, &w2, name, dsch, nav, u1bDataC(&from), u1bDataC(&to), cap_cb, &cf);
+    call(WEAVEEmitFull, &w2, name, dsch, nav, u1bDataC(from), u1bDataC(to), cap_cb, &cf);
     if (cf.n != 1) { fprintf(stderr, " full want 1 hunk got %u\n", cf.n); fail(TESTFAIL); }
     call(expect, "Full-diff", &cf.h[0], NO, "diff:foo.c?deadbeef#L1", wanttext, wantsides);
 
     //  cat: (empty scheme) — no scheme prefix on the URI.
     capctx cc = {};
     u8cs nosch = {};
-    call(WEAVEEmitFull, &w2, name, nosch, nav, u1bDataC(&from), u1bDataC(&to), cap_cb, &cc);
+    call(WEAVEEmitFull, &w2, name, nosch, nav, u1bDataC(from), u1bDataC(to), cap_cb, &cc);
     if (cc.n != 1) { fprintf(stderr, " cat want 1 hunk got %u\n", cc.n); fail(TESTFAIL); }
     call(expect, "Full-cat", &cc.h[0], NO, "foo.c?deadbeef#L1", wanttext, wantsides);
     fprintf(stderr, " ok\n");
@@ -149,11 +149,11 @@ static ok64 emit_twowin(void) {
     weave w2 = {}; call(WEAVEParse, &w2, u8bDataC(w2b));
     u1b from = {}, to = {};
     u64 idf[] = {1}, idt[] = {1, 2};
-    MK_SCOPE(&from, &w2, idf, 1);
-    MK_SCOPE(&to, &w2, idt, 2);
+    MK_SCOPE(from, &w2, idf, 1);
+    MK_SCOPE(to, &w2, idt, 2);
 
     capctx c = {};
-    call(WEAVEEmitDiff, &w2, name, nav, u1bDataC(&from), u1bDataC(&to), cap_cb, &c);
+    call(WEAVEEmitDiff, &w2, name, nav, u1bDataC(from), u1bDataC(to), cap_cb, &c);
     if (c.n != 2) { fprintf(stderr, " want 2 hunks got %u\n", c.n); fail(TESTFAIL); }
     call(expect, "2W-a", &c.h[0], NO, "diff:foo.c?deadbeef#L1",
          "l0\nX1l1\nl2\nl3\nl4\n", "=2 =1 +2 -2 =1 =2 =1 =2 =1 =2 =1 ");
@@ -186,9 +186,11 @@ static ok64 emit_merged(void) {
 
     u1b g_ours = {}, g_theirs = {};
     u64 ido[] = {1, 2}, idt[] = {1, 3};
-    MK_SCOPE(&g_ours, &wm, ido, 2);
-    MK_SCOPE(&g_theirs, &wm, idt, 2);
-    u1cs groups[2] = {u1bDataC(&g_ours), u1bDataC(&g_theirs)};
+    MK_SCOPE(g_ours, &wm, ido, 2);
+    MK_SCOPE(g_theirs, &wm, idt, 2);
+    u1cs groups[2] = {};
+    u64csDup(groups[0], u1bDataC(g_ours));
+    u64csDup(groups[1], u1bDataC(g_theirs));
 
     a_carve(u8, out, 1UL << 16);
     call(WEAVEEmitMerged, &wm, groups, 2, out);
@@ -218,9 +220,11 @@ static ok64 emit_merged(void) {
     a_carve(u8, dmb, 1UL << 16); call(WEAVEMerge, u8bIdle(dmb), &dao, &dat, 0);
     weave dm = {}; call(WEAVEParse, &dm, u8bDataC(dmb));
     u1b dg_o = {}, dg_t = {};
-    MK_SCOPE(&dg_o, &dm, ido, 2);
-    MK_SCOPE(&dg_t, &dm, idt, 2);
-    u1cs dgroups[2] = {u1bDataC(&dg_o), u1bDataC(&dg_t)};
+    MK_SCOPE(dg_o, &dm, ido, 2);
+    MK_SCOPE(dg_t, &dm, idt, 2);
+    u1cs dgroups[2] = {};
+    u64csDup(dgroups[0], u1bDataC(dg_o));
+    u64csDup(dgroups[1], u1bDataC(dg_t));
     a_carve(u8, dout, 1UL << 16);
     call(WEAVEEmitMerged, &dm, dgroups, 2, dout);
     char gotd[256] = {}; u32 dl = (u32)u8bDataLen(dout);
@@ -262,10 +266,10 @@ static ok64 emit_capped(void) {
     }
     u1b from = {}, to = {};
     u64 idf[] = {1}, idt[] = {1};
-    MK_SCOPE(&from, &w1, idf, 1);
-    MK_SCOPE(&to, &w1, idt, 1);
+    MK_SCOPE(from, &w1, idf, 1);
+    MK_SCOPE(to, &w1, idt, 1);
     capctx c = {};
-    call(WEAVEEmitDiff, &w1, name, nav, u1bDataC(&from), u1bDataC(&to), cap_cb, &c);
+    call(WEAVEEmitDiff, &w1, name, nav, u1bDataC(from), u1bDataC(to), cap_cb, &c);
     if (c.n != 2) { fprintf(stderr, " capped want 2 hunks (body+status) got %u\n", c.n); fail(TESTFAIL); }
     //  hunk 0: coarse whole-file body (the alive bytes), no verb.
     if (c.h[0].has_verb) { fprintf(stderr, " capped: body hunk has verb\n"); fail(TESTFAIL); }

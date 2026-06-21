@@ -92,17 +92,18 @@ ok64 WEAVESerialize(u8s into, weave const *w) {
 //  Fill `into` (caller-acquired, >= ncommits bits) so bit i is set iff
 //  i == WEAVE_SPINE or commits[i] is in `active`.  Linear membership;
 //  ncommits is per-file (small), so no index needed yet.
-ok64 WEAVEScope(u1b *into, weave const *w, u64cs active) {
-    sane(into && w);
+ok64 WEAVEScope(u1b into, weave const *w, u64cs active) {
+    sane(w);
     u32 n = (u32)$len(w->commits);
     u1bReset(into);
+    u64s bits; u64sDup(bits, u1bData(into));
     for (u32 i = 0; i < n; i++) {
         b8 on = (i == WEAVE_SPINE);
         if (!on) {
             u64 id = w->commits[0][i];
             $for(u64c, a, active) if (*a == id) { on = YES; break; }
         }
-        call(u1bFeed1, into, on);
+        if (on) u1sSet(bits, i);
     }
     done;
 }
