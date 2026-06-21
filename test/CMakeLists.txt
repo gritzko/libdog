@@ -108,6 +108,13 @@ target_compile_options(PACKRESOLVEtest PRIVATE ${TEST_CXX_FLAGS})
 target_link_libraries(PACKRESOLVEtest dog abc-core)
 add_test(NAME PACKRESOLVEtest COMMAND PACKRESOLVEtest)
 
+# GIT-010: pack-log index-emit (PIDXScan / PIDXFeedEmit)
+add_executable(PIDXtest PIDX.c)
+target_link_options(PIDXtest PRIVATE ${TEST_LDD_FLAGS})
+target_compile_options(PIDXtest PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(PIDXtest dog abc-core)
+add_test(NAME PIDXtest COMMAND PIDXtest)
+
 # DOG-001: BRAM unit test relocated from graf/test (abc-only)
 add_executable(BRAM01test BRAM01.c)
 target_link_options(BRAM01test PRIVATE ${TEST_LDD_FLAGS})

@@ -145,6 +145,14 @@ The packfile codec, the git delta instruction parser/applier, and the zlib infla
  -  `DELTApply`/`DELTEncode` — apply a delta stream to a base.
  -  `ZINFInflate`/`ZINFDeflate` — the slice-consuming zlib wrappers (`into` advances by produced, source by consumed).
 
+###  PIDX.h — pack-log index-EMIT (GIT-010)
+
+The pack-log owns NO index; these ENTRY PRODUCERS emit `(sha→offset)` wh128 rows into a caller `Bwh128` (the `tok.parse(…, out?)` shape — hold nothing, JABC rule #4). Sort/merge/persist/query stay the caller's (an abc.index wh128 lane, the keeper puppy registry). Entry layout: `key = WHIFFKeyPack(type, hashlet60)`, `val = offset` (bare; caller re-packs file_id when merging). Shared by keeper + the `git.pack` JABC binding.
+
+ -  `PIDXScan` — walk one OFS-only pack (`PACKRecordEnd`), resolve each object (`PACKResolveOfs`), git-sha it (`PIDXObjSha`), emit one entry per object; the small single-pack, single-threaded core modelled on `keeper/UNPK.c::UNPKIndex` minus the keeper coupling/fork/REF-waiters/ingest. `PACKREF` on a stray REF.
+ -  `PIDXFeedEmit` — index-on-append: git-sha the content the caller JUST fed (no resolve) and append its `(sha, offset)` entry.
+ -  `PIDXObjSha`/`PIDXEntry` — the loose-object framing sha (dog/git twin of keeper's KEEPObjSha) + the canonical wh128 entry builder.
+
 ###  PKT.h, CFG.h, SUBS.h, IGNO.h — protocol & config
 
 git pkt-line framing, the gitconfig-family parser, the `.gitmodules` submodule parser, and the `.gitignore` matcher.

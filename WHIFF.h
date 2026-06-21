@@ -127,6 +127,24 @@ fun u64 whiff_hashlet(sha1cp s, int chars) {
 fun u64 WHIFFHashlet40(sha1cp s) { return whiff_hashlet(s, 10); }
 fun u64 WHIFFHashlet60(sha1cp s) { return whiff_hashlet(s, 15); }
 
+// --- index key: hashlet60[60] | type[4] ---
+//
+//  The canonical wh128-lane KEY shared by every emitter (keeper puppy
+//  registry, the dog/git pack-log index-emit, the abc.index wh128 lane):
+//  the 60-bit hashlet in the MS bits, the 4-bit git object type in the LS
+//  nibble.  Pure WHIFF-bit composition over wh64 (id=0 → hashlet spans
+//  the off+id fields).  keeper/KEEP.h's keepKeyPack delegates here so the
+//  two never diverge.
+fun u64 WHIFFKeyPack(u8 type, u64 hashlet60) {
+    return ((u64)type & WHIFF_TYPE_MASK) |
+           ((hashlet60 & WHIFF_ID_MASK) << WHIFF_ID_SHIFT) |
+           (((hashlet60 >> WHIFF_ID_BITS) & WHIFF_OFF_MASK) << WHIFF_OFF_SHIFT);
+}
+fun u8  WHIFFKeyType(u64 key)    { return wh64Type(key); }
+fun u64 WHIFFKeyHashlet(u64 key) {
+    return (wh64Off(key) << WHIFF_ID_BITS) | wh64Id(key);
+}
+
 // --- Hashlet to hex ---
 
 // Emit `chars` hex digits of `hashlet`, most-significant nibble first.
