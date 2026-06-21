@@ -760,25 +760,60 @@ ok64 WEAVEMerge(u8s into, weave const *a, weave const *b, u64 merge_commit) {
             u64map_put(&umap, d->idh[i], ui);
         }
     }
-    //  Pass 2: per entry (in creation order) gather the UNION of removers from
-    //  every matching token on both sides, appending one contiguous run to
-    //  urid.  Processing entries in order keeps each run at urid's tail.
-    for (u32 ui = 0; ui < nu; ui++) {
-        uroff[ui] = (u32)u32bDataLen(urid); urlen[ui] = 0;
-        for (u32 side = 0; side < 2; side++) {
-            wmdec const *d = side ? &db : &da;
-            for (u32 i = 0; i < d->n; i++) {
-                if (d->idh[i] != uidh[ui]) continue;
-                for (u32 k = 0; k < d->rlen[i]; k++) {
-                    u32 rv = d->rid[d->roff[i] + k];
-                    u32 *ridd = (u32 *)u32bDataHead(urid);
-                    b8 dup = NO;
-                    for (u32 m = 0; m < urlen[ui]; m++) if (ridd[uroff[ui] + m] == rv) { dup = YES; break; }
-                    if (dup) continue;
-                    call(u32bFeed1, urid, rv); urlen[ui]++;
-                }
+    //  Pass 2 (DIS-047): gather, per entry, the UNION of removers from every
+    //  matching token on both sides — but in LINEAR time.  The old code rescanned
+    //  both parents' whole token arrays once per union entry (O(nu*(na+nb)) — the
+    //  measured quadratic that made a 5k-line merge take ~10 s).  Instead route
+    //  each token's removers straight to its entry via `umap`:
+    //    (a) prefix-sum an UPPER bound (sum of rlen) into per-entry scratch slots,
+    //    (b) one linear pass over (da,db) tokens scatters removers into each
+    //        entry's slot, deduping within that slot (bounded by removers/token,
+    //        tiny — normally 0..2 — so effectively O(1) per remover),
+    //    (c) compact the per-entry runs contiguously into `urid`.
+    //  Order is byte-identical to the old nested loop: removers still arrive da
+    //  before db, in token order within a side, first-wins on dedup.
+    u32 rcap = (u32)(u8csLen(a->rms) / 4 + u8csLen(b->rms) / 4 + 1);
+    a_carve(u32, rbase, (size_t)nu + 1);   // entry -> start in scratch
+    a_carve(u32, rcnt,  (size_t)nu + 1);   // entry -> count filled (deduped)
+    a_carve(u32, rscr,  (size_t)rcap);     // scattered removers (upper-bound sized)
+    for (u32 i = 0; i < nu; i++) { call(u32bFeed1, rbase, 0); call(u32bFeed1, rcnt, 0); }
+    u32 *rbasep = (u32 *)u32bDataHead(rbase);
+    u32 *rcntp  = (u32 *)u32bDataHead(rcnt);
+    u32 *rscrp  = (u32 *)u32bIdleHead(rscr);
+    //  (a) upper-bound counts per entry, then prefix-sum to slot starts.
+    for (u32 side = 0; side < 2; side++) {
+        wmdec const *d = side ? &db : &da;
+        for (u32 i = 0; i < d->n; i++) {
+            if (d->rlen[i] == 0) continue;
+            u32 ui = 0;
+            if (!u64map_get(&umap, d->idh[i], &ui)) continue;
+            rcntp[ui] += d->rlen[i];
+        }
+    }
+    { u32 acc = 0;
+      for (u32 ui = 0; ui < nu; ui++) { rbasep[ui] = acc; acc += rcntp[ui]; rcntp[ui] = 0; } }
+    //  (b) scatter + dedup-within-slot, da before db, token order preserved.
+    for (u32 side = 0; side < 2; side++) {
+        wmdec const *d = side ? &db : &da;
+        for (u32 i = 0; i < d->n; i++) {
+            if (d->rlen[i] == 0) continue;
+            u32 ui = 0;
+            if (!u64map_get(&umap, d->idh[i], &ui)) continue;
+            u32 sl = rbasep[ui];
+            for (u32 k = 0; k < d->rlen[i]; k++) {
+                u32 rv = d->rid[d->roff[i] + k];
+                b8 dup = NO;
+                for (u32 m = 0; m < rcntp[ui]; m++) if (rscrp[sl + m] == rv) { dup = YES; break; }
+                if (dup) continue;
+                rscrp[sl + rcntp[ui]] = rv; rcntp[ui]++;
             }
         }
+    }
+    //  (c) compact deduped runs contiguously into `urid`, in entry order.
+    for (u32 ui = 0; ui < nu; ui++) {
+        uroff[ui] = (u32)u32bDataLen(urid); urlen[ui] = rcntp[ui];
+        u32 sl = rbasep[ui];
+        for (u32 m = 0; m < rcntp[ui]; m++) { u32 rv = rscrp[sl + m]; call(u32bFeed1, urid, rv); }
     }
 
     //  (2) RGA-linearise: sort by (anchor, commit-index DESC, ord ASC) so
