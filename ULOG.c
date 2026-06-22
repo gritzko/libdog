@@ -1190,6 +1190,9 @@ static u64 const ULOG_VERB_TAGS[][2] = {
                            //              file rows in the post-push banner)
     {0x31cfa,        'V'},  // mov       — slot V  (cyan)
     {0x31ce8,        'E'},  // mod       — slot E  (yellow)
+    {0x25a3a,        'Y'},  // adv       — slot Y  (blue; SUBS-030 sub
+                           //              advanced past pin, gitlink bump
+                           //              pending — distinct from `mod`)
     {0x39d28,        'Y'},  // upd       — slot Y  (blue, GET-overwritten)
     {0x28a70,        'X'},  // del       — slot X  (orange/brown)
     {0x31b77,        'M'},  // mis       — slot M  (red)
