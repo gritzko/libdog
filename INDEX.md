@@ -48,6 +48,14 @@ Parse `dog [verb] [--flags] [URI...]` into a `cli` whose slices borrow argv; URI
  -  `CLIFlag`/`CLIHas`/`CLIAtURI` — read a flag's value, test a boolean flag.
  -  `CLISetHUNKMode` — resolve the process-global `HUNKMode` from `--tlv`/ `--color`/`--plain` (default keys off).
 
+###  VERSN.h — compile-time build metadata (version / hash / date)
+
+Build stamp every binary can report on `--version`. `dog/version.cmake` writes the three literals into a generated `VERSN_BUILD.h` (rewritten only on change, so only VERSN.c recompiles); off a git checkout the version/hash read "unknown".
+
+ -  `VERSNVersion`/`VERSNHash`/`VERSNDate` — `git describe` / short hash / source date (ISO-8601 UTC) as const `u8cs` slices.
+ -  `VERSNu8sFeed` — feed `<prog> <version> (<hash>) <date>` into a slice (empty `prog` skipped; propagates SNOROOM).
+ -  `VERSNReport` — print that one-line banner to stdout; the `--version` convenience for a dog's MAIN.
+
 ##  Event log & reporting
 
 ###  ULOG.h — append-only URI event log + sidecar index

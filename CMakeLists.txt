@@ -261,9 +261,29 @@ list(APPEND TOK_SOURCES DOG.c)
 list(APPEND TOK_HEADERS CLI.h)
 list(APPEND TOK_SOURCES CLI.c)
 
+list(APPEND TOK_HEADERS VERSN.h)
+list(APPEND TOK_SOURCES VERSN.c)
+
 add_library(dog STATIC ${TOK_HEADERS} ${TOK_SOURCES}
             sha1dc/sha1.c sha1dc/ubc_check.c)
 target_link_libraries(dog abc-core ZLIB::ZLIB)
+
+#  Build metadata for VERSN.c: regenerate VERSN_BUILD.h every build
+#  (the script rewrites it only when a value changes, so dog/VERSN.c
+#  recompiles only on a real version change).  FALLBACK_DATE is the
+#  configure-time UTC stamp used off-git; string(TIMESTAMP) honors
+#  SOURCE_DATE_EPOCH for reproducible builds.
+string(TIMESTAMP _dog_build_date "%Y-%m-%dT%H:%M:%SZ" UTC)
+add_custom_target(dog-version ALL
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC=${CMAKE_CURRENT_SOURCE_DIR}
+        -DOUT=${CMAKE_CURRENT_BINARY_DIR}/VERSN_BUILD.h
+        -DFALLBACK_DATE=${_dog_build_date}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/VERSN_BUILD.h
+)
+add_dependencies(dog dog-version)
+target_include_directories(dog PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(dogtok tok/TOK.cli.c)
 target_link_libraries(dogtok dog abc-core)
