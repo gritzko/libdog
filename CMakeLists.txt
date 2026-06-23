@@ -279,6 +279,7 @@ add_custom_target(dog-version ALL
         -DSRC=${CMAKE_CURRENT_SOURCE_DIR}
         -DOUT=${CMAKE_CURRENT_BINARY_DIR}/VERSN_BUILD.h
         -DFALLBACK_DATE=${_dog_build_date}
+        -DBEBIN=${DOG_BIN_DIR}/be
         -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/VERSN_BUILD.h
 )
