@@ -402,6 +402,26 @@ ok64 JATBasicTest() {
     done;
 }
 
+ok64 CPPTRawStringTest() {
+    sane(1);
+    // DOG-007: C++11 raw string R"delim(...)delim" as one G token.
+    TOK01Case cases[] = {
+        {"R\"JS(x)JS\"", "G"},
+        {"R\"(x)\"", "G"},
+        {"u8R\"d(x)d\"", "G"},
+        {"LR\"d(x)d\"", "G"},
+        {"uR\"d(x)d\"", "G"},
+        {"UR\"d(x)d\"", "G"},
+        {"R\"d(a\"b)c\n)d\"", "G"},
+        {"x = R\"(y)\";", "SWPWGP"},
+        {"\"plain\"", "G"},
+        {"'c'", "G"},
+    };
+    int ncases = sizeof(cases) / sizeof(cases[0]);
+    RUN_CASES(CPPTLexer, CPPT, cases, ncases);
+    done;
+}
+
 ok64 JSONTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
@@ -1299,6 +1319,7 @@ ok64 TOK01test() {
     call(JSTFileTest);
     call(RSTBasicTest);
     call(JATBasicTest);
+    call(CPPTRawStringTest);
     call(JSONTBasicTest);
     call(SHTBasicTest);
     call(HSTBasicTest);

@@ -75,6 +75,31 @@ action on_space {
     if (o!=OK) fbreak;
 }
 
+# DOG-007: capture the raw-string delimiter span (between `"` and `(`),
+# then in the opener action skip the opaque body to `)<delim>"`.
+action rs_d0 { rsd[0] = (u8c*)fpc; }
+action rs_d1 { rsd[1] = (u8c*)fpc; }
+action on_rawstr {
+    size_t n = $size(rsd);
+    u8c* q = (u8c*)rsd[1] + 1;       // first body byte, just past the `(`
+    u8c* end = NULL;
+    while (q + n + 1 < pe) {
+        u8cs run = {q + 1, q + 1 + n};
+        if (*q == ')' && q[n+1] == '"' && $eq(rsd, run)) {
+            end = q + n + 2;
+            break;
+        }
+        ++q;
+    }
+    if (end == NULL) { o = CPPTBAD; fbreak; }
+    tok[0] = (u8c*)ts;
+    tok[1] = end;
+    o = CPPTonString(tok, state);
+    if (o!=OK) fbreak;
+    fexec end;          // resume the scanner just past the close
+    fgoto main;
+}
+
 bscont = [\\] [\r]? [\n];
 
 ddig = dgt+ ( ['] dgt+ )*;
@@ -90,8 +115,9 @@ main := |*
     "//" [^\n]*                                                   => on_comment;
     "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
 
-    # ---- raw strings R"delim(...)delim" ----
-    strpfx? "R\"(" ( any8 - [)] | [)] (any8 - ["]) )* ")\""     => on_string;
+    # ---- raw strings R"delim(...)delim" (DOG-007) ----
+    # capture <delim>, the action skips the opaque body to `)<delim>"`.
+    strpfx? "R" ["] %rs_d0 ( any8 - ["()\\ \t\r\n\f\v] ){0,16} ("(" >rs_d1)  => on_rawstr;
 
     # ---- string literals ----
     strpfx? ["] ( esc | any8 - ["\\] )* ["]                      => on_string;
@@ -154,6 +180,8 @@ ok64 CPPTLexer(CPPTstate* state) {
     u8c *ts = NULL;
     u8c *te = NULL;
     ok64 o = OK;
+
+    u8cs rsd = {NULL, NULL};        // DOG-007: raw-string delimiter capture
 
     u8cs tok = {p, p};
 
