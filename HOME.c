@@ -1077,6 +1077,18 @@ ok64 HOMEResolveSibling(path8b out, u8csc name, u8csc argv0) {
                     if (PATHu8bFeed(exe, entry)   != OK) continue;
                     if (PATHu8bPush(exe, a0_s)    != OK) continue;
                     if (!home_is_exe($path(exe))) continue;
+                    //  SUBS-034: the PATH-resolved exe may be a symlink into
+                    //  the real bin dir; realpath it so `name` is sought beside
+                    //  the REAL binary, not the PATH entry (mirrors l.1043).
+                    a_path(exe_real);
+                    if (PATHu8bReal(exe_real, $path(exe)) == OK &&
+                        u8bHasData(exe_real)) {
+                        a_dup(u8c, exe_real_v, u8bData(exe_real));
+                        u8cs real_dir = {};
+                        PATHu8sDir(real_dir, exe_real_v);
+                        u8csc real_dir_c = {real_dir[0], real_dir[1]};
+                        if (home_try_sibling(out, real_dir_c, name) == OK) done;
+                    }
                     if (home_try_sibling(out, entry_c, name) == OK) done;
                     break;
                 }
