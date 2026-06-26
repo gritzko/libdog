@@ -1197,8 +1197,71 @@ static ok64 T_torn_mid_no_zero(void) {
     done;
 }
 
+//  STATUS-003 regression: a long-lived worktree's wtlog accumulates one
+//  ULOG row per put/get/post over its lifetime — easily thousands.  The
+//  open path (ULOGOpenBooked RW and ULOGOpenRO) runs a THROW-AWAY scan
+//  to position the log's idle head, into a scratch index that used to be
+//  a FIXED 1024-entry anonymous mmap.  Any log past 1024 rows overflowed
+//  it → SNOROOM out of ulog_scan_log's idx push → `be status` / `be post`
+//  aborted before doing anything.  The scratch cap is now sized to the
+//  log's content (one entry per ~16 B + slack), so it scales with the
+//  row count.  Seed >1024 rows, close, then both reopen paths must
+//  surface every row without SNOROOM.
+static ok64 T_open_over_1024_rows(void) {
+    sane(1);
+    call(FILEInit);
+    rm_tmp("/tmp/ulog-big.log");
+    rm_tmp("/tmp/.ulog-big.log.idx");
+    LOGPATH(path, "/tmp/ulog-big.log");
+
+    saved_uri s = {};
+    call(parse_uri_lit, &s, "?heads/main");
+
+    //  Comfortably past the old 1024-entry cap.
+    u32 const N = 1500;
+    {
+        u8bp    l_data = NULL;
+        wh128bp l_idx  = NULL;
+        call(ULOGOpen, &l_data, &l_idx, path);
+        for (u32 i = 0; i < N; i++) {
+            ulogrec r = rec_of((ron60)(1 + i), verb_of("put"), &s);
+            call(ULOGAppendAt, l_data, l_idx, &r);
+        }
+        want(ULOGCount(l_idx) == N);
+        call(ULOGClose, l_data, &l_idx, YES);
+    }
+
+    //  RW reopen (ULOGOpenBooked throw-away scan): no SNOROOM, all rows.
+    {
+        u8bp    l_data = NULL;
+        wh128bp l_idx  = NULL;
+        call(ULOGOpen, &l_data, &l_idx, path);
+        want(ULOGCount(l_idx) == N);
+        call(ULOGClose, l_data, &l_idx, YES);
+    }
+
+    //  Drop the sidecar so the RO open must rebuild via the anonymous
+    //  fallback (the SAME throw-away scan cap, plus the rebuild cap).
+    rm_tmp("/tmp/.ulog-big.log.idx");
+    {
+        u8bp    l_data = NULL;
+        wh128bp l_idx  = NULL;
+        call(ULOGOpenRO, &l_data, &l_idx, path);
+        want(ULOGCount(l_idx) == N);
+        ulogrec g = {};
+        call(ULOGTail, l_data, l_idx, &g);
+        want(g.ts == (ron60)N);
+        call(ULOGClose, l_data, &l_idx, NO);
+    }
+
+    rm_tmp("/tmp/ulog-big.log");
+    rm_tmp("/tmp/.ulog-big.log.idx");
+    done;
+}
+
 ok64 ULOGtest(void) {
     sane(1);
+    fprintf(stderr, "T_open_over_1024_rows...\n");  call(T_open_over_1024_rows);
     fprintf(stderr, "T_torn_first_byte_no_zero...\n"); call(T_torn_first_byte_no_zero);
     fprintf(stderr, "T_torn_mid_no_zero...\n");        call(T_torn_mid_no_zero);
     fprintf(stderr, "T_open_alloc_fail_no_leak...\n"); call(T_open_alloc_fail_no_leak);

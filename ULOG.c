@@ -280,6 +280,20 @@ static ok64 ulog_idx_path(path8b out, path8s log_path) {
 //  than leaked.  Defaults to 0 — never trips in production.
 u32 ULOG_FAULT_ALLOC_ANON = 0;
 
+//  Scratch-index entry cap sized to the log's CONTENT, not a constant:
+//  one wh128 entry per row, and the densest possible log is ~16 B/row,
+//  so `log_size/16 + slack` always covers the real row count.  Capped at
+//  the booked-RW sidecar capacity (the same ceiling ULOGOpenIdx uses) so
+//  the anonymous scratch never outgrows the on-disk index it stands in
+//  for.  A fixed `1024` here SNOROOM'd any wtlog past ~1024 rows (a
+//  long-lived secondary worktree easily clears that) — STATUS-003.
+static size_t ulog_idx_scan_cap(u8b log_data) {
+    u64 log_size = (u64)((u8 const *)log_data[2] - (u8 const *)log_data[0]);
+    size_t cap = (size_t)(log_size / 16) + 1024;
+    size_t ceil = ULOG_IDX_BOOK_DEFAULT / sizeof(wh128);
+    return cap > ceil ? ceil : cap;
+}
+
 //  Allocate an anonymous-mmap-backed wh128b descriptor on the heap.
 //  Used for RO + missing sidecar.  The caller's `*idx_out` is set to
 //  point at a 4-pointer slot; ULOGCloseIdx detects this via
@@ -448,12 +462,7 @@ ok64 ULOGOpenIdx(wh128bp *idx_out, path8s log_path, u8b log_data, b8 ro,
 
     //  Quiet anonymous-mmap fallback.  Size for one entry per ~16 B of
     //  log; cap at the booked-RW capacity so we don't outgrow it.
-    u64 log_size = (u64)((u8 const *)log_data[2] - (u8 const *)log_data[0]);
-    size_t cap = (size_t)(log_size / 16) + 1024;
-    if (cap > (ULOG_IDX_BOOK_DEFAULT / sizeof(wh128))) {
-        cap = ULOG_IDX_BOOK_DEFAULT / sizeof(wh128);
-    }
-    call(ulog_idx_alloc_anon, idx_out, cap);
+    call(ulog_idx_alloc_anon, idx_out, ulog_idx_scan_cap(log_data));
     ok64 ro3 = ulog_idx_rebuild(*idx_out, (u8bp)log_data);
     if (ro3 != OK) {
         ulog_idx_free_anon(*idx_out);
@@ -520,7 +529,7 @@ ok64 ULOGOpenBooked(u8bp *data, wh128bp *idx, path8s path,
     //  the idx scan/load — we need the byte size right.
     {
         wh128bp tmp = NULL;
-        ok64 ao = ulog_idx_alloc_anon(&tmp, 1024);
+        ok64 ao = ulog_idx_alloc_anon(&tmp, ulog_idx_scan_cap(*data));
         if (ao != OK) {                 // scratch alloc failed AFTER book
             if (*data && (*data)[0]) FILEUnBook(*data);
             return ao;
@@ -576,7 +585,7 @@ ok64 ULOGOpenRO(u8bp *data, wh128bp *idx, path8s path) {
     //  we won't write the sidecar from here).
     {
         wh128bp tmp = NULL;
-        ok64 ao = ulog_idx_alloc_anon(&tmp, 1024);
+        ok64 ao = ulog_idx_alloc_anon(&tmp, ulog_idx_scan_cap(*data));
         if (ao != OK) {                 // scratch alloc failed AFTER book
             if (*data && (*data)[0]) FILEUnBook(*data);
             return ao;
