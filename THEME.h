@@ -18,7 +18,8 @@ con ok64 THEMEBAD = 0x75139638b28d;       // unknown theme name
 //  Tag mapping (matches dog/INDEX.md "Tag mapping" plus bro's
 //  diff-side bg conventions):
 //
-//    Fg:  D comment   G string    L number    H preproc
+//    Fg:  D comment (grey)
+//         G string    L number    H preproc
 //         R keyword   P punct     N defname (bold)   C funcall (bold)
 //         F filename  T title
 //    Bg:  I INS (normal + in-pass eq context)
@@ -40,7 +41,11 @@ con ok64 THEMEBAD = 0x75139638b28d;       // unknown theme name
 //                       ordinary code identifiers, whitespace, and the
 //                       neutral status columns.  Stays ANSI_DEFAULT so
 //                       non-conflict content never renders red (BE-001).
-//         Q unk       (untracked; also `dirty`)
+//         Q unk (grey) — untracked / `dirty`; also the LOG-001 NON-SPINE
+//                       log row: `be log` / `jab log` grey a merged-in
+//                       (2nd+ parent) commit's whole row with 'Q', the
+//                       first-parent spine keeps its hue.  dog/THEME is
+//                       the single source of the tag→SGR for C and JS.
 //         Y upd       (GET-overwritten)
 //         Z mrg       (weave-merge write; also `merged`)
 typedef ansi64 theme[32];

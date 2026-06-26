@@ -55,6 +55,8 @@ static theme const THEME16TBL = {
     //  and the neutral status columns, none of which are conflicts.
     IDX('M') = FG16(91),    // mis/conf/modl — bright red (DIS-018, BE-001)
     //  'S' intentionally ANSI_DEFAULT (zero-init) — see note above.
+    //  'Q' = unk GREY; also the LOG-001 non-spine log-row tag (merged-in
+    //  2nd+ parent commits in `be log` / `jab log`, JS at parity).
     IDX('Q') = FG16(90),    // unk       — grey
     IDX('Y') = FG16(34),    // upd       — blue (== put)
     IDX('Z') = FG16(35),    // mrg       — magenta
