@@ -6,6 +6,7 @@
 
 #include "abc/ANSI.h"
 #include "abc/TTY.h"
+#include "abc/UTF8.h"
 #include "abc/FILE.h"
 #include "abc/PRO.h"
 #include "abc/RON.h"
@@ -632,12 +633,245 @@ ok64 HUNKu8sFeedText(u8s into, hunk const *hk) {
     done;
 }
 
-//  ANSI sequences for the diff-line colour band.  Re-emitted per line
-//  so the renderer stays stateless (no carried `prev`); the trailing
-//  `\033[0m` keeps the terminal clean once the hunk ends.
-#define HUNK_ANSI_RED   "\033[31m"
-#define HUNK_ANSI_GREEN "\033[32m"
-#define HUNK_ANSI_RESET "\033[0m"
+// === BRO-009: the two-pass side→bg diff-colour renderer (shared with bro) ===
+// Relocated from bro/BRO.c so HUNKu8sFeedColor (the direct-colour path) and the
+// bro pager single-source ONE renderer.  bro keeps only its pager-side row
+// index (range32 lines + scrolling); these are the side-aware primitives both
+// build on.  See dog/HUNK.h for the contract.
+
+//  Resolve one cell's full SGR state from what tok32 already carries.
+//  (pass, side) → bg: NORMAL ins→I del→O; RM rm→K else→O; IN in→J else→I.
+ansi64 bro_cell_ansi(u8 fg_tag, u8 pass, u8 side, b8 in_search) {
+    ansi64 want = THEMEAt(fg_tag);
+    if (pass == BRO_PASS_NORMAL) {
+        if (side == TOK_SIDE_IN)      want |= THEMEAt('I');
+        else if (side == TOK_SIDE_RM) want |= THEMEAt('O');
+    } else if (pass == BRO_PASS_RM) {
+        want |= (side == TOK_SIDE_RM) ? THEMEAt('K') : THEMEAt('O');
+    } else {  // BRO_PASS_IN
+        want |= (side == TOK_SIDE_IN) ? THEMEAt('J') : THEMEAt('I');
+    }
+    if (in_search) want |= ANSI64_FLAG(ANSI_REVERSE);
+    return want;
+}
+
+//  Walk one display row forward from `off`: advance at most `cols` codepoints,
+//  stop on a '\n' (not consumed) or end.
+static u32 hunk_row_end(u8csc text, u32 tlen, u32 off, u32 cols) {
+    u32 cp = 0;
+    while (off < tlen && cp < cols && text[0][off] != '\n') {
+        u8 ch = text[0][off];
+        u32 clen = UTF8_LEN[ch >> 4];
+        if (clen == 0 || off + clen > tlen) clen = 1;
+        off += clen;
+        cp++;
+    }
+    return off;
+}
+
+//  Pass-aware row end: skip bytes hidden in this pass (in-side for rm-pass,
+//  rm-side for in-pass, 'U' always); a '\n' only terminates when visible here.
+u32 bro_row_end_pass(hunk const *hk, u32 tlen, u32 off, u32 cols, u8 pass) {
+    int ntoks = (int)$len(hk->toks);
+    if (ntoks == 0 && pass == BRO_PASS_NORMAL) {
+        u8csc text = {hk->text[0], hk->text[1]};
+        return hunk_row_end(text, tlen, off, cols);
+    }
+    int ti = 0;
+    while (ti < ntoks && tok32Offset(hk->toks[0][ti]) <= off) ti++;
+    u32 cp = 0;
+    while (off < tlen && cp < cols) {
+        while (ti < ntoks && tok32Offset(hk->toks[0][ti]) <= off) ti++;
+        u8 side = (ti < ntoks) ? tok32Side(hk->toks[0][ti]) : TOK_SIDE_EQ;
+        u8 tag  = (ti < ntoks) ? tok32Tag (hk->toks[0][ti]) : 'S';
+        u8 ch = hk->text[0][off];
+        b8 hidden = (tag == 'U') ||
+                    (pass == BRO_PASS_RM && side == TOK_SIDE_IN) ||
+                    (pass == BRO_PASS_IN && side == TOK_SIDE_RM);
+        if (ch == '\n' && !hidden) break;
+        u32 clen = UTF8_LEN[ch >> 4];
+        if (clen == 0 || off + clen > tlen) clen = 1;
+        off += clen;
+        if (!hidden) cp++;
+    }
+    return off;
+}
+
+//  Split the hunk text into per-segment {lo,hi,in_b,rm_b,eq_b,bnd_side}.
+u32 bro_classify_lines(hunk const *hk, bro_lineinfo *out, u32 cap) {
+    u32 tlen = (u32)$len(hk->text);
+    if (tlen == 0 || cap == 0) return 0;
+    u32 nl = 0, line_lo = 0;
+    int ntoks = (int)$len(hk->toks);
+    int ti = 0;
+    u32 in_b = 0, rm_b = 0, eq_b = 0;
+    for (u32 off = 0; off < tlen; off++) {
+        while (ti < ntoks && tok32Offset(hk->toks[0][ti]) <= off) ti++;
+        u8 side = (ti < ntoks) ? tok32Side(hk->toks[0][ti]) : TOK_SIDE_EQ;
+        u8 tag  = (ti < ntoks) ? tok32Tag (hk->toks[0][ti]) : 'S';
+        if (tag == 'U') continue;
+        if (hk->text[0][off] == '\n') {
+            if (nl < cap)
+                out[nl] = (bro_lineinfo){line_lo, off, in_b, rm_b, eq_b, side};
+            nl++;
+            line_lo = off + 1;
+            in_b = rm_b = eq_b = 0;
+        } else if (side == TOK_SIDE_IN) in_b++;
+        else if (side == TOK_SIDE_RM) rm_b++;
+        else eq_b++;
+    }
+    if (line_lo < tlen) {
+        if (nl < cap)
+            out[nl] = (bro_lineinfo){line_lo, tlen, in_b, rm_b, eq_b, TOK_SIDE_EQ};
+        nl++;
+    }
+    return nl < cap ? nl : cap;
+}
+
+static b8 hunk_pass_sees_nl(u8 pass, u8 bnd_side) {
+    if (pass == BRO_PASS_NORMAL) return YES;
+    if (pass == BRO_PASS_RM) return (bnd_side != TOK_SIDE_IN) ? YES : NO;
+    return (bnd_side != TOK_SIDE_RM) ? YES : NO;  // BRO_PASS_IN
+}
+
+//  True if a line's content continues PAST its boundary '\n' into the next
+//  line (so the two share a render row in one pass) — a hidden-'\n' overrun.
+static b8 hunk_line_continues(bro_lineinfo const *li) {
+    if (li->bnd_side == TOK_SIDE_IN) return (li->rm_b > 0) ? YES : NO;
+    if (li->bnd_side == TOK_SIDE_RM) return (li->in_b > 0) ? YES : NO;
+    return NO;
+}
+
+typedef enum {
+    HUNK_LINE_EQ, HUNK_LINE_PURE_IN, HUNK_LINE_PURE_RM,
+    HUNK_LINE_MOD_INLINE, HUNK_LINE_MOD_SPLIT,
+} hunk_linekind;
+
+static hunk_linekind hunk_line_classify(bro_lineinfo const *li) {
+    u32 changed = li->in_b + li->rm_b;
+    if (changed == 0) return HUNK_LINE_EQ;
+    if (li->eq_b == 0) {
+        if (li->in_b > 0 && li->rm_b > 0) return HUNK_LINE_MOD_SPLIT;
+        return (li->in_b > 0) ? HUNK_LINE_PURE_IN : HUNK_LINE_PURE_RM;
+    }
+    //  Small edits stay inline (single normal-pass row); larger edits split
+    //  into rm-row + in-row (merged INS-before-DEL byte order reads wrong
+    //  inline once the change dominates).
+    u32 total = changed + li->eq_b;
+    if (changed * 4 < total) return HUNK_LINE_MOD_INLINE;
+    return HUNK_LINE_MOD_SPLIT;
+}
+
+//  Drive the two-pass row emission (eq context normal; then per modified block
+//  the rm-pass rows, then the in-pass rows).  `emit` is the per-row sink.
+ok64 bro_walk_hunk(hunk const *hk, bro_emit_fn emit, void *ctx, u32 *total) {
+    sane(hk && emit && total);
+    a_carve(u32, scratch, BRO_LINEINFO_CELLS);
+    bro_lineinfo *info = (bro_lineinfo*)u32bIdleHead(scratch);
+    u32 nl = bro_classify_lines(hk, info, BRO_LINEINFO_CAP);
+    *total = 0;
+    u32 i = 0;
+    while (i < nl) {
+        hunk_linekind k = hunk_line_classify(&info[i]);
+        if ((k == HUNK_LINE_EQ || k == HUNK_LINE_MOD_INLINE) &&
+            info[i].bnd_side == TOK_SIDE_EQ) {
+            *total += emit(ctx, info[i].lo, info[i].hi, BRO_PASS_NORMAL);
+            i++;
+            continue;
+        }
+        //  Block end: the next eq/inline context line whose predecessor does
+        //  not continue into it (a hidden-'\n' overrun keeps the row going).
+        u32 j = i;
+        while (j < nl) {
+            hunk_linekind kj = hunk_line_classify(&info[j]);
+            if (info[j].bnd_side == TOK_SIDE_EQ &&
+                (kj == HUNK_LINE_EQ || kj == HUNK_LINE_MOD_INLINE) &&
+                (j == i || !hunk_line_continues(&info[j - 1])))
+                break;
+            j++;
+        }
+        u32 block_hi = info[j - 1].hi;
+        //  rm-pass: group across hidden IN '\n's.
+        u32 row_start = info[i].lo, pend_in = 0, pend_rm = 0, pend_eq = 0;
+        for (u32 m = i; m < j; m++) {
+            pend_in += info[m].in_b; pend_rm += info[m].rm_b; pend_eq += info[m].eq_b;
+            if (hunk_pass_sees_nl(BRO_PASS_RM, info[m].bnd_side)) {
+                if (pend_rm > 0 || pend_eq > 0)
+                    *total += emit(ctx, row_start, info[m].hi, BRO_PASS_RM);
+                row_start = info[m].hi + 1; pend_in = pend_rm = pend_eq = 0;
+            }
+        }
+        if (pend_rm > 0 || pend_eq > 0)
+            *total += emit(ctx, row_start, block_hi, BRO_PASS_RM);
+        //  in-pass: symmetric.
+        row_start = info[i].lo; pend_in = pend_rm = pend_eq = 0;
+        for (u32 m = i; m < j; m++) {
+            pend_in += info[m].in_b; pend_rm += info[m].rm_b; pend_eq += info[m].eq_b;
+            if (hunk_pass_sees_nl(BRO_PASS_IN, info[m].bnd_side)) {
+                if (pend_in > 0 || pend_eq > 0)
+                    *total += emit(ctx, row_start, info[m].hi, BRO_PASS_IN);
+                row_start = info[m].hi + 1; pend_in = pend_rm = pend_eq = 0;
+            }
+        }
+        if (pend_in > 0 || pend_eq > 0)
+            *total += emit(ctx, row_start, block_hi, BRO_PASS_IN);
+        i = j;
+    }
+    done;
+}
+
+//  HUNKu8sFeedColor diff body (BRO-009): render one row [off,line_end) in
+//  `pass` to `into` — visible cells only, minimal SGR deltas, reset at row end.
+static ok64 hunk_color_diff_row(u8s into, hunk const *hk, u32 off,
+                                u32 line_end, u8 pass) {
+    sane(u8sOK(into) && hk);
+    int ntoks = (int)$len(hk->toks);
+    int ti = 0;
+    while (ti < ntoks && tok32Offset(hk->toks[0][ti]) <= off) ti++;
+    ansi64 cur = ANSI_DEFAULT;
+    for (u32 pos = off; pos < line_end; ) {
+        while (ti < ntoks && tok32Offset(hk->toks[0][ti]) <= pos) ti++;
+        u8 tag  = (ti < ntoks) ? tok32Tag (hk->toks[0][ti]) : 'S';
+        u8 side = (ti < ntoks) ? tok32Side(hk->toks[0][ti]) : TOK_SIDE_EQ;
+        u8 ch = hk->text[0][pos];
+        u32 clen = UTF8_LEN[ch >> 4];
+        if (clen == 0 || pos + clen > line_end) clen = 1;
+        if (tag == 'U' ||
+            (pass == BRO_PASS_RM && side == TOK_SIDE_IN) ||
+            (pass == BRO_PASS_IN && side == TOK_SIDE_RM)) { pos += clen; continue; }
+        ansi64 want = bro_cell_ansi(tag, pass, side, NO);
+        if (want != cur) { call(ANSIu8sFeedDelta, into, want, cur); cur = want; }
+        a_part(u8c, span, hk->text, pos, clen);
+        call(u8sFeed, into, span);
+        pos += clen;
+    }
+    call(ANSIu8sFeedReset, into, cur);
+    call(u8sFeed1, into, '\n');
+    done;
+}
+
+//  The per-row emit sink for the HUNKu8sFeedColor diff body: soft-wrap [lo,
+//  end_nl] into display rows and render each.  `into` is the caller's slice as
+//  a decayed `u8**` (u8s is `u8 *[2]`; an array member would copy the cursor
+//  and the advances would not reach the caller), so u8sFeed advances ITS
+//  cursor.  Errors stash on ctx->err (the u32 emit return is bro's row count,
+//  which HUNKu8sFeedColor ignores).
+typedef struct { u8 **into; hunk const *hk; u32 cols; ok64 err; } hunk_color_ctx;
+static u32 hunk_color_emit(void *vctx, u32 lo, u32 end_nl, u8 pass) {
+    hunk_color_ctx *c = vctx;
+    if (c->err != OK) return 0;
+    u32 tlen = (u32)$len(c->hk->text);
+    u32 off = lo;
+    while (off <= end_nl) {
+        u32 end = bro_row_end_pass(c->hk, tlen, off, c->cols, pass);
+        u32 row_end = (end < end_nl) ? end : end_nl;
+        ok64 r = hunk_color_diff_row(c->into, c->hk, off, row_end, pass);
+        if (r != OK) { c->err = r; return 0; }
+        if (end >= end_nl) break;
+        off = end;
+    }
+    return 0;
+}
 
 ok64 HUNKu8sFeedColor(u8s into, hunk const *hk) {
     sane(u8sOK(into) && hk != NULL);
@@ -689,35 +923,17 @@ ok64 HUNKu8sFeedColor(u8s into, hunk const *hk) {
         done;
     }
 
-    //  Diff hunk: per-line side from tok bits, `-` lines red and `+`
-    //  lines green; context lines uncoloured.  Mirrors HUNKu8sFeedText's
-    //  line-walk; only the colour band differs.
-    u8c *base = hk->text[0];
-    a_dup(u8 const, cur, hk->text);
-    while (!$empty(cur)) {
-        u32 line_lo = (u32)(cur[0] - base);
-        u8cs scan = {cur[0], cur[1]};
-        b8 had_nl = (u8csFind(scan, '\n') == OK);
-        u8c *line_end = scan[0];
-        u32 line_hi = (u32)(line_end - base);
-
-        u8 sides = hunk_line_sides(hk, line_lo, line_hi);
-        u8 prefix = ' ';
-        b8 col_add = NO, col_del = NO;
-        if (sides & 1) { prefix = '+'; col_add = YES; }
-        if (sides & 2) { prefix = '-'; col_del = YES; }
-
-        if (col_add) { a_cstr(s, HUNK_ANSI_GREEN); u8sFeed(into, s); }
-        if (col_del) { a_cstr(s, HUNK_ANSI_RED);   u8sFeed(into, s); }
-        u8sFeed1(into, prefix);
-        call(hunk_feed_visible, into, hk, line_lo, line_hi);
-        if (col_add || col_del) {
-            a_cstr(off, HUNK_ANSI_RESET); u8sFeed(into, off);
-        }
-        u8sFeed1(into, '\n');
-        cur[0] = had_nl ? line_end + 1 : line_end;
-    }
-    u8sFeed1(into, '\n');
+    //  Diff hunk (BRO-009): the two-pass side→bg word wash — the ONE renderer,
+    //  shared with the bro pager (bro_walk_hunk + bro_cell_ansi, dog/HUNK.h).
+    //  rm-pass rows (old) then in-pass rows (new) per modified block; changed
+    //  words THEME-washed; each row ends in '\n' (no trailing separator — the
+    //  next hunk's banner divides).  A huge `cols` disables soft-wrap (this
+    //  width-agnostic path renders one row per logical line; the bro pager
+    //  passes its terminal width instead).
+    hunk_color_ctx hc = {into, hk, 1u << 24, OK};
+    u32 nrows = 0;
+    call(bro_walk_hunk, hk, hunk_color_emit, &hc, &nrows);
+    if (hc.err != OK) return hc.err;
     done;
 }
 

@@ -1,6 +1,7 @@
 #ifndef DOG_HUNK_H
 #define DOG_HUNK_H
 
+#include "abc/ANSI.h"
 #include "abc/BUF.h"
 #include "abc/RON.h"
 #include "abc/TLV.h"
@@ -165,6 +166,61 @@ ok64 HUNKu8sFeedHtml(u8s into, hunk const *hk);
 // `diff:` to the hunk URI — see `graf/WEAVE.c`.  No standalone entry
 // point: the three public renderers are `HUNKu8sFeed` (TLV),
 // `HUNKu8sFeedText` (plain), and `HUNKu8sFeedColor` (ANSI).
+
+// --- two-pass diff-colour renderer (BRO-009) -----------------------------
+// The ONE side→bg word-wash renderer, shared by `HUNKu8sFeedColor` (the
+// direct-colour path: `graf`, any non-paging tool) and the `bro` pager.  Each
+// `tok32` carries a 2-bit diff side (eq/in/rm); a modified line is reconstructed
+// as an OLD row (rm-pass) then a NEW row (in-pass), the other side's bytes
+// hidden, the changed words washed with a THEME bg (I/O ins/del line, J/K
+// ins/del word).  Lives here (libdog) so producers and the pager single-source
+// it.  bro keeps only its pager-side row index (range32 lines + scrolling).
+//
+//   pass: 0 = normal/inline (eq lines, small inline edits), 1 = rm-pass (old
+//   side; in bytes hidden), 2 = in-pass (new side; rm bytes hidden).
+#define BRO_PASS_NORMAL 0u
+#define BRO_PASS_RM     1u
+#define BRO_PASS_IN     2u
+
+// Per-segment classification: a segment runs from after the previous '\n' to
+// (and including) the next '\n'.  `bnd_side` is the side of the boundary '\n'
+// (which pass(es) see it as a row break); the *_b counts drive the line kind.
+typedef struct {
+    u32 lo;       // segment start byte offset
+    u32 hi;       // exclusive end (the '\n' or text end)
+    u32 in_b;     // in-side byte count within [lo,hi)
+    u32 rm_b;     // rm-side byte count
+    u32 eq_b;     // eq-side byte count
+    u8  bnd_side; // side of the byte at `hi` (TOK_SIDE_EQ/IN/RM)
+} bro_lineinfo;
+
+#define BRO_LINEINFO_CAP   8192  // generous; hunks are typically tiny
+#define BRO_LINEINFO_CELLS \
+    ((BRO_LINEINFO_CAP * sizeof(bro_lineinfo) + sizeof(u32) - 1) / sizeof(u32))
+
+// Per-render-row sink: receives (row-start offset, terminating-'\n' offset or
+// text end, pass).  bro feeds rows into its line index; HUNKu8sFeedColor
+// renders each row's bytes directly.
+typedef u32 (*bro_emit_fn)(void *ctx, u32 lo, u32 end_nl, u8 pass);
+
+// Resolve one cell's ansi64 from its tag + render pass + diff side (+ search
+// reverse).  fg = THEMEAt(tag); bg OR'd per (pass,side): I/O ins/del line wash,
+// J/K ins/del changed-word wash.
+ansi64 bro_cell_ansi(u8 fg_tag, u8 pass, u8 side, b8 in_search);
+
+// End byte of one display row in `pass`: at most `cols` VISIBLE codepoints,
+// stop at a visible '\n'; bytes hidden in this pass (the other side, 'U')
+// advance but don't count.
+u32 bro_row_end_pass(hunk const *hk, u32 tlen, u32 off, u32 cols, u8 pass);
+
+// Classify the hunk text into per-segment `out[]` (≤ cap entries); returns the
+// segment count.  Backed by BRO_LINEINFO_CAP-sized BASS scratch by the caller.
+u32 bro_classify_lines(hunk const *hk, bro_lineinfo *out, u32 cap);
+
+// Drive the two-pass row emission: eq context lines (normal pass), then each
+// modified block's rm-pass rows followed by its in-pass rows.  `*total` sums
+// the emit() return values (bro counts rows; HUNKu8sFeedColor ignores it).
+ok64 bro_walk_hunk(hunk const *hk, bro_emit_fn emit, void *ctx, u32 *total);
 
 // Clip file-level toks to [lo,hi), arena-write rebased entries.
 // Output slice points into `arena` after this returns.
