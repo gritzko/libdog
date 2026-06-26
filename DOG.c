@@ -480,6 +480,20 @@ b8 DOGIsFullSha(u8cs s) {
     return HEXu8sValid(s) ? YES : NO;
 }
 
+//  DIS-008: `#~N` relative-ancestor fragment.  `~` alone is N=1; a
+//  decimal tail (`~3`) is that N.  u64decdrain stops at the first
+//  non-digit, so re-check the tail is empty to reject `~1x` / `~`.
+b8 DOGFragRewind(u8cs frag, u32 *n_out) {
+    a_dup(u8c, f, frag);
+    if ($empty(f) || *f[0] != '~') return NO;
+    u8csUsed1(f);
+    if ($empty(f)) { if (n_out) *n_out = 1; return YES; }
+    u64 n = 0;
+    if (u64decdrain(&n, f) != OK || !$empty(f) || n == 0) return NO;
+    if (n_out) *n_out = (u32)n;
+    return YES;
+}
+
 b8 DOGRefIsBranch(u8cs ref) {
     size_t n = u8csLen(ref);
     if (n == 0) return YES;  // trunk

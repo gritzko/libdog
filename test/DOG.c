@@ -497,6 +497,37 @@ static ok64 DOGTestIsHashlet(void) {
     done;
 }
 
+// --- DOGFragRewind (`#~N` relative-ancestor fragment, DIS-008) ------
+
+static ok64 DOGTestFragRewind(void) {
+    sane(1);
+    struct { char const *in; b8 want; u32 n; } cases[] = {
+        {"~",    YES, 1},   // bare tilde → N=1
+        {"~1",   YES, 1},
+        {"~2",   YES, 2},
+        {"~10",  YES, 10},
+        {"~0",   NO,  0},   // zero is not a rewind
+        {"~1x",  NO,  0},   // trailing junk
+        {"~ ",   NO,  0},   // trailing space
+        {"1",    NO,  0},   // no tilde
+        {"abc",  NO,  0},   // a sha/branch, not a rewind
+        {"",     NO,  0},   // empty fragment
+        {"~~",   NO,  0},   // double tilde
+    };
+    for (size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
+        a_cstr(src, cases[i].in);
+        a_dup(u8c, in, src);
+        u32 n = 0;
+        b8 got = DOGFragRewind(in, &n);
+        if (got != cases[i].want || (got && n != cases[i].n)) {
+            fprintf(stderr, "FragRewind '%s': want (%d,%u) got (%d,%u)\n",
+                    cases[i].in, cases[i].want, cases[i].n, got, n);
+            fail(FAIL);
+        }
+    }
+    done;
+}
+
 // --- DOGCanonQueryParse ---------------------------------------------
 //
 //  The canonical resolved query splits into (project, branch, pin).  The
@@ -1196,6 +1227,7 @@ ok64 DOGtest() {
     call(DOGTestFeedDate);
     call(DOGTestIsFullSha);
     call(DOGTestIsHashlet);
+    call(DOGTestFragRewind);
     call(DOGTestCanonQueryParse);
     call(DOGTestGitTransport);
     call(DOGTestProjector);

@@ -411,6 +411,11 @@ b8   DOGIsHashlet(u8cs s);
 // or branch name; when sha256 objects land, this one predicate widens.
 b8   DOGIsFullSha(u8cs s);
 
+// GET `#~N` relative-ancestor fragment (DIS-008; [GET], [URI]).  YES iff
+// `frag` is `~` optionally followed by a decimal N.  On a hit `*n_out`
+// gets N (default 1 for a bare `~`); a trailing non-digit makes it NO.
+b8   DOGFragRewind(u8cs frag, u32 *n_out);
+
 // Consume one `&`-separated chunk from a multi-ref query body
 // (`A&B&C` shape — `graf get` blob/tree merges, `sniff` baseline
 // rows that store `<branch>&<sha>`).  Advances `q[0]` past the
