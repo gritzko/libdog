@@ -58,7 +58,28 @@ ok64 PIDXFeedEmit(Bwh128 out, u8 type, u8csc content, u64 offset) {
     return pidx_push(out, &e);
 }
 
-ok64 PIDXScan(u8cs pack, Bwh128 out, u8s base, u8s delta) {
+//  PACK-001: resolve the record at *off, git-sha it, emit its entry, advance.
+static ok64 pidx_emit_at(u8cs pack, u64 *off, Bwh128 out, u8s base, u8s delta) {
+    sane(off && out && u8csOK(pack) && u8sOK(base) && u8sOK(delta));
+    //  Resolve to full bytes (chases the OFS chain bottom-up).  A REF_DELTA
+    //  surfaces as PACKREF — the loud OFS-only backstop (no sha-addressed base).
+    u8cs body = {};
+    u8 type = 0;
+    call(PACKResolveOfs, pack, *off, base, delta, body, &type);
+    sha1 sha = {};
+    a_dup(u8c, content, body);
+    PIDXObjSha(&sha, type, content);
+    wh128 e = PIDXEntry(type, &sha, *off);
+    call(pidx_push, out, &e);
+    //  Advance to the next record (header + the whole zlib stream).
+    u64 end = 0;
+    call(PACKRecordEnd, pack, *off, &end);
+    if (end <= *off) return PIDXFAIL;   //  no forward progress -> corrupt
+    *off = end;
+    done;
+}
+
+ok64 PIDXScan(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta) {
     sane(u8csOK(pack) && out && u8sOK(base) && u8sOK(delta));
 
     pack_hdr hdr = {};
@@ -66,27 +87,16 @@ ok64 PIDXScan(u8cs pack, Bwh128 out, u8s base, u8s delta) {
     call(PACKDrainHdr, hp, &hdr);   //  validates magic, reads object count
 
     u64 packlen = (u64)u8csLen(pack);
-    u64 off = 12;   //  first record starts just past the 12-byte header
-    for (u32 i = 0; i < hdr.count; i++) {
-        if (off >= packlen) return PIDXFAIL;
-        //  Resolve to full bytes (chases the OFS chain bottom-up).  A
-        //  REF_DELTA surfaces as PACKREF here — propagate as the loud
-        //  OFS-only backstop (no sha-addressed bases in a native log).
-        u8cs body = {};
-        u8 type = 0;
-        call(PACKResolveOfs, pack, off, base, delta, body, &type);
-
-        sha1 sha = {};
-        a_dup(u8c, content, body);
-        PIDXObjSha(&sha, type, content);
-        wh128 e = PIDXEntry(type, &sha, off);
-        call(pidx_push, out, &e);
-
-        //  Advance to the next record (header + the whole zlib stream).
-        u64 end = 0;
-        call(PACKRecordEnd, pack, off, &end);
-        if (end <= off) return PIDXFAIL;   //  no forward progress -> corrupt
-        off = end;
+    if (from_off) {
+        //  PACK-001: tail scan from a known boundary to EOF (hdr.count is total).
+        u64 off = from_off;
+        while (off < packlen) call(pidx_emit_at, pack, &off, out, base, delta);
+    } else {
+        u64 off = 12;   //  whole-pack: bounded by the header's object count
+        for (u32 i = 0; i < hdr.count; i++) {
+            if (off >= packlen) return PIDXFAIL;
+            call(pidx_emit_at, pack, &off, out, base, delta);
+        }
     }
     done;
 }

@@ -120,7 +120,7 @@ static ok64 scan_emit() {
     a_carve(u8, db, SCRATCH);
     u8s bsc = {u8bHead(bb), u8bTerm(bb)};
     u8s dsc = {u8bHead(db), u8bTerm(db)};
-    if (PIDXScan(lb, out, bsc, dsc) != OK) { wh128bFree(out); fail(TESTFAIL); }
+    if (PIDXScan(lb, 0, out, bsc, dsc) != OK) { wh128bFree(out); fail(TESTFAIL); }
 
     a_dup(wh128, entries, wh128bData(out));   //  slice over emitted entries
     size_t n = (size_t)wh128sLen(entries);
@@ -187,7 +187,7 @@ static ok64 feed_eq_scan() {
     a_carve(u8, bb, SCRATCH); a_carve(u8, db, SCRATCH);
     u8s bsc = {u8bHead(bb), u8bTerm(bb)};
     u8s dsc = {u8bHead(db), u8bTerm(db)};
-    if (PIDXScan(lb, scan, bsc, dsc) != OK) { wh128bFree(scan); fail(TESTFAIL); }
+    if (PIDXScan(lb, 0, scan, bsc, dsc) != OK) { wh128bFree(scan); fail(TESTFAIL); }
 
     //  Index-on-append: feed each object's full content + its offset.  Both
     //  objects resolve to v0 / v1, so feed-emit gets the same (sha, off).
@@ -213,6 +213,73 @@ static ok64 feed_eq_scan() {
     done;
 }
 
+//  PACK-001 (4) tail scan: PIDXScan from a mid-pack byte offset emits ONLY
+//  objects at offset >= from_off, yet still resolves a tail OFS_DELTA whose
+//  base precedes from_off (the whole `pack` slice is passed to the resolver).
+static ok64 tail_scan() {
+    sane(1);
+    a_cstr(v0, "tail scan base: the quick brown fox take zero base!");
+    a_cstr(v1, "tail scan mid : the quick brown fox take one is here");
+    a_cstr(v2, "tail scan tail: the quick brown fox take two, delta!!");
+
+    a_carve(u8, logb_c, SCRATCH); zerob(logb_c);
+    u8bp log = (u8bp)logb_c; u8bReset(log);
+    a_carve(u8, ds, SCRATCH); u8bp dscratch = (u8bp)ds;
+
+    u8s into = {u8bIdleHead(log), u8bTerm(log)};
+    call(PACKu8sFeedHdr, into, 3); u8bFed(log, 12);
+
+    //  o0 raw (base, precedes from_off); o1 raw (start of tail); o2 OFS_DELTA
+    //  against o0 (base earlier than from_off) -> must still resolve.
+    u64 o0 = 0, o1 = 0, o2 = 0;
+    call(feed_raw, log, PACK_OBJ_BLOB, v0, &o0);
+    call(feed_raw, log, PACK_OBJ_BLOB, v1, &o1);
+    call(feed_ofs, log, v0, v2, o0, dscratch, &o2);  //  base o0 < from_off
+    u8cs lb = {u8bDataHead(log), u8bIdleHead(log)};
+
+    u64 from_off = o1;   //  tail scan starts at the mid object
+
+    Bwh128 out = {};
+    call(wh128bAllocate, out, 8);
+    a_carve(u8, bb, SCRATCH); a_carve(u8, db, SCRATCH);
+    u8s bsc = {u8bHead(bb), u8bTerm(bb)};
+    u8s dsc = {u8bHead(db), u8bTerm(db)};
+    if (PIDXScan(lb, from_off, out, bsc, dsc) != OK) { wh128bFree(out); fail(TESTFAIL); }
+
+    a_dup(wh128, entries, wh128bData(out));
+    size_t n = (size_t)wh128sLen(entries);
+    if (n != 2) {   //  only o1, o2 (>= from_off); o0 excluded
+        fprintf(stderr, "tail: %zu entries, want 2\n", n);
+        wh128bFree(out); fail(TESTFAIL);
+    }
+
+    u64 want_off[2] = {o1, o2};
+    u8  want_type[2] = {PACK_OBJ_BLOB, PACK_OBJ_BLOB};
+    for (size_t i = 0; i < 2; i++) {
+        wh128 e = entries[0][i];
+        if (wh64Off(e.val) != want_off[i] && e.val != want_off[i]) {
+            fprintf(stderr, "tail entry %zu: val=%llu want off %llu\n", i,
+                    (unsigned long long)e.val, (unsigned long long)want_off[i]);
+            wh128bFree(out); fail(TESTFAIL);
+        }
+        if (want_off[i] < from_off) { wh128bFree(out); fail(TESTFAIL); }
+        //  Resolve (o2's base o0 precedes from_off), re-sha, hashlet must match.
+        a_carve(u8, rb, SCRATCH);
+        u8bp rbuf = (u8bp)rb; u8bReset(rbuf);
+        u8 rtype = 0;
+        if (resolve_into(lb, e.val, rbuf, &rtype) != OK) { wh128bFree(out); fail(TESTFAIL); }
+        if (rtype != want_type[i]) { wh128bFree(out); fail(TESTFAIL); }
+        sha1 sha = {};
+        PIDXObjSha(&sha, rtype, u8bDataC(rbuf));
+        if (WHIFFKeyHashlet(e.key) != WHIFFHashlet60(&sha)) {
+            fprintf(stderr, "tail entry %zu: hashlet mismatch\n", i);
+            wh128bFree(out); fail(TESTFAIL);
+        }
+    }
+    wh128bFree(out);
+    done;
+}
+
 //  (3) REF backstop: a REF_DELTA record makes the scan fail loudly.
 static ok64 ref_backstop() {
     sane(1);
@@ -231,7 +298,7 @@ static ok64 ref_backstop() {
     a_carve(u8, bb, SCRATCH); a_carve(u8, db, SCRATCH);
     u8s bsc = {u8bHead(bb), u8bTerm(bb)};
     u8s dsc = {u8bHead(db), u8bTerm(db)};
-    ok64 got = PIDXScan(lb, out, bsc, dsc);
+    ok64 got = PIDXScan(lb, 0, out, bsc, dsc);
     wh128bFree(out);
     if (got == OK) {
         fprintf(stderr, "ref backstop: scan returned OK, want fail\n");
@@ -246,6 +313,8 @@ ok64 maintest() {
     call(scan_emit);
     fprintf(stderr, "feed_eq_scan...\n");
     call(feed_eq_scan);
+    fprintf(stderr, "tail_scan...\n");
+    call(tail_scan);
     fprintf(stderr, "ref_backstop...\n");
     call(ref_backstop);
     fprintf(stderr, "all passed\n");

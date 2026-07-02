@@ -49,7 +49,11 @@ wh128 PIDXEntry(u8 type, sha1cp sha, u64 offset);
 //  may pre-Reserve to the object count).  REF_DELTA records make the scan
 //  return PIDXFAIL (an OFS-only log carries no sha-addressed bases — the
 //  same loud backstop as PACKResolveOfs).  No malloc, no refs, no index.
-ok64 PIDXScan(u8cs pack, Bwh128 out, u8s base, u8s delta);
+//  PACK-001: `from_off` = in-pack byte offset to START emitting at (an object
+//  boundary, e.g. a bookmark's pack_offset+byte_len); 0 = whole pack from the
+//  12-byte header. A tail scan (from_off>0) runs to slice end; an OFS base
+//  earlier in the pack still resolves (the whole `pack` slice is passed).
+ok64 PIDXScan(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta);
 
 //  INDEX-ON-APPEND: emit the entry for the object the caller JUST fed,
 //  hashing the full content it already holds (no resolve — cheap).
