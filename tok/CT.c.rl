@@ -3,7 +3,7 @@
 #include "CT.h"
 
 // user functions (callbacks) for the parser
-ok64 CTonComment (u8cs tok, CTstate* state);
+ok64 CTonComment (u8cs tok, u32 olen, u32 clen, CTstate* state);
 ok64 CTonString (u8cs tok, CTstate* state);
 ok64 CTonNumber (u8cs tok, CTstate* state);
 ok64 CTonPreproc (u8cs tok, CTstate* state);
@@ -35,10 +35,17 @@ esc = [\\] ( [abefnrtv\\'\"?0]
 # string prefix: L u U u8
 strpfx = [LuU] | "u8";
 
-action on_comment {
+# DOG-006: "//" (2,0) and "/* */" (2,2); delimiters emit 'D', body StrictMark.
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CTonComment(tok, state);
+    o = CTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = CTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -95,8 +102,8 @@ fsuf = [fFlLdD]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- string literals (with optional prefix) ----
     strpfx? ["] ( esc | any8 - ["\\] )* ["]                      => on_string;

@@ -1,10 +1,10 @@
 
-/* #line 1 "KTT.c.rl" */
+/* #line 1 "dog/tok/KTT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "KTT.h"
 
-ok64 KTTonComment (u8cs tok, KTTstate* state);
+ok64 KTTonComment (u8cs tok, u32 olen, u32 clen, KTTstate* state);
 ok64 KTTonString (u8cs tok, KTTstate* state);
 ok64 KTTonNumber (u8cs tok, KTTstate* state);
 ok64 KTTonAnnotation (u8cs tok, KTTstate* state);
@@ -13,11 +13,11 @@ ok64 KTTonPunct (u8cs tok, KTTstate* state);
 ok64 KTTonSpace (u8cs tok, KTTstate* state);
 
 
-/* #line 130 "KTT.c.rl" */
+/* #line 137 "dog/tok/KTT.c.rl" */
 
 
 
-/* #line 16 "KTT.rl.c" */
+/* #line 16 "dog/tok/KTT.rl.c" */
 static const char _KTT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	9, 1, 10, 1, 11, 1, 12, 1, 
@@ -224,7 +224,7 @@ static const int KTT_error = 0;
 static const int KTT_en_main = 31;
 
 
-/* #line 133 "KTT.c.rl" */
+/* #line 140 "dog/tok/KTT.c.rl" */
 
 ok64 KTTLexer(KTTstate* state) {
 
@@ -243,7 +243,7 @@ ok64 KTTLexer(KTTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 238 "KTT.rl.c" */
+/* #line 238 "dog/tok/KTT.rl.c" */
 	{
 	cs = KTT_start;
 	ts = 0;
@@ -251,9 +251,9 @@ ok64 KTTLexer(KTTstate* state) {
 	act = 0;
 	}
 
-/* #line 151 "KTT.c.rl" */
+/* #line 158 "dog/tok/KTT.c.rl" */
     
-/* #line 244 "KTT.rl.c" */
+/* #line 244 "dog/tok/KTT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -274,7 +274,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 263 "KTT.rl.c" */
+/* #line 263 "dog/tok/KTT.rl.c" */
 		}
 	}
 
@@ -345,40 +345,40 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{act = 7;}
 	break;
 	case 5:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{act = 10;}
 	break;
 	case 6:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{act = 11;}
 	break;
 	case 7:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{act = 14;}
 	break;
 	case 8:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{act = 15;}
 	break;
 	case 9:
-/* #line 31 "KTT.c.rl" */
+/* #line 38 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = KTTonComment(tok, state);
+    o = KTTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 37 "KTT.c.rl" */
+/* #line 44 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -387,7 +387,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 37 "KTT.c.rl" */
+/* #line 44 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -396,7 +396,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 37 "KTT.c.rl" */
+/* #line 44 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -405,7 +405,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -414,7 +414,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -423,7 +423,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -432,7 +432,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -441,7 +441,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -450,7 +450,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -459,7 +459,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -468,7 +468,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -477,16 +477,16 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 31 "KTT.c.rl" */
+/* #line 32 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = KTTonComment(tok, state);
+    o = KTTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 22:
-/* #line 37 "KTT.c.rl" */
+/* #line 44 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -495,7 +495,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -504,7 +504,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -513,7 +513,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -522,7 +522,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -531,7 +531,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -540,7 +540,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -549,7 +549,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 49 "KTT.c.rl" */
+/* #line 56 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -558,7 +558,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 55 "KTT.c.rl" */
+/* #line 62 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -567,7 +567,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -576,7 +576,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -585,7 +585,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 67 "KTT.c.rl" */
+/* #line 74 "dog/tok/KTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -594,7 +594,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 37 "KTT.c.rl" */
+/* #line 44 "dog/tok/KTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -603,7 +603,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -612,7 +612,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -621,7 +621,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 43 "KTT.c.rl" */
+/* #line 50 "dog/tok/KTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -630,7 +630,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 61 "KTT.c.rl" */
+/* #line 68 "dog/tok/KTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -692,7 +692,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 642 "KTT.rl.c" */
+/* #line 642 "dog/tok/KTT.rl.c" */
 		}
 	}
 
@@ -705,7 +705,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 653 "KTT.rl.c" */
+/* #line 653 "dog/tok/KTT.rl.c" */
 		}
 	}
 
@@ -725,7 +725,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 152 "KTT.c.rl" */
+/* #line 159 "dog/tok/KTT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < KTT_first_final)

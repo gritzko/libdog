@@ -1,10 +1,10 @@
 
-/* #line 1 "AGDT.c.rl" */
+/* #line 1 "dog/tok/AGDT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "AGDT.h"
 
-ok64 AGDTonComment (u8cs tok, AGDTstate* state);
+ok64 AGDTonComment (u8cs tok, u32 olen, u32 clen, AGDTstate* state);
 ok64 AGDTonString (u8cs tok, AGDTstate* state);
 ok64 AGDTonNumber (u8cs tok, AGDTstate* state);
 ok64 AGDTonPragma (u8cs tok, AGDTstate* state);
@@ -13,11 +13,11 @@ ok64 AGDTonPunct (u8cs tok, AGDTstate* state);
 ok64 AGDTonSpace (u8cs tok, AGDTstate* state);
 
 
-/* #line 111 "AGDT.c.rl" */
+/* #line 118 "dog/tok/AGDT.c.rl" */
 
 
 
-/* #line 16 "AGDT.rl.c" */
+/* #line 16 "dog/tok/AGDT.rl.c" */
 static const char _AGDT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 4, 1, 5, 1, 6, 1, 
@@ -168,7 +168,7 @@ static const int AGDT_error = 0;
 static const int AGDT_en_main = 28;
 
 
-/* #line 114 "AGDT.c.rl" */
+/* #line 121 "dog/tok/AGDT.c.rl" */
 
 ok64 AGDTLexer(AGDTstate* state) {
 
@@ -187,7 +187,7 @@ ok64 AGDTLexer(AGDTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 182 "AGDT.rl.c" */
+/* #line 182 "dog/tok/AGDT.rl.c" */
 	{
 	cs = AGDT_start;
 	ts = 0;
@@ -195,9 +195,9 @@ ok64 AGDTLexer(AGDTstate* state) {
 	act = 0;
 	}
 
-/* #line 132 "AGDT.c.rl" */
+/* #line 139 "dog/tok/AGDT.c.rl" */
     
-/* #line 188 "AGDT.rl.c" */
+/* #line 188 "dog/tok/AGDT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -218,7 +218,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 207 "AGDT.rl.c" */
+/* #line 207 "dog/tok/AGDT.rl.c" */
 		}
 	}
 
@@ -289,7 +289,7 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 51 "AGDT.c.rl" */
+/* #line 58 "dog/tok/AGDT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -298,16 +298,16 @@ _eof_trans:
 }}
 	break;
 	case 4:
-/* #line 33 "AGDT.c.rl" */
+/* #line 34 "dog/tok/AGDT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = AGDTonComment(tok, state);
+    o = AGDTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 5:
-/* #line 39 "AGDT.c.rl" */
+/* #line 46 "dog/tok/AGDT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -316,7 +316,7 @@ _eof_trans:
 }}
 	break;
 	case 6:
-/* #line 39 "AGDT.c.rl" */
+/* #line 46 "dog/tok/AGDT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -325,7 +325,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 63 "AGDT.c.rl" */
+/* #line 70 "dog/tok/AGDT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -334,7 +334,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 63 "AGDT.c.rl" */
+/* #line 70 "dog/tok/AGDT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -343,25 +343,25 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 33 "AGDT.c.rl" */
+/* #line 34 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = AGDTonComment(tok, state);
+    o = AGDTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 33 "AGDT.c.rl" */
+/* #line 40 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = AGDTonComment(tok, state);
+    o = AGDTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 11:
-/* #line 45 "AGDT.c.rl" */
+/* #line 52 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -370,7 +370,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 45 "AGDT.c.rl" */
+/* #line 52 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -379,7 +379,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 45 "AGDT.c.rl" */
+/* #line 52 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -388,7 +388,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 45 "AGDT.c.rl" */
+/* #line 52 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -397,7 +397,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 57 "AGDT.c.rl" */
+/* #line 64 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -406,7 +406,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 63 "AGDT.c.rl" */
+/* #line 70 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -415,7 +415,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 69 "AGDT.c.rl" */
+/* #line 76 "dog/tok/AGDT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -424,16 +424,16 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 33 "AGDT.c.rl" */
+/* #line 34 "dog/tok/AGDT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = AGDTonComment(tok, state);
+    o = AGDTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 19:
-/* #line 45 "AGDT.c.rl" */
+/* #line 52 "dog/tok/AGDT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -442,7 +442,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 45 "AGDT.c.rl" */
+/* #line 52 "dog/tok/AGDT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -451,7 +451,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 63 "AGDT.c.rl" */
+/* #line 70 "dog/tok/AGDT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -459,7 +459,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-/* #line 427 "AGDT.rl.c" */
+/* #line 427 "dog/tok/AGDT.rl.c" */
 		}
 	}
 
@@ -472,7 +472,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 438 "AGDT.rl.c" */
+/* #line 438 "dog/tok/AGDT.rl.c" */
 		}
 	}
 
@@ -492,7 +492,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 133 "AGDT.c.rl" */
+/* #line 140 "dog/tok/AGDT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < AGDT_first_final)

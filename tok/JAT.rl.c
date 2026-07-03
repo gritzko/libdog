@@ -1,10 +1,10 @@
 
-/* #line 1 "JAT.c.rl" */
+/* #line 1 "dog/tok/JAT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "JAT.h"
 
-ok64 JATonComment (u8cs tok, JATstate* state);
+ok64 JATonComment (u8cs tok, u32 olen, u32 clen, JATstate* state);
 ok64 JATonString (u8cs tok, JATstate* state);
 ok64 JATonNumber (u8cs tok, JATstate* state);
 ok64 JATonAnnotation (u8cs tok, JATstate* state);
@@ -13,11 +13,11 @@ ok64 JATonPunct (u8cs tok, JATstate* state);
 ok64 JATonSpace (u8cs tok, JATstate* state);
 
 
-/* #line 134 "JAT.c.rl" */
+/* #line 141 "dog/tok/JAT.c.rl" */
 
 
 
-/* #line 16 "JAT.rl.c" */
+/* #line 16 "dog/tok/JAT.rl.c" */
 static const char _JAT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	9, 1, 10, 1, 11, 1, 12, 1, 
@@ -241,7 +241,7 @@ static const int JAT_error = 0;
 static const int JAT_en_main = 35;
 
 
-/* #line 137 "JAT.c.rl" */
+/* #line 144 "dog/tok/JAT.c.rl" */
 
 ok64 JATLexer(JATstate* state) {
 
@@ -260,7 +260,7 @@ ok64 JATLexer(JATstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 255 "JAT.rl.c" */
+/* #line 255 "dog/tok/JAT.rl.c" */
 	{
 	cs = JAT_start;
 	ts = 0;
@@ -268,9 +268,9 @@ ok64 JATLexer(JATstate* state) {
 	act = 0;
 	}
 
-/* #line 155 "JAT.c.rl" */
+/* #line 162 "dog/tok/JAT.c.rl" */
     
-/* #line 261 "JAT.rl.c" */
+/* #line 261 "dog/tok/JAT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -291,7 +291,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 280 "JAT.rl.c" */
+/* #line 280 "dog/tok/JAT.rl.c" */
 		}
 	}
 
@@ -362,40 +362,40 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{act = 8;}
 	break;
 	case 5:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{act = 11;}
 	break;
 	case 6:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{act = 12;}
 	break;
 	case 7:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{act = 15;}
 	break;
 	case 8:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{act = 16;}
 	break;
 	case 9:
-/* #line 32 "JAT.c.rl" */
+/* #line 39 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JATonComment(tok, state);
+    o = JATonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 38 "JAT.c.rl" */
+/* #line 45 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -404,7 +404,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 38 "JAT.c.rl" */
+/* #line 45 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -413,7 +413,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 38 "JAT.c.rl" */
+/* #line 45 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -422,7 +422,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -431,7 +431,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -440,7 +440,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -449,7 +449,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -458,7 +458,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -467,7 +467,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -476,7 +476,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -485,7 +485,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -494,7 +494,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -503,16 +503,16 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 32 "JAT.c.rl" */
+/* #line 33 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JATonComment(tok, state);
+    o = JATonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 23:
-/* #line 38 "JAT.c.rl" */
+/* #line 45 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -521,7 +521,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -530,7 +530,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -539,7 +539,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -548,7 +548,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -557,7 +557,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -566,7 +566,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -575,7 +575,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 50 "JAT.c.rl" */
+/* #line 57 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -584,7 +584,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 56 "JAT.c.rl" */
+/* #line 63 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -593,7 +593,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -602,7 +602,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -611,7 +611,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -620,7 +620,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 68 "JAT.c.rl" */
+/* #line 75 "dog/tok/JAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -629,7 +629,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 38 "JAT.c.rl" */
+/* #line 45 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -638,7 +638,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -647,7 +647,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -656,7 +656,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -665,7 +665,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 44 "JAT.c.rl" */
+/* #line 51 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -674,7 +674,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -683,7 +683,7 @@ _eof_trans:
 }}
 	break;
 	case 42:
-/* #line 62 "JAT.c.rl" */
+/* #line 69 "dog/tok/JAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -745,7 +745,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 691 "JAT.rl.c" */
+/* #line 691 "dog/tok/JAT.rl.c" */
 		}
 	}
 
@@ -758,7 +758,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 702 "JAT.rl.c" */
+/* #line 702 "dog/tok/JAT.rl.c" */
 		}
 	}
 
@@ -778,7 +778,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 156 "JAT.c.rl" */
+/* #line 163 "dog/tok/JAT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < JAT_first_final)

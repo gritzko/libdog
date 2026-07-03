@@ -130,8 +130,8 @@ ok64 CTBasicTest() {
         {"int x;", "RWSP"},
         {"if (x)", "RWPSP"},
         {"return 0;", "RWLP"},
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"'c'", "G"},
         {"42", "L"},
@@ -163,7 +163,7 @@ ok64 CTBasicTest() {
         {"'\\xff'", "G"},
         {"\"esc\\t\\n\"", "G"},
         {"#define FOO \\\nbar", "HWSWPWS"},
-        {"// end", "DDDD"},
+        {"// end", "DDD"},
         {"a->b", "SPS"},
         {"a++", "SP"},
         {"x <<= 1", "SWPWL"},
@@ -249,8 +249,8 @@ ok64 GOTBasicTest() {
     TOK01Case cases[] = {
         {"func main() {", "RWSPPWP"},
         {"var x int", "RWSWS"},
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"0xFF", "L"},
@@ -299,8 +299,8 @@ ok64 JSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
         {"function foo() {", "RWSPPWP"},
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"'hello'", "G"},
         {"42", "L"},
@@ -364,8 +364,8 @@ ok64 RSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
         {"fn main() {", "RWSPPWP"},
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"0xFF", "L"},
@@ -387,8 +387,8 @@ ok64 JATBasicTest() {
     sane(1);
     TOK01Case cases[] = {
         {"public class Foo {", "RWRWSWP"},
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"'c'", "G"},
         {"42", "L"},
@@ -416,6 +416,10 @@ ok64 CPPTRawStringTest() {
         {"x = R\"(y)\";", "SWPWGP"},
         {"\"plain\"", "G"},
         {"'c'", "G"},
+        //  DOG-006: comment delimiter is one 'D'; body is StrictMark-parsed.
+        {"// plain\n", "DDDW"},       // "//" | " " plain | newline
+        {"// *hi*\n", "DDGW"},        // strong span inside a line comment
+        {"/* `c` */", "DDHDD"},       // block: "/*" | " " `c` " " | "*/"
     };
     int ncases = sizeof(cases) / sizeof(cases[0]);
     RUN_CASES(CPPTLexer, CPPT, cases, ncases);
@@ -468,7 +472,7 @@ ok64 SHTBasicTest() {
 ok64 HSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"-- comment\n", "DDDDW"},
+        {"-- comment\n", "DDDW"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"3.14", "L"},
@@ -485,7 +489,7 @@ ok64 HSTBasicTest() {
 ok64 MLTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"(* comment *)", "DDDDDDD"},
+        {"(* comment *)", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"3.14", "L"},
@@ -515,8 +519,8 @@ ok64 JLTBasicTest() {
 ok64 TSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"'hello'", "G"},
         {"42", "L"},
@@ -533,8 +537,8 @@ ok64 TSTBasicTest() {
 ok64 KTTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"fun val var", "RWRWR"},
@@ -548,8 +552,8 @@ ok64 KTTBasicTest() {
 ok64 SCLTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"def val var", "RWRWR"},
@@ -563,8 +567,8 @@ ok64 SCLTBasicTest() {
 ok64 SWFTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"func let var", "RWRWR"},
@@ -578,8 +582,8 @@ ok64 SWFTBasicTest() {
 ok64 DARTTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"'hello'", "G"},
         {"42", "L"},
@@ -594,7 +598,7 @@ ok64 DARTTBasicTest() {
 ok64 ZIGTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
+        {"// comment\n", "DDDW"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"const fn pub", "RWRWR"},
@@ -608,8 +612,8 @@ ok64 ZIGTBasicTest() {
 ok64 DTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"class void", "RWR"},
@@ -623,7 +627,7 @@ ok64 DTBasicTest() {
 ok64 LUATBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"-- comment\n", "DDDDW"},
+        {"-- comment\n", "DDDW"},
         {"\"hello\"", "G"},
         {"'hello'", "G"},
         {"42", "L"},
@@ -845,7 +849,7 @@ ok64 CFGDrainTest() {
 ok64 SQLTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"-- comment\n", "DDDDW"},
+        {"-- comment\n", "DDDW"},
         {"'hello'", "G"},
         {"42", "L"},
         {"SELECT FROM WHERE", "RWRWR"},
@@ -871,8 +875,8 @@ ok64 GQLTBasicTest() {
 ok64 PRTTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"message enum", "RWR"},
@@ -886,8 +890,8 @@ ok64 HCLTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
         {"# comment\n", "DDDW"},
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"{}", "PP"},
@@ -901,8 +905,8 @@ ok64 HCLTBasicTest() {
 ok64 SCSSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"'hello'", "G"},
         {"42", "L"},
@@ -916,7 +920,7 @@ ok64 SCSSTBasicTest() {
 ok64 CSSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"/* block */", "DDDDDDD"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"#fff", "L"},
@@ -974,8 +978,8 @@ ok64 FORTBasicTest() {
 ok64 GLSTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"42", "L"},
         {"3.14", "L"},
         {"{}", "PP"},
@@ -988,8 +992,8 @@ ok64 GLSTBasicTest() {
 ok64 SOLTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"// comment\n", "DDDDW"},
-        {"/* block */", "DDDDDDD"},
+        {"// comment\n", "DDDW"},
+        {"/* block */", "DDDDD"},
         {"\"hello\"", "G"},
         {"42", "L"},
         {"contract function", "RWR"},
@@ -1160,6 +1164,62 @@ ok64 FREEOverlayTest() {
     want(ctx.tags[2] == 'F');   // ABC-123 (sticky)
     want(ctx.tags[3] == 'D');   // ' '
     want(ctx.tags[4] == 'D');   // now
+    done;
+}
+
+//  DOG-006: FREE now lexes StrictMark inline spans; markup ('G' emphasis/link,
+//  'H' code) and issue keys ('F') stay sticky through the 'D' comment overlay.
+ok64 FREEInlineMarkupTest() {
+    sane(1);
+    TOK01Case cases[] = {
+        {"a `b` c",      "DDHDD"},   // code span pops as H
+        {"see *bold* x", "DDGDD"},   // strong -> G
+        {"_em_",         "G"},
+        {"~~s~~",        "G"},
+        {"[Page]",       "G"},       // shortcut link
+        {"[t][1]",       "G"},       // reference link
+        {"ABC-123 `c`",  "FDH"},     // issue key + code both sticky
+        {"plain words",  "DDD"},     // no markup at all
+    };
+    int ncases = (int)(sizeof(cases) / sizeof(cases[0]));
+    for (int i = 0; i < ncases; ++i) {
+        TOK01ctx ctx = {};
+        u8cs sl = u8scstr(cases[i].input);
+        ok64 o = FREEu8sFeed('D', sl, TOK01cb, &ctx);
+        if (o != OK) { fprintf(stderr, "FAIL '%s' %s\n", cases[i].input, ok64str(o)); fail(TESTFAIL); }
+        int el = (int)strlen(cases[i].tags);
+        if (ctx.count != el) { fprintf(stderr, "FAIL '%s' count %d!=%d got ", cases[i].input, ctx.count, el);
+            for (int j = 0; j < ctx.count && j < 256; ++j) fputc(ctx.tags[j], stderr); fputc('\n', stderr); fail(TESTFAIL); }
+        for (int j = 0; j < el; ++j) if (ctx.tags[j] != (u8)cases[i].tags[j]) {
+            fprintf(stderr, "FAIL '%s' tag[%d]='%c'!='%c'\n", cases[i].input, j, ctx.tags[j], cases[i].tags[j]); fail(TESTFAIL); }
+    }
+    done;
+}
+
+//  DOG-006: comment-delimiter split — delimiters emit as plain 'D' and never
+//  reach the parser, so "/* */" cannot false-open a strong span.
+ok64 FREECommentSplitTest() {
+    sane(1);
+    struct { const char *input; u32 olen, clen; const char *tags; } cases[] = {
+        {"// *b*",     2, 0, "DDG"},     // line "//" | " " | *b*
+        {"/* *b* */",  2, 2, "DDGDD"},   // block "/*" | " " *b* " " | "*/"
+        {"# hello",    1, 0, "DDD"},     // "#" | " " | hello
+        {"<!-- x -->", 4, 3, "DDDDD"},   // "<!--" | " " x " " | "-->"
+        {"//",         2, 0, "D"},       // empty body
+        {"/",          2, 0, "D"},       // short token -> whole-token fallback
+    };
+    int ncases = (int)(sizeof(cases) / sizeof(cases[0]));
+    for (int i = 0; i < ncases; ++i) {
+        TOK01ctx ctx = {};
+        u8cs sl = u8scstr(cases[i].input);
+        ok64 o = FREECommentFeedN(sl, cases[i].olen, cases[i].clen, TOK01cb, &ctx);
+        if (o != OK) { fprintf(stderr, "FAIL '%s' %s\n", cases[i].input, ok64str(o)); fail(TESTFAIL); }
+        int el = (int)strlen(cases[i].tags);
+        if (ctx.count != el) { fprintf(stderr, "FAIL '%s' count %d!=%d got ", cases[i].input, ctx.count, el);
+            for (int j = 0; j < ctx.count && j < 256; ++j) fputc(ctx.tags[j], stderr); fputc('\n', stderr); fail(TESTFAIL); }
+        for (int j = 0; j < el; ++j) if (ctx.tags[j] != (u8)cases[i].tags[j]) {
+            fprintf(stderr, "FAIL '%s' tag[%d]='%c'!='%c'\n", cases[i].input, j, ctx.tags[j], cases[i].tags[j]); fail(TESTFAIL); }
+    }
     done;
 }
 
@@ -1356,6 +1416,8 @@ ok64 TOK01test() {
     call(LLTBasicTest);
     call(FREEBasicTest);
     call(FREEOverlayTest);
+    call(FREEInlineMarkupTest);
+    call(FREECommentSplitTest);
     call(MDTBasicTest);
     call(MDTIssueKeyTest);
     call(MDTEmphTest);

@@ -25,9 +25,9 @@ static b8 HSTIsKeyword(u8cs tok) {
     return NO;
 }
 
-ok64 HSTonComment(u8cs tok, HSTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 HSTonComment(u8cs tok, u32 olen, u32 clen, HSTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "GOT.h"
 
-ok64 GOTonComment (u8cs tok, GOTstate* state);
+ok64 GOTonComment (u8cs tok, u32 olen, u32 clen, GOTstate* state);
 ok64 GOTonString (u8cs tok, GOTstate* state);
 ok64 GOTonNumber (u8cs tok, GOTstate* state);
 ok64 GOTonWord (u8cs tok, GOTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\'\"0]
            | [u] xdgt{4}
            | [U] xdgt{8} );
 
-action on_comment {
+# DOG-006: "//" (2,0) and "/* */" (2,2); delimiters emit 'D', body StrictMark.
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = GOTonComment(tok, state);
+    o = GOTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = GOTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -78,8 +85,8 @@ isuf = [i]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- string literals ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

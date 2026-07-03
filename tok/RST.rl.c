@@ -1,10 +1,10 @@
 
-/* #line 1 "RST.c.rl" */
+/* #line 1 "dog/tok/RST.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "RST.h"
 
-ok64 RSTonComment (u8cs tok, RSTstate* state);
+ok64 RSTonComment (u8cs tok, u32 olen, u32 clen, RSTstate* state);
 ok64 RSTonString (u8cs tok, RSTstate* state);
 ok64 RSTonNumber (u8cs tok, RSTstate* state);
 ok64 RSTonAttr (u8cs tok, RSTstate* state);
@@ -13,11 +13,11 @@ ok64 RSTonPunct (u8cs tok, RSTstate* state);
 ok64 RSTonSpace (u8cs tok, RSTstate* state);
 
 
-/* #line 145 "RST.c.rl" */
+/* #line 158 "dog/tok/RST.c.rl" */
 
 
 
-/* #line 16 "RST.rl.c" */
+/* #line 16 "dog/tok/RST.rl.c" */
 static const char _RST_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	11, 1, 12, 1, 13, 1, 14, 1, 
@@ -394,7 +394,7 @@ static const int RST_error = -1;
 static const int RST_en_main = 111;
 
 
-/* #line 148 "RST.c.rl" */
+/* #line 161 "dog/tok/RST.c.rl" */
 
 ok64 RSTLexer(RSTstate* state) {
 
@@ -413,7 +413,7 @@ ok64 RSTLexer(RSTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 408 "RST.rl.c" */
+/* #line 408 "dog/tok/RST.rl.c" */
 	{
 	cs = RST_start;
 	ts = 0;
@@ -421,9 +421,9 @@ ok64 RSTLexer(RSTstate* state) {
 	act = 0;
 	}
 
-/* #line 166 "RST.c.rl" */
+/* #line 179 "dog/tok/RST.c.rl" */
     
-/* #line 414 "RST.rl.c" */
+/* #line 414 "dog/tok/RST.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -442,7 +442,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 431 "RST.rl.c" */
+/* #line 431 "dog/tok/RST.rl.c" */
 		}
 	}
 
@@ -513,48 +513,48 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{act = 13;}
 	break;
 	case 4:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{act = 14;}
 	break;
 	case 5:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{act = 15;}
 	break;
 	case 6:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{act = 17;}
 	break;
 	case 7:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{act = 18;}
 	break;
 	case 8:
-/* #line 56 "RST.c.rl" */
+/* #line 69 "dog/tok/RST.c.rl" */
 	{act = 20;}
 	break;
 	case 9:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{act = 21;}
 	break;
 	case 10:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{act = 22;}
 	break;
 	case 11:
-/* #line 32 "RST.c.rl" */
+/* #line 45 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = RSTonComment(tok, state);
+    o = RSTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 12:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -563,7 +563,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -572,7 +572,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -581,7 +581,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -590,7 +590,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -599,7 +599,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -608,7 +608,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 38 "RST.c.rl" */
+/* #line 51 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -617,7 +617,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -626,7 +626,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -635,7 +635,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -644,7 +644,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -653,7 +653,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -662,7 +662,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -671,7 +671,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -680,7 +680,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -689,34 +689,34 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 32 "RST.c.rl" */
+/* #line 33 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = RSTonComment(tok, state);
+    o = RSTonComment(tok, 3, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 28:
-/* #line 32 "RST.c.rl" */
+/* #line 33 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = RSTonComment(tok, state);
+    o = RSTonComment(tok, 3, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 29:
-/* #line 32 "RST.c.rl" */
+/* #line 39 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = RSTonComment(tok, state);
+    o = RSTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 30:
-/* #line 56 "RST.c.rl" */
+/* #line 69 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -725,7 +725,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -734,7 +734,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -743,7 +743,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -752,7 +752,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -761,7 +761,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -770,7 +770,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -779,7 +779,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 50 "RST.c.rl" */
+/* #line 63 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -788,7 +788,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 56 "RST.c.rl" */
+/* #line 69 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -797,7 +797,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -806,7 +806,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -815,7 +815,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 68 "RST.c.rl" */
+/* #line 81 "dog/tok/RST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -824,7 +824,7 @@ _eof_trans:
 }}
 	break;
 	case 42:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -833,7 +833,7 @@ _eof_trans:
 }}
 	break;
 	case 43:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -842,7 +842,7 @@ _eof_trans:
 }}
 	break;
 	case 44:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -851,7 +851,7 @@ _eof_trans:
 }}
 	break;
 	case 45:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -860,7 +860,7 @@ _eof_trans:
 }}
 	break;
 	case 46:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -869,7 +869,7 @@ _eof_trans:
 }}
 	break;
 	case 47:
-/* #line 44 "RST.c.rl" */
+/* #line 57 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -878,7 +878,7 @@ _eof_trans:
 }}
 	break;
 	case 48:
-/* #line 56 "RST.c.rl" */
+/* #line 69 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -887,7 +887,7 @@ _eof_trans:
 }}
 	break;
 	case 49:
-/* #line 62 "RST.c.rl" */
+/* #line 75 "dog/tok/RST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -965,7 +965,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 904 "RST.rl.c" */
+/* #line 904 "dog/tok/RST.rl.c" */
 		}
 	}
 
@@ -978,7 +978,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 915 "RST.rl.c" */
+/* #line 915 "dog/tok/RST.rl.c" */
 		}
 	}
 
@@ -996,7 +996,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 167 "RST.c.rl" */
+/* #line 180 "dog/tok/RST.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < RST_first_final)

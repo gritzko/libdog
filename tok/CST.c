@@ -38,9 +38,9 @@ static b8 CSTIsKeyword(u8cs tok) {
     return NO;
 }
 
-ok64 CSTonComment(u8cs tok, CSTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 CSTonComment(u8cs tok, u32 olen, u32 clen, CSTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

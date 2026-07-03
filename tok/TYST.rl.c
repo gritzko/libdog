@@ -1,10 +1,10 @@
 
-/* #line 1 "TYST.c.rl" */
+/* #line 1 "dog/tok/TYST.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "TYST.h"
 
-ok64 TYSTonComment (u8cs tok, TYSTstate* state);
+ok64 TYSTonComment (u8cs tok, u32 olen, u32 clen, TYSTstate* state);
 ok64 TYSTonString (u8cs tok, TYSTstate* state);
 ok64 TYSTonNumber (u8cs tok, TYSTstate* state);
 ok64 TYSTonMath (u8cs tok, TYSTstate* state);
@@ -15,11 +15,11 @@ ok64 TYSTonPunct (u8cs tok, TYSTstate* state);
 ok64 TYSTonSpace (u8cs tok, TYSTstate* state);
 
 
-/* #line 129 "TYST.c.rl" */
+/* #line 136 "dog/tok/TYST.c.rl" */
 
 
 
-/* #line 18 "TYST.rl.c" */
+/* #line 18 "dog/tok/TYST.rl.c" */
 static const char _TYST_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 4, 1, 5, 1, 6, 1, 
@@ -192,7 +192,7 @@ static const int TYST_error = 0;
 static const int TYST_en_main = 44;
 
 
-/* #line 132 "TYST.c.rl" */
+/* #line 139 "dog/tok/TYST.c.rl" */
 
 ok64 TYSTLexer(TYSTstate* state) {
 
@@ -211,7 +211,7 @@ ok64 TYSTLexer(TYSTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 206 "TYST.rl.c" */
+/* #line 206 "dog/tok/TYST.rl.c" */
 	{
 	cs = TYST_start;
 	ts = 0;
@@ -219,9 +219,9 @@ ok64 TYSTLexer(TYSTstate* state) {
 	act = 0;
 	}
 
-/* #line 150 "TYST.c.rl" */
+/* #line 157 "dog/tok/TYST.c.rl" */
     
-/* #line 212 "TYST.rl.c" */
+/* #line 212 "dog/tok/TYST.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -242,7 +242,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 231 "TYST.rl.c" */
+/* #line 231 "dog/tok/TYST.rl.c" */
 		}
 	}
 
@@ -313,16 +313,16 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 32 "TYST.c.rl" */
+/* #line 39 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = TYSTonComment(tok, state);
+    o = TYSTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 4:
-/* #line 38 "TYST.c.rl" */
+/* #line 45 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -331,7 +331,7 @@ _eof_trans:
 }}
 	break;
 	case 5:
-/* #line 50 "TYST.c.rl" */
+/* #line 57 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -340,7 +340,7 @@ _eof_trans:
 }}
 	break;
 	case 6:
-/* #line 56 "TYST.c.rl" */
+/* #line 63 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -349,7 +349,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 62 "TYST.c.rl" */
+/* #line 69 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -358,7 +358,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -367,7 +367,7 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -376,7 +376,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -385,7 +385,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 74 "TYST.c.rl" */
+/* #line 81 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -394,7 +394,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 74 "TYST.c.rl" */
+/* #line 81 "dog/tok/TYST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -403,16 +403,16 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 32 "TYST.c.rl" */
+/* #line 33 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = TYSTonComment(tok, state);
+    o = TYSTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 14:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -421,7 +421,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -430,7 +430,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -439,7 +439,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 68 "TYST.c.rl" */
+/* #line 75 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -448,7 +448,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 74 "TYST.c.rl" */
+/* #line 81 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -457,7 +457,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 74 "TYST.c.rl" */
+/* #line 81 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -466,7 +466,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 80 "TYST.c.rl" */
+/* #line 87 "dog/tok/TYST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -475,7 +475,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -484,7 +484,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -493,7 +493,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 44 "TYST.c.rl" */
+/* #line 51 "dog/tok/TYST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -502,7 +502,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 74 "TYST.c.rl" */
+/* #line 81 "dog/tok/TYST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -511,7 +511,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 74 "TYST.c.rl" */
+/* #line 81 "dog/tok/TYST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -519,7 +519,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-/* #line 483 "TYST.rl.c" */
+/* #line 483 "dog/tok/TYST.rl.c" */
 		}
 	}
 
@@ -532,7 +532,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 494 "TYST.rl.c" */
+/* #line 494 "dog/tok/TYST.rl.c" */
 		}
 	}
 
@@ -552,7 +552,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 151 "TYST.c.rl" */
+/* #line 158 "dog/tok/TYST.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < TYST_first_final)

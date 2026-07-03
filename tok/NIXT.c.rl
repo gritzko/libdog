@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "NIXT.h"
 
-ok64 NIXTonComment (u8cs tok, NIXTstate* state);
+ok64 NIXTonComment (u8cs tok, u32 olen, u32 clen, NIXTstate* state);
 ok64 NIXTonString (u8cs tok, NIXTstate* state);
 ok64 NIXTonNumber (u8cs tok, NIXTstate* state);
 ok64 NIXTonWord (u8cs tok, NIXTstate* state);
@@ -23,10 +23,17 @@ dgt = [0-9];
 
 esc = [\\] ( [nrt\\"$] | "${"  );
 
-action on_comment {
+# DOG-006: split delimiter from body — "/* */" (2,2), "#" (1,0).
+action on_block_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIXTonComment(tok, state);
+    o = NIXTonComment(tok, 2, 2, state);
+    if (o!=OK) fbreak;
+}
+action on_hash_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = NIXTonComment(tok, 1, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -63,9 +70,9 @@ action on_space {
 main := |*
 
     # ---- block comments /* ... */ ----
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"           => on_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"           => on_block_comment;
     # ---- line comments ----
-    [#] [^\n]*                                                     => on_comment;
+    [#] [^\n]*                                                     => on_hash_comment;
 
     # ---- indented strings '' ... '' (Nix uses '' for multi-line) ----
     ['] ['] ( any8 - ['] | ['] (any8 - [']) )* ['] [']            => on_string;

@@ -1,10 +1,10 @@
 
-/* #line 1 "SOLT.c.rl" */
+/* #line 1 "dog/tok/SOLT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "SOLT.h"
 
-ok64 SOLTonComment (u8cs tok, SOLTstate* state);
+ok64 SOLTonComment (u8cs tok, u32 olen, u32 clen, SOLTstate* state);
 ok64 SOLTonString (u8cs tok, SOLTstate* state);
 ok64 SOLTonNumber (u8cs tok, SOLTstate* state);
 ok64 SOLTonWord (u8cs tok, SOLTstate* state);
@@ -12,20 +12,21 @@ ok64 SOLTonPunct (u8cs tok, SOLTstate* state);
 ok64 SOLTonSpace (u8cs tok, SOLTstate* state);
 
 
-/* #line 105 "SOLT.c.rl" */
+/* #line 118 "dog/tok/SOLT.c.rl" */
 
 
 
-/* #line 15 "SOLT.rl.c" */
+/* #line 15 "dog/tok/SOLT.rl.c" */
 static const char _SOLT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	8, 1, 9, 1, 10, 1, 11, 1, 
 	12, 1, 13, 1, 14, 1, 15, 1, 
 	16, 1, 17, 1, 18, 1, 19, 1, 
 	20, 1, 21, 1, 22, 1, 23, 1, 
-	24, 1, 25, 1, 26, 1, 27, 2, 
-	2, 3, 2, 2, 4, 2, 2, 5, 
-	2, 2, 6, 2, 2, 7
+	24, 1, 25, 1, 26, 1, 27, 1, 
+	28, 2, 2, 3, 2, 2, 4, 2, 
+	2, 5, 2, 2, 6, 2, 2, 7
+	
 };
 
 static const unsigned char _SOLT_key_offsets[] = {
@@ -120,12 +121,12 @@ static const char _SOLT_indicies[] = {
 	49, 49, 51, 49, 49, 51, 18, 52, 
 	54, 55, 54, 18, 53, 16, 17, 53, 
 	20, 56, 49, 51, 57, 59, 58, 57, 
-	58, 57, 59, 61, 62, 63, 64, 62, 
-	63, 31, 60, 66, 66, 26, 65, 66, 
-	67, 66, 26, 65, 24, 25, 65, 61, 
-	62, 64, 62, 31, 60, 28, 29, 68, 
-	63, 32, 32, 32, 69, 70, 49, 51, 
-	49, 51, 49, 70, 51, 49, 49, 51, 
+	58, 60, 59, 62, 63, 64, 65, 63, 
+	64, 31, 61, 67, 67, 26, 66, 67, 
+	68, 67, 26, 66, 24, 25, 66, 62, 
+	63, 65, 63, 31, 61, 28, 29, 69, 
+	64, 32, 32, 32, 70, 71, 49, 51, 
+	49, 51, 49, 71, 51, 49, 49, 51, 
 	0
 };
 
@@ -137,20 +138,20 @@ static const char _SOLT_trans_targs[] = {
 	46, 25, 26, 27, 28, 29, 30, 31, 
 	32, 33, 36, 40, 47, 48, 49, 50, 
 	25, 25, 25, 25, 25, 25, 13, 15, 
-	37, 25, 38, 39, 25, 41, 21, 24, 
-	23, 25, 18, 20, 25, 25, 27
+	37, 25, 38, 39, 25, 25, 41, 21, 
+	24, 23, 25, 18, 20, 25, 25, 27
 };
 
 static const char _SOLT_trans_actions[] = {
 	0, 9, 0, 0, 0, 0, 0, 0, 
-	0, 11, 0, 0, 0, 0, 0, 39, 
-	0, 5, 5, 43, 0, 0, 7, 37, 
-	0, 5, 5, 41, 0, 50, 45, 53, 
-	47, 15, 0, 59, 0, 0, 0, 0, 
-	0, 0, 5, 53, 0, 0, 0, 0, 
-	35, 13, 29, 31, 33, 23, 0, 0, 
-	0, 17, 0, 0, 27, 5, 0, 0, 
-	0, 21, 0, 0, 25, 19, 56
+	0, 11, 0, 0, 0, 0, 0, 41, 
+	0, 5, 5, 45, 0, 0, 7, 39, 
+	0, 5, 5, 43, 0, 52, 47, 55, 
+	49, 15, 0, 61, 0, 0, 0, 0, 
+	0, 0, 5, 55, 0, 0, 0, 0, 
+	37, 13, 31, 33, 35, 25, 0, 0, 
+	0, 19, 0, 0, 17, 29, 5, 0, 
+	0, 0, 23, 0, 0, 27, 21, 58
 };
 
 static const char _SOLT_to_state_actions[] = {
@@ -178,8 +179,8 @@ static const short _SOLT_eof_trans[] = {
 	0, 0, 0, 0, 0, 16, 16, 16, 
 	20, 20, 24, 24, 24, 28, 31, 28, 
 	31, 0, 49, 31, 51, 52, 52, 52, 
-	52, 53, 54, 54, 52, 58, 58, 58, 
-	61, 66, 66, 66, 61, 69, 70, 52, 
+	52, 53, 54, 54, 52, 58, 58, 61, 
+	62, 67, 67, 67, 62, 70, 71, 52, 
 	52, 52, 52
 };
 
@@ -190,7 +191,7 @@ static const int SOLT_error = 0;
 static const int SOLT_en_main = 25;
 
 
-/* #line 108 "SOLT.c.rl" */
+/* #line 121 "dog/tok/SOLT.c.rl" */
 
 ok64 SOLTLexer(SOLTstate* state) {
 
@@ -209,7 +210,7 @@ ok64 SOLTLexer(SOLTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 204 "SOLT.rl.c" */
+/* #line 205 "dog/tok/SOLT.rl.c" */
 	{
 	cs = SOLT_start;
 	ts = 0;
@@ -217,9 +218,9 @@ ok64 SOLTLexer(SOLTstate* state) {
 	act = 0;
 	}
 
-/* #line 126 "SOLT.c.rl" */
+/* #line 139 "dog/tok/SOLT.c.rl" */
     
-/* #line 210 "SOLT.rl.c" */
+/* #line 211 "dog/tok/SOLT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -240,7 +241,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 229 "SOLT.rl.c" */
+/* #line 230 "dog/tok/SOLT.rl.c" */
 		}
 	}
 
@@ -311,36 +312,36 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{act = 9;}
 	break;
 	case 5:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{act = 10;}
 	break;
 	case 6:
-/* #line 53 "SOLT.c.rl" */
+/* #line 66 "dog/tok/SOLT.c.rl" */
 	{act = 12;}
 	break;
 	case 7:
-/* #line 53 "SOLT.c.rl" */
+/* #line 66 "dog/tok/SOLT.c.rl" */
 	{act = 13;}
 	break;
 	case 8:
-/* #line 29 "SOLT.c.rl" */
+/* #line 42 "dog/tok/SOLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SOLTonComment(tok, state);
+    o = SOLTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 9:
-/* #line 35 "SOLT.c.rl" */
+/* #line 48 "dog/tok/SOLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -349,7 +350,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 35 "SOLT.c.rl" */
+/* #line 48 "dog/tok/SOLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -358,7 +359,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 53 "SOLT.c.rl" */
+/* #line 66 "dog/tok/SOLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -367,7 +368,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 53 "SOLT.c.rl" */
+/* #line 66 "dog/tok/SOLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -376,25 +377,25 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 29 "SOLT.c.rl" */
+/* #line 30 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SOLTonComment(tok, state);
+    o = SOLTonComment(tok, 3, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 14:
-/* #line 41 "SOLT.c.rl" */
+/* #line 36 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SOLTonNumber(tok, state);
+    o = SOLTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 15:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -403,7 +404,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -412,7 +413,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -421,7 +422,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -430,7 +431,16 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 47 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
+	{te = p;p--;{
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SOLTonNumber(tok, state);
+    if (o!=OK) {p++; goto _out; }
+}}
+	break;
+	case 20:
+/* #line 60 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -438,17 +448,8 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-	case 20:
-/* #line 53 "SOLT.c.rl" */
-	{te = p;p--;{
-    tok[0] = (u8c*)ts;
-    tok[1] = (u8c*)te;
-    o = SOLTonPunct(tok, state);
-    if (o!=OK) {p++; goto _out; }
-}}
-	break;
 	case 21:
-/* #line 53 "SOLT.c.rl" */
+/* #line 66 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -457,7 +458,16 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 59 "SOLT.c.rl" */
+/* #line 66 "dog/tok/SOLT.c.rl" */
+	{te = p;p--;{
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SOLTonPunct(tok, state);
+    if (o!=OK) {p++; goto _out; }
+}}
+	break;
+	case 23:
+/* #line 72 "dog/tok/SOLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -465,17 +475,8 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-	case 23:
-/* #line 41 "SOLT.c.rl" */
-	{{p = ((te))-1;}{
-    tok[0] = (u8c*)ts;
-    tok[1] = (u8c*)te;
-    o = SOLTonNumber(tok, state);
-    if (o!=OK) {p++; goto _out; }
-}}
-	break;
 	case 24:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -484,7 +485,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 41 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -493,7 +494,16 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 53 "SOLT.c.rl" */
+/* #line 54 "dog/tok/SOLT.c.rl" */
+	{{p = ((te))-1;}{
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SOLTonNumber(tok, state);
+    if (o!=OK) {p++; goto _out; }
+}}
+	break;
+	case 27:
+/* #line 66 "dog/tok/SOLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -501,7 +511,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-	case 27:
+	case 28:
 /* #line 1 "NONE" */
 	{	switch( act ) {
 	case 6:
@@ -547,7 +557,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 509 "SOLT.rl.c" */
+/* #line 518 "dog/tok/SOLT.rl.c" */
 		}
 	}
 
@@ -560,7 +570,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 520 "SOLT.rl.c" */
+/* #line 529 "dog/tok/SOLT.rl.c" */
 		}
 	}
 
@@ -580,7 +590,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 127 "SOLT.c.rl" */
+/* #line 140 "dog/tok/SOLT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < SOLT_first_final)

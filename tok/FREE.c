@@ -13,10 +13,11 @@ typedef struct {
 
 static ok64 FREE_overlay_cb(u8 nat, u8cs tok, void *ctx) {
     FREE_overlay_ctx *o = (FREE_overlay_ctx *)ctx;
-    // 'F' (issue key) is sticky — keeps its native tag through the
-    // overlay, so issue keys pop visually even inside D-tagged
-    // comments instead of vanishing into comment gray.
-    u8 tag = (o->overlay && nat != 'F') ? o->overlay : nat;
+    // Sticky tags pop through the overlay: 'F' issue key, and (DOG-006)
+    // StrictMark markup 'G' (emphasis/link) and 'H' (code span) — so they
+    // stay lit instead of vanishing into comment gray.
+    b8 sticky = (nat == 'F' || nat == 'G' || nat == 'H');
+    u8 tag = (o->overlay && !sticky) ? o->overlay : nat;
     return o->cb ? o->cb(tag, tok, o->ctx) : OK;
 }
 
@@ -29,4 +30,28 @@ ok64 FREEu8sFeed(u8 overlay, u8cs slice, TOKcb cb, void *ctx) {
         .ctx = &oc,
     };
     return FREELexer(&st);
+}
+
+// DOG-006: emit comment delimiters as plain 'D' (never StrictMark-parsed),
+// then FREE-scan the body (issue keys + inline markup) under a 'D' overlay.
+ok64 FREECommentFeed(u8cs open, u8cs body, u8cs close, TOKcb cb, void *ctx) {
+    sane($ok(body));
+    if (!cb) done;
+    if (!u8csEmpty(open)) { ok64 o = cb('D', open, ctx); if (o != OK) return o; }
+    { ok64 o = FREEu8sFeed('D', body, cb, ctx); if (o != OK) return o; }
+    if (!u8csEmpty(close)) { ok64 o = cb('D', close, ctx); if (o != OK) return o; }
+    done;
+}
+
+// DOG-006: fixed-width delimiter split (line "//" -> 2,0; block "/* */" -> 2,2).
+// A short/malformed token (olen+clen > len) falls back to a plain body feed.
+ok64 FREECommentFeedN(u8cs tok, u32 olen, u32 clen, TOKcb cb, void *ctx) {
+    sane($ok(tok));
+    if (!cb) done;
+    size_t n = u8csLen(tok);
+    if ((size_t)olen + (size_t)clen > n) return FREEu8sFeed('D', tok, cb, ctx);
+    a_head(u8c, open, tok, olen);
+    a_tail(u8c, close, tok, clen);
+    a_part(u8c, body, tok, olen, n - olen - clen);
+    return FREECommentFeed(open, body, close, cb, ctx);
 }

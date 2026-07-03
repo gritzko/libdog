@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "TYST.h"
 
-ok64 TYSTonComment (u8cs tok, TYSTstate* state);
+ok64 TYSTonComment (u8cs tok, u32 olen, u32 clen, TYSTstate* state);
 ok64 TYSTonString (u8cs tok, TYSTstate* state);
 ok64 TYSTonNumber (u8cs tok, TYSTstate* state);
 ok64 TYSTonMath (u8cs tok, TYSTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\'\"0]
            | [x] xdgt{2}
            | [u] xdgt{4} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0) and "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = TYSTonComment(tok, state);
+    o = TYSTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = TYSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -89,8 +96,8 @@ unit = ("pt" | "mm" | "cm" | "in" | "em");
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- string literals ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

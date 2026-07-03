@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "RBT.h"
 
-ok64 RBTonComment (u8cs tok, RBTstate* state);
+ok64 RBTonComment (u8cs tok, u32 olen, u32 clen, RBTstate* state);
 ok64 RBTonString (u8cs tok, RBTstate* state);
 ok64 RBTonNumber (u8cs tok, RBTstate* state);
 ok64 RBTonWord (u8cs tok, RBTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrstv\\'\"0\\]
            | [u] "{" xdgt{1,6} "}"
            | [\n] );
 
-action on_comment {
+# DOG-006: "#" line comment splits delim (1,0); =begin/=end block stays (0,0)
+action on_hash {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = RBTonComment(tok, state);
+    o = RBTonComment(tok, 1, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = RBTonComment(tok, 0, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -75,9 +82,9 @@ bdig = [01] ( [_]? [01] )*;
 main := |*
 
     # ---- comments ----
-    [#] [^\n]*                                                    => on_comment;
+    [#] [^\n]*                                                    => on_hash;
     # =begin...=end block comments
-    "=begin" [^\n]* [\n] ( any8 - [=] | [=] (any8 - [e]) | "=e" (any8 - [n]) | "=en" (any8 - [d]) )* "=end" [^\n]* => on_comment;
+    "=begin" [^\n]* [\n] ( any8 - [=] | [=] (any8 - [e]) | "=e" (any8 - [n]) | "=en" (any8 - [d]) )* "=end" [^\n]* => on_block;
 
     # ---- strings ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

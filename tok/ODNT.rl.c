@@ -1,10 +1,10 @@
 
-/* #line 1 "ODNT.c.rl" */
+/* #line 1 "dog/tok/ODNT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "ODNT.h"
 
-ok64 ODNTonComment (u8cs tok, ODNTstate* state);
+ok64 ODNTonComment (u8cs tok, u32 olen, u32 clen, ODNTstate* state);
 ok64 ODNTonString (u8cs tok, ODNTstate* state);
 ok64 ODNTonNumber (u8cs tok, ODNTstate* state);
 ok64 ODNTonWord (u8cs tok, ODNTstate* state);
@@ -12,11 +12,11 @@ ok64 ODNTonPunct (u8cs tok, ODNTstate* state);
 ok64 ODNTonSpace (u8cs tok, ODNTstate* state);
 
 
-/* #line 116 "ODNT.c.rl" */
+/* #line 123 "dog/tok/ODNT.c.rl" */
 
 
 
-/* #line 15 "ODNT.rl.c" */
+/* #line 15 "dog/tok/ODNT.rl.c" */
 static const char _ODNT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	10, 1, 11, 1, 12, 1, 13, 1, 
@@ -216,7 +216,7 @@ static const int ODNT_error = 0;
 static const int ODNT_en_main = 38;
 
 
-/* #line 119 "ODNT.c.rl" */
+/* #line 126 "dog/tok/ODNT.c.rl" */
 
 ok64 ODNTLexer(ODNTstate* state) {
 
@@ -235,7 +235,7 @@ ok64 ODNTLexer(ODNTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 230 "ODNT.rl.c" */
+/* #line 230 "dog/tok/ODNT.rl.c" */
 	{
 	cs = ODNT_start;
 	ts = 0;
@@ -243,9 +243,9 @@ ok64 ODNTLexer(ODNTstate* state) {
 	act = 0;
 	}
 
-/* #line 137 "ODNT.c.rl" */
+/* #line 144 "dog/tok/ODNT.c.rl" */
     
-/* #line 236 "ODNT.rl.c" */
+/* #line 236 "dog/tok/ODNT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -266,7 +266,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 255 "ODNT.rl.c" */
+/* #line 255 "dog/tok/ODNT.rl.c" */
 		}
 	}
 
@@ -337,44 +337,44 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{act = 7;}
 	break;
 	case 5:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{act = 8;}
 	break;
 	case 6:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{act = 11;}
 	break;
 	case 7:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{act = 12;}
 	break;
 	case 8:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{act = 14;}
 	break;
 	case 9:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{act = 15;}
 	break;
 	case 10:
-/* #line 31 "ODNT.c.rl" */
+/* #line 38 "dog/tok/ODNT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = ODNTonComment(tok, state);
+    o = ODNTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 11:
-/* #line 37 "ODNT.c.rl" */
+/* #line 44 "dog/tok/ODNT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -383,7 +383,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 37 "ODNT.c.rl" */
+/* #line 44 "dog/tok/ODNT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -392,7 +392,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 37 "ODNT.c.rl" */
+/* #line 44 "dog/tok/ODNT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -401,7 +401,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -410,7 +410,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -419,16 +419,16 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 31 "ODNT.c.rl" */
+/* #line 32 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = ODNTonComment(tok, state);
+    o = ODNTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 17:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -437,7 +437,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -446,7 +446,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -455,7 +455,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -464,7 +464,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -473,7 +473,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -482,7 +482,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -491,7 +491,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 49 "ODNT.c.rl" */
+/* #line 56 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -500,7 +500,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -509,7 +509,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -518,7 +518,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -527,7 +527,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 61 "ODNT.c.rl" */
+/* #line 68 "dog/tok/ODNT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -536,7 +536,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -545,7 +545,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -554,7 +554,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 43 "ODNT.c.rl" */
+/* #line 50 "dog/tok/ODNT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -563,7 +563,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -572,7 +572,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 55 "ODNT.c.rl" */
+/* #line 62 "dog/tok/ODNT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -642,7 +642,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 597 "ODNT.rl.c" */
+/* #line 597 "dog/tok/ODNT.rl.c" */
 		}
 	}
 
@@ -655,7 +655,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 608 "ODNT.rl.c" */
+/* #line 608 "dog/tok/ODNT.rl.c" */
 		}
 	}
 
@@ -675,7 +675,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 138 "ODNT.c.rl" */
+/* #line 145 "dog/tok/ODNT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < ODNT_first_final)

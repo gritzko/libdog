@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "CST.h"
 
-ok64 CSTonComment (u8cs tok, CSTstate* state);
+ok64 CSTonComment (u8cs tok, u32 olen, u32 clen, CSTstate* state);
 ok64 CSTonString (u8cs tok, CSTstate* state);
 ok64 CSTonNumber (u8cs tok, CSTstate* state);
 ok64 CSTonPreproc (u8cs tok, CSTstate* state);
@@ -28,10 +28,23 @@ esc = [\\] ( [abefnrtv\\'\"?0]
            | [u] xdgt{4}
            | [U] xdgt{8} );
 
-action on_comment {
+# DOG-006: doc "///" (3,0); line "//" (2,0); block "/* */" (2,2)
+action on_doc_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CSTonComment(tok, state);
+    o = CSTonComment(tok, 3, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = CSTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = CSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -81,9 +94,9 @@ fsuf = [fFdDmM]?;
 main := |*
 
     # ---- comments ----
-    "///" [^\n]*                                                  => on_comment;
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "///" [^\n]*                                                  => on_doc_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- raw string literals (triple-quoted) ----
     ["] ["] ["] ( any8 - ["] | ["] (any8 - ["]) | ["] ["] (any8 - ["]) )* ["] ["] ["]   => on_string;

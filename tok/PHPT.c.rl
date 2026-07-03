@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "PHPT.h"
 
-ok64 PHPTonComment (u8cs tok, PHPTstate* state);
+ok64 PHPTonComment (u8cs tok, u32 olen, u32 clen, PHPTstate* state);
 ok64 PHPTonString (u8cs tok, PHPTstate* state);
 ok64 PHPTonNumber (u8cs tok, PHPTstate* state);
 ok64 PHPTonPreproc (u8cs tok, PHPTstate* state);
@@ -29,10 +29,23 @@ esc = [\\] ( [abefnrtv\\'\"$]
            | [u] "{" xdgt{1,6} "}"
            | odgt{1,3} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0), "#" (1,0), "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PHPTonComment(tok, state);
+    o = PHPTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_hash_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = PHPTonComment(tok, 1, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = PHPTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -80,9 +93,9 @@ main := |*
     "<?php" | "<?=" | "<?" | "?>"                                => on_preproc;
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    [#] [^\n]*                                                    => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    [#] [^\n]*                                                    => on_hash_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- strings ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

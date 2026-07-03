@@ -5,7 +5,7 @@
 
 ok64 HTMTonComment(u8cs tok, HTMTstate *state) {
     sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+    if (state->cb) return FREECommentFeedN(tok, 4, 3, state->cb, state->ctx);  // DOG-006
     done;
 }
 

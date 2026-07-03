@@ -189,7 +189,8 @@ The per-language `.c` lexers share these: a keyword-set probe, a definition-mark
 
  -  `KEYWOpen`/`KEYWHas` (`keyw`) — the 256-slot open-addressing keyword set each language builds once.
  -  `DEFMark` (`DEF_TAG`='N', `CALL_TAG`='C') — second pass over a tok array: enrich tags, run per-language NFA patterns.
- -  `FREELexer`/`FREEu8sFeed` (`FREEstate`) — the natural-language scanner (comment bodies, docstrings).
+ -  `FREELexer`/`FREEu8sFeed` (`FREEstate`) — natural-language scanner (comment bodies, docstrings); also lexes StrictMark inline spans (code->`H`, emph/strike/link->`G`), kept sticky with `F` through the overlay (DOG-006).
+ -  `FREECommentFeed`/`FREECommentFeedN` — split a comment delimiter (own `D` token, never parsed) from the StrictMark-scanned body; `N` takes fixed widths (line `//`->2,0; block `/* */`->2,2).
  -  `BRCTMatch`/`BRCTInner`/`BRCTOuter`/`BRCTCheck`/`BRCTDepth` — bracket matching: partner, region, balance, depth.
  -  `MDBLKu8csSkipSpaces`/`SkipIndents`/`Run`/`AllBlank`/`DrainLine` — the slice-cursor Markdown block idioms.
 

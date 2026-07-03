@@ -1,10 +1,10 @@
 
-/* #line 1 "PHPT.c.rl" */
+/* #line 1 "dog/tok/PHPT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "PHPT.h"
 
-ok64 PHPTonComment (u8cs tok, PHPTstate* state);
+ok64 PHPTonComment (u8cs tok, u32 olen, u32 clen, PHPTstate* state);
 ok64 PHPTonString (u8cs tok, PHPTstate* state);
 ok64 PHPTonNumber (u8cs tok, PHPTstate* state);
 ok64 PHPTonPreproc (u8cs tok, PHPTstate* state);
@@ -13,11 +13,11 @@ ok64 PHPTonPunct (u8cs tok, PHPTstate* state);
 ok64 PHPTonSpace (u8cs tok, PHPTstate* state);
 
 
-/* #line 125 "PHPT.c.rl" */
+/* #line 138 "dog/tok/PHPT.c.rl" */
 
 
 
-/* #line 16 "PHPT.rl.c" */
+/* #line 16 "dog/tok/PHPT.rl.c" */
 static const char _PHPT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	10, 1, 11, 1, 12, 1, 13, 1, 
@@ -223,7 +223,7 @@ static const int PHPT_error = 0;
 static const int PHPT_en_main = 33;
 
 
-/* #line 128 "PHPT.c.rl" */
+/* #line 141 "dog/tok/PHPT.c.rl" */
 
 ok64 PHPTLexer(PHPTstate* state) {
 
@@ -242,7 +242,7 @@ ok64 PHPTLexer(PHPTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 237 "PHPT.rl.c" */
+/* #line 237 "dog/tok/PHPT.rl.c" */
 	{
 	cs = PHPT_start;
 	ts = 0;
@@ -250,9 +250,9 @@ ok64 PHPTLexer(PHPTstate* state) {
 	act = 0;
 	}
 
-/* #line 146 "PHPT.c.rl" */
+/* #line 159 "dog/tok/PHPT.c.rl" */
     
-/* #line 243 "PHPT.rl.c" */
+/* #line 243 "dog/tok/PHPT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -273,7 +273,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 262 "PHPT.rl.c" */
+/* #line 262 "dog/tok/PHPT.rl.c" */
 		}
 	}
 
@@ -344,35 +344,35 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{act = 7;}
 	break;
 	case 4:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{act = 8;}
 	break;
 	case 5:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{act = 9;}
 	break;
 	case 6:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{act = 12;}
 	break;
 	case 7:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{act = 13;}
 	break;
 	case 8:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{act = 16;}
 	break;
 	case 9:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{act = 17;}
 	break;
 	case 10:
-/* #line 50 "PHPT.c.rl" */
+/* #line 63 "dog/tok/PHPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -381,16 +381,16 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 32 "PHPT.c.rl" */
+/* #line 45 "dog/tok/PHPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PHPTonComment(tok, state);
+    o = PHPTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 12:
-/* #line 38 "PHPT.c.rl" */
+/* #line 51 "dog/tok/PHPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -399,7 +399,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 38 "PHPT.c.rl" */
+/* #line 51 "dog/tok/PHPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -408,7 +408,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -417,7 +417,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -426,7 +426,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 50 "PHPT.c.rl" */
+/* #line 63 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -435,25 +435,25 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 32 "PHPT.c.rl" */
+/* #line 33 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PHPTonComment(tok, state);
+    o = PHPTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 18:
-/* #line 32 "PHPT.c.rl" */
+/* #line 39 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PHPTonComment(tok, state);
+    o = PHPTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 19:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -462,7 +462,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -471,7 +471,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -480,7 +480,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -489,7 +489,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -498,7 +498,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -507,7 +507,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -516,7 +516,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 56 "PHPT.c.rl" */
+/* #line 69 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -525,7 +525,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 56 "PHPT.c.rl" */
+/* #line 69 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -534,7 +534,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -543,7 +543,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -552,7 +552,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -561,7 +561,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 68 "PHPT.c.rl" */
+/* #line 81 "dog/tok/PHPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -570,7 +570,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 50 "PHPT.c.rl" */
+/* #line 63 "dog/tok/PHPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -579,7 +579,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -588,7 +588,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -597,7 +597,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 44 "PHPT.c.rl" */
+/* #line 57 "dog/tok/PHPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -606,7 +606,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -615,7 +615,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 62 "PHPT.c.rl" */
+/* #line 75 "dog/tok/PHPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -685,7 +685,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 636 "PHPT.rl.c" */
+/* #line 636 "dog/tok/PHPT.rl.c" */
 		}
 	}
 
@@ -698,7 +698,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 647 "PHPT.rl.c" */
+/* #line 647 "dog/tok/PHPT.rl.c" */
 		}
 	}
 
@@ -718,7 +718,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 147 "PHPT.c.rl" */
+/* #line 160 "dog/tok/PHPT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < PHPT_first_final)

@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "GLST.h"
 
-ok64 GLSTonComment (u8cs tok, GLSTstate* state);
+ok64 GLSTonComment (u8cs tok, u32 olen, u32 clen, GLSTstate* state);
 ok64 GLSTonNumber (u8cs tok, GLSTstate* state);
 ok64 GLSTonPreproc (u8cs tok, GLSTstate* state);
 ok64 GLSTonWord (u8cs tok, GLSTstate* state);
@@ -23,10 +23,17 @@ dgt = [0-9];
 xdgt = [0-9a-fA-F];
 odgt = [0-7];
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0), "/* */" (2,2)
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = GLSTonComment(tok, state);
+    o = GLSTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = GLSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_number {
@@ -66,8 +73,8 @@ xdig = xdgt+;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- preprocessor directives ----
     [#] [ \t]* ("version" | "define" | "undef" |

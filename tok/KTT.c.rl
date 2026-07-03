@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "KTT.h"
 
-ok64 KTTonComment (u8cs tok, KTTstate* state);
+ok64 KTTonComment (u8cs tok, u32 olen, u32 clen, KTTstate* state);
 ok64 KTTonString (u8cs tok, KTTstate* state);
 ok64 KTTonNumber (u8cs tok, KTTstate* state);
 ok64 KTTonAnnotation (u8cs tok, KTTstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abefnrtv\\'\"?0$]
            | [x] xdgt{2}
            | [u] xdgt{4} );
 
-action on_comment {
+# DOG-006: "//" (2,0) and "/* */" (2,2); delimiters emit 'D', body StrictMark.
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = KTTonComment(tok, state);
+    o = KTTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = KTTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -83,8 +90,8 @@ fsuf = [fFdD]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- triple-quoted raw strings ----
     ["] ["] ["] ( any8 - ["] | ["] (any8 - ["]) | ["] ["] (any8 - ["]) )* ["] ["] ["]   => on_string;

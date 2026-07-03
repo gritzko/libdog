@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "AGDT.h"
 
-ok64 AGDTonComment (u8cs tok, AGDTstate* state);
+ok64 AGDTonComment (u8cs tok, u32 olen, u32 clen, AGDTstate* state);
 ok64 AGDTonString (u8cs tok, AGDTstate* state);
 ok64 AGDTonNumber (u8cs tok, AGDTstate* state);
 ok64 AGDTonPragma (u8cs tok, AGDTstate* state);
@@ -30,10 +30,17 @@ esc = [\\] ( [abefnrtv\\'\"0]
            | [x] xdgt+
            | dgt+ );
 
-action on_comment {
+# DOG-006: block "{-".."-}" (2,2), line "--" (2,0) — delimiter 'D', body StrictMark
+action on_block_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = AGDTonComment(tok, state);
+    o = AGDTonComment(tok, 2, 2, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = AGDTonComment(tok, 2, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -79,10 +86,10 @@ main := |*
     "{-#" ( any8 - [#] | [#] (any8 - [\-]) | [#] [\-] (any8 - [}]) )* "#-}"  => on_pragma;
 
     # ---- block comments {- ... -} (flat approximation) ----
-    "{-" ( any8 - [\-] | [\-] (any8 - [}]) )* "-}"              => on_comment;
+    "{-" ( any8 - [\-] | [\-] (any8 - [}]) )* "-}"              => on_block_comment;
 
     # ---- line comments ----
-    "--" [^\n]*                                                   => on_comment;
+    "--" [^\n]*                                                   => on_line_comment;
 
     # ---- strings ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

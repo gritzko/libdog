@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "LUAT.h"
 
-ok64 LUATonComment (u8cs tok, LUATstate* state);
+ok64 LUATonComment (u8cs tok, u32 olen, u32 clen, LUATstate* state);
 ok64 LUATonString (u8cs tok, LUATstate* state);
 ok64 LUATonNumber (u8cs tok, LUATstate* state);
 ok64 LUATonWord (u8cs tok, LUATstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abfnrtv\\"'\n0]
            | dgt{1,3}
            | [u] "{" xdgt+ "}" );
 
-action on_comment {
+# DOG-006: block "--[[".."]]" (4,2), line "--" (2,0) — delimiter 'D', body StrictMark
+action on_block_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = LUATonComment(tok, state);
+    o = LUATonComment(tok, 4, 2, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = LUATonComment(tok, 2, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -71,9 +78,9 @@ xdig = xdgt+;
 main := |*
 
     # ---- block comment --[[ ... ]] ----
-    "--[[" ( any8 - [\]] | [\]] (any8 - [\]]) )* "]]"            => on_comment;
+    "--[[" ( any8 - [\]] | [\]] (any8 - [\]]) )* "]]"            => on_block_comment;
     # ---- line comment ----
-    "--" [^\n]*                                                    => on_comment;
+    "--" [^\n]*                                                    => on_line_comment;
 
     # ---- long strings [[ ... ]] ----
     "[[" ( any8 - [\]] | [\]] (any8 - [\]]) )* "]]"              => on_string;

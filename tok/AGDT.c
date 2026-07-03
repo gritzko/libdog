@@ -28,9 +28,9 @@ static b8 AGDTIsKeyword(u8cs tok) {
     return NO;
 }
 
-ok64 AGDTonComment(u8cs tok, AGDTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 AGDTonComment(u8cs tok, u32 olen, u32 clen, AGDTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

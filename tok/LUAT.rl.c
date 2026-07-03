@@ -1,10 +1,10 @@
 
-/* #line 1 "LUAT.c.rl" */
+/* #line 1 "dog/tok/LUAT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "LUAT.h"
 
-ok64 LUATonComment (u8cs tok, LUATstate* state);
+ok64 LUATonComment (u8cs tok, u32 olen, u32 clen, LUATstate* state);
 ok64 LUATonString (u8cs tok, LUATstate* state);
 ok64 LUATonNumber (u8cs tok, LUATstate* state);
 ok64 LUATonWord (u8cs tok, LUATstate* state);
@@ -12,11 +12,11 @@ ok64 LUATonPunct (u8cs tok, LUATstate* state);
 ok64 LUATonSpace (u8cs tok, LUATstate* state);
 
 
-/* #line 109 "LUAT.c.rl" */
+/* #line 116 "dog/tok/LUAT.c.rl" */
 
 
 
-/* #line 15 "LUAT.rl.c" */
+/* #line 15 "dog/tok/LUAT.rl.c" */
 static const char _LUAT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	5, 1, 6, 1, 7, 1, 8, 1, 
@@ -192,7 +192,7 @@ static const int LUAT_error = 0;
 static const int LUAT_en_main = 28;
 
 
-/* #line 112 "LUAT.c.rl" */
+/* #line 119 "dog/tok/LUAT.c.rl" */
 
 ok64 LUATLexer(LUATstate* state) {
 
@@ -211,7 +211,7 @@ ok64 LUATLexer(LUATstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 206 "LUAT.rl.c" */
+/* #line 206 "dog/tok/LUAT.rl.c" */
 	{
 	cs = LUAT_start;
 	ts = 0;
@@ -219,9 +219,9 @@ ok64 LUATLexer(LUATstate* state) {
 	act = 0;
 	}
 
-/* #line 130 "LUAT.c.rl" */
+/* #line 137 "dog/tok/LUAT.c.rl" */
     
-/* #line 212 "LUAT.rl.c" */
+/* #line 212 "dog/tok/LUAT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -242,7 +242,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 231 "LUAT.rl.c" */
+/* #line 231 "dog/tok/LUAT.rl.c" */
 		}
 	}
 
@@ -313,24 +313,24 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 31 "LUAT.c.rl" */
+/* #line 32 "dog/tok/LUAT.c.rl" */
 	{act = 1;}
 	break;
 	case 4:
-/* #line 31 "LUAT.c.rl" */
+/* #line 38 "dog/tok/LUAT.c.rl" */
 	{act = 2;}
 	break;
 	case 5:
-/* #line 31 "LUAT.c.rl" */
+/* #line 32 "dog/tok/LUAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = LUATonComment(tok, state);
+    o = LUATonComment(tok, 4, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 6:
-/* #line 37 "LUAT.c.rl" */
+/* #line 44 "dog/tok/LUAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -339,7 +339,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 37 "LUAT.c.rl" */
+/* #line 44 "dog/tok/LUAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -348,7 +348,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 37 "LUAT.c.rl" */
+/* #line 44 "dog/tok/LUAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -357,7 +357,7 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 55 "LUAT.c.rl" */
+/* #line 62 "dog/tok/LUAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -366,7 +366,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 55 "LUAT.c.rl" */
+/* #line 62 "dog/tok/LUAT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -375,16 +375,16 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 31 "LUAT.c.rl" */
+/* #line 38 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = LUATonComment(tok, state);
+    o = LUATonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 12:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -393,7 +393,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -402,7 +402,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -411,7 +411,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -420,7 +420,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -429,7 +429,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 49 "LUAT.c.rl" */
+/* #line 56 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -438,7 +438,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 55 "LUAT.c.rl" */
+/* #line 62 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -447,7 +447,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 55 "LUAT.c.rl" */
+/* #line 62 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -456,7 +456,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 55 "LUAT.c.rl" */
+/* #line 62 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -465,7 +465,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 61 "LUAT.c.rl" */
+/* #line 68 "dog/tok/LUAT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -474,16 +474,16 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 31 "LUAT.c.rl" */
+/* #line 38 "dog/tok/LUAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = LUATonComment(tok, state);
+    o = LUATonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 23:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -492,7 +492,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -501,7 +501,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -510,7 +510,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 43 "LUAT.c.rl" */
+/* #line 50 "dog/tok/LUAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -519,7 +519,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 55 "LUAT.c.rl" */
+/* #line 62 "dog/tok/LUAT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -534,7 +534,7 @@ _eof_trans:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = LUATonComment(tok, state);
+    o = LUATonComment(tok, 4, 2, state);
     if (o!=OK) {p++; goto _out; }
 }
 	break;
@@ -542,14 +542,14 @@ _eof_trans:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = LUATonComment(tok, state);
+    o = LUATonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }
 	break;
 	}
 	}
 	break;
-/* #line 510 "LUAT.rl.c" */
+/* #line 510 "dog/tok/LUAT.rl.c" */
 		}
 	}
 
@@ -562,7 +562,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 521 "LUAT.rl.c" */
+/* #line 521 "dog/tok/LUAT.rl.c" */
 		}
 	}
 
@@ -582,7 +582,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 131 "LUAT.c.rl" */
+/* #line 138 "dog/tok/LUAT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < LUAT_first_final)

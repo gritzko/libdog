@@ -1,10 +1,10 @@
 
-/* #line 1 "FSHT.c.rl" */
+/* #line 1 "dog/tok/FSHT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "FSHT.h"
 
-ok64 FSHTonComment (u8cs tok, FSHTstate* state);
+ok64 FSHTonComment (u8cs tok, u32 olen, u32 clen, FSHTstate* state);
 ok64 FSHTonString (u8cs tok, FSHTstate* state);
 ok64 FSHTonNumber (u8cs tok, FSHTstate* state);
 ok64 FSHTonWord (u8cs tok, FSHTstate* state);
@@ -12,11 +12,11 @@ ok64 FSHTonPunct (u8cs tok, FSHTstate* state);
 ok64 FSHTonSpace (u8cs tok, FSHTstate* state);
 
 
-/* #line 119 "FSHT.c.rl" */
+/* #line 126 "dog/tok/FSHT.c.rl" */
 
 
 
-/* #line 15 "FSHT.rl.c" */
+/* #line 15 "dog/tok/FSHT.rl.c" */
 static const char _FSHT_actions[] = {
 	0, 1, 2, 1, 3, 1, 10, 1, 
 	11, 1, 12, 1, 13, 1, 14, 1, 
@@ -229,7 +229,7 @@ static const int FSHT_error = 0;
 static const int FSHT_en_main = 43;
 
 
-/* #line 122 "FSHT.c.rl" */
+/* #line 129 "dog/tok/FSHT.c.rl" */
 
 ok64 FSHTLexer(FSHTstate* state) {
 
@@ -248,7 +248,7 @@ ok64 FSHTLexer(FSHTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 243 "FSHT.rl.c" */
+/* #line 243 "dog/tok/FSHT.rl.c" */
 	{
 	cs = FSHT_start;
 	ts = 0;
@@ -256,9 +256,9 @@ ok64 FSHTLexer(FSHTstate* state) {
 	act = 0;
 	}
 
-/* #line 140 "FSHT.c.rl" */
+/* #line 147 "dog/tok/FSHT.c.rl" */
     
-/* #line 249 "FSHT.rl.c" */
+/* #line 249 "dog/tok/FSHT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -279,7 +279,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 268 "FSHT.rl.c" */
+/* #line 268 "dog/tok/FSHT.rl.c" */
 		}
 	}
 
@@ -350,40 +350,40 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 4:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{act = 4;}
 	break;
 	case 5:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{act = 7;}
 	break;
 	case 6:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{act = 8;}
 	break;
 	case 7:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{act = 9;}
 	break;
 	case 8:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{act = 12;}
 	break;
 	case 9:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{act = 13;}
 	break;
 	case 10:
-/* #line 31 "FSHT.c.rl" */
+/* #line 38 "dog/tok/FSHT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = FSHTonComment(tok, state);
+    o = FSHTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 11:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -392,7 +392,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -401,7 +401,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -410,7 +410,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 55 "FSHT.c.rl" */
+/* #line 62 "dog/tok/FSHT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -419,7 +419,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 55 "FSHT.c.rl" */
+/* #line 62 "dog/tok/FSHT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -428,16 +428,16 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 31 "FSHT.c.rl" */
+/* #line 32 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = FSHTonComment(tok, state);
+    o = FSHTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 17:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -446,7 +446,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -455,7 +455,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -464,7 +464,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -473,7 +473,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -482,7 +482,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -491,7 +491,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -500,7 +500,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -509,7 +509,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -518,7 +518,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 49 "FSHT.c.rl" */
+/* #line 56 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -527,7 +527,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 55 "FSHT.c.rl" */
+/* #line 62 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -536,7 +536,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 55 "FSHT.c.rl" */
+/* #line 62 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -545,7 +545,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 55 "FSHT.c.rl" */
+/* #line 62 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -554,7 +554,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 61 "FSHT.c.rl" */
+/* #line 68 "dog/tok/FSHT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -563,7 +563,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 37 "FSHT.c.rl" */
+/* #line 44 "dog/tok/FSHT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -572,7 +572,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -581,7 +581,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -590,7 +590,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 43 "FSHT.c.rl" */
+/* #line 50 "dog/tok/FSHT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -599,7 +599,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 55 "FSHT.c.rl" */
+/* #line 62 "dog/tok/FSHT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -664,7 +664,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 618 "FSHT.rl.c" */
+/* #line 618 "dog/tok/FSHT.rl.c" */
 		}
 	}
 
@@ -681,7 +681,7 @@ _again:
 /* #line 1 "NONE" */
 	{act = 0;}
 	break;
-/* #line 632 "FSHT.rl.c" */
+/* #line 632 "dog/tok/FSHT.rl.c" */
 		}
 	}
 
@@ -701,7 +701,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 141 "FSHT.c.rl" */
+/* #line 148 "dog/tok/FSHT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < FSHT_first_final)

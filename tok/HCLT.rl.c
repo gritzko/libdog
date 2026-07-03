@@ -1,10 +1,10 @@
 
-/* #line 1 "HCLT.c.rl" */
+/* #line 1 "dog/tok/HCLT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "HCLT.h"
 
-ok64 HCLTonComment (u8cs tok, HCLTstate* state);
+ok64 HCLTonComment (u8cs tok, u32 olen, u32 clen, HCLTstate* state);
 ok64 HCLTonString (u8cs tok, HCLTstate* state);
 ok64 HCLTonNumber (u8cs tok, HCLTstate* state);
 ok64 HCLTonWord (u8cs tok, HCLTstate* state);
@@ -12,11 +12,11 @@ ok64 HCLTonPunct (u8cs tok, HCLTstate* state);
 ok64 HCLTonSpace (u8cs tok, HCLTstate* state);
 
 
-/* #line 93 "HCLT.c.rl" */
+/* #line 106 "dog/tok/HCLT.c.rl" */
 
 
 
-/* #line 15 "HCLT.rl.c" */
+/* #line 15 "dog/tok/HCLT.rl.c" */
 static const char _HCLT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 4, 1, 5, 1, 6, 1, 
@@ -150,7 +150,7 @@ static const int HCLT_error = 0;
 static const int HCLT_en_main = 20;
 
 
-/* #line 96 "HCLT.c.rl" */
+/* #line 109 "dog/tok/HCLT.c.rl" */
 
 ok64 HCLTLexer(HCLTstate* state) {
 
@@ -169,7 +169,7 @@ ok64 HCLTLexer(HCLTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 164 "HCLT.rl.c" */
+/* #line 164 "dog/tok/HCLT.rl.c" */
 	{
 	cs = HCLT_start;
 	ts = 0;
@@ -177,9 +177,9 @@ ok64 HCLTLexer(HCLTstate* state) {
 	act = 0;
 	}
 
-/* #line 114 "HCLT.c.rl" */
+/* #line 127 "dog/tok/HCLT.c.rl" */
     
-/* #line 170 "HCLT.rl.c" */
+/* #line 170 "dog/tok/HCLT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -200,7 +200,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 189 "HCLT.rl.c" */
+/* #line 189 "dog/tok/HCLT.rl.c" */
 		}
 	}
 
@@ -271,16 +271,16 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 26 "HCLT.c.rl" */
+/* #line 39 "dog/tok/HCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HCLTonComment(tok, state);
+    o = HCLTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 4:
-/* #line 32 "HCLT.c.rl" */
+/* #line 45 "dog/tok/HCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -289,7 +289,7 @@ _eof_trans:
 }}
 	break;
 	case 5:
-/* #line 50 "HCLT.c.rl" */
+/* #line 63 "dog/tok/HCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -298,7 +298,7 @@ _eof_trans:
 }}
 	break;
 	case 6:
-/* #line 50 "HCLT.c.rl" */
+/* #line 63 "dog/tok/HCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -307,25 +307,25 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 26 "HCLT.c.rl" */
+/* #line 27 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HCLTonComment(tok, state);
+    o = HCLTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 8:
-/* #line 26 "HCLT.c.rl" */
+/* #line 33 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HCLTonComment(tok, state);
+    o = HCLTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 9:
-/* #line 38 "HCLT.c.rl" */
+/* #line 51 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -334,7 +334,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 38 "HCLT.c.rl" */
+/* #line 51 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -343,7 +343,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 38 "HCLT.c.rl" */
+/* #line 51 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -352,7 +352,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 44 "HCLT.c.rl" */
+/* #line 57 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -361,7 +361,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 50 "HCLT.c.rl" */
+/* #line 63 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -370,7 +370,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 50 "HCLT.c.rl" */
+/* #line 63 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -379,7 +379,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 56 "HCLT.c.rl" */
+/* #line 69 "dog/tok/HCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -388,7 +388,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 38 "HCLT.c.rl" */
+/* #line 51 "dog/tok/HCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -397,7 +397,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 38 "HCLT.c.rl" */
+/* #line 51 "dog/tok/HCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -406,7 +406,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 38 "HCLT.c.rl" */
+/* #line 51 "dog/tok/HCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -415,7 +415,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 50 "HCLT.c.rl" */
+/* #line 63 "dog/tok/HCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -424,7 +424,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 50 "HCLT.c.rl" */
+/* #line 63 "dog/tok/HCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -432,7 +432,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-/* #line 401 "HCLT.rl.c" */
+/* #line 401 "dog/tok/HCLT.rl.c" */
 		}
 	}
 
@@ -445,7 +445,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 412 "HCLT.rl.c" */
+/* #line 412 "dog/tok/HCLT.rl.c" */
 		}
 	}
 
@@ -465,7 +465,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 115 "HCLT.c.rl" */
+/* #line 128 "dog/tok/HCLT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < HCLT_first_final)

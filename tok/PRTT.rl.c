@@ -1,10 +1,10 @@
 
-/* #line 1 "PRTT.c.rl" */
+/* #line 1 "dog/tok/PRTT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "PRTT.h"
 
-ok64 PRTTonComment (u8cs tok, PRTTstate* state);
+ok64 PRTTonComment (u8cs tok, u32 olen, u32 clen, PRTTstate* state);
 ok64 PRTTonString (u8cs tok, PRTTstate* state);
 ok64 PRTTonNumber (u8cs tok, PRTTstate* state);
 ok64 PRTTonWord (u8cs tok, PRTTstate* state);
@@ -12,11 +12,11 @@ ok64 PRTTonPunct (u8cs tok, PRTTstate* state);
 ok64 PRTTonSpace (u8cs tok, PRTTstate* state);
 
 
-/* #line 96 "PRTT.c.rl" */
+/* #line 103 "dog/tok/PRTT.c.rl" */
 
 
 
-/* #line 15 "PRTT.rl.c" */
+/* #line 15 "dog/tok/PRTT.rl.c" */
 static const char _PRTT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	5, 1, 6, 1, 7, 1, 8, 1, 
@@ -154,7 +154,7 @@ static const int PRTT_error = 0;
 static const int PRTT_en_main = 18;
 
 
-/* #line 99 "PRTT.c.rl" */
+/* #line 106 "dog/tok/PRTT.c.rl" */
 
 ok64 PRTTLexer(PRTTstate* state) {
 
@@ -173,7 +173,7 @@ ok64 PRTTLexer(PRTTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 168 "PRTT.rl.c" */
+/* #line 168 "dog/tok/PRTT.rl.c" */
 	{
 	cs = PRTT_start;
 	ts = 0;
@@ -181,9 +181,9 @@ ok64 PRTTLexer(PRTTstate* state) {
 	act = 0;
 	}
 
-/* #line 117 "PRTT.c.rl" */
+/* #line 124 "dog/tok/PRTT.c.rl" */
     
-/* #line 174 "PRTT.rl.c" */
+/* #line 174 "dog/tok/PRTT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -204,7 +204,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 193 "PRTT.rl.c" */
+/* #line 193 "dog/tok/PRTT.rl.c" */
 		}
 	}
 
@@ -275,24 +275,24 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{act = 9;}
 	break;
 	case 5:
-/* #line 28 "PRTT.c.rl" */
+/* #line 35 "dog/tok/PRTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PRTTonComment(tok, state);
+    o = PRTTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 6:
-/* #line 34 "PRTT.c.rl" */
+/* #line 41 "dog/tok/PRTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -301,7 +301,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 34 "PRTT.c.rl" */
+/* #line 41 "dog/tok/PRTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -310,7 +310,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 52 "PRTT.c.rl" */
+/* #line 59 "dog/tok/PRTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -319,16 +319,16 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 28 "PRTT.c.rl" */
+/* #line 29 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PRTTonComment(tok, state);
+    o = PRTTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -337,7 +337,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -346,7 +346,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -355,7 +355,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -364,7 +364,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -373,7 +373,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 46 "PRTT.c.rl" */
+/* #line 53 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -382,7 +382,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 52 "PRTT.c.rl" */
+/* #line 59 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -391,7 +391,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 52 "PRTT.c.rl" */
+/* #line 59 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -400,7 +400,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 58 "PRTT.c.rl" */
+/* #line 65 "dog/tok/PRTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -409,7 +409,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -418,7 +418,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -427,7 +427,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 40 "PRTT.c.rl" */
+/* #line 47 "dog/tok/PRTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -436,7 +436,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 52 "PRTT.c.rl" */
+/* #line 59 "dog/tok/PRTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -466,7 +466,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 432 "PRTT.rl.c" */
+/* #line 432 "dog/tok/PRTT.rl.c" */
 		}
 	}
 
@@ -479,7 +479,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 443 "PRTT.rl.c" */
+/* #line 443 "dog/tok/PRTT.rl.c" */
 		}
 	}
 
@@ -499,7 +499,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 118 "PRTT.c.rl" */
+/* #line 125 "dog/tok/PRTT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < PRTT_first_final)

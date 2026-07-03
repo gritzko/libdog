@@ -24,7 +24,7 @@ static b8 YMLTIsKeyword(u8cs tok) {
 
 ok64 YMLTonComment(u8cs tok, YMLTstate *state) {
     sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+    if (state->cb) return FREECommentFeedN(tok, 1, 0, state->cb, state->ctx);  // DOG-006
     done;
 }
 

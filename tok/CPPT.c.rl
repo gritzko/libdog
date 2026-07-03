@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "CPPT.h"
 
-ok64 CPPTonComment (u8cs tok, CPPTstate* state);
+ok64 CPPTonComment (u8cs tok, u32 olen, u32 clen, CPPTstate* state);
 ok64 CPPTonString (u8cs tok, CPPTstate* state);
 ok64 CPPTonNumber (u8cs tok, CPPTstate* state);
 ok64 CPPTonPreproc (u8cs tok, CPPTstate* state);
@@ -32,10 +32,19 @@ esc = [\\] ( [abefnrtv\\'\"?0]
 
 strpfx = [LuU] | "u8";
 
-action on_comment {
+#  DOG-006: split the comment delimiter from the body — "//" (2,0) and
+#  "/* */" (2,2); the handler emits the delimiter as 'D' and StrictMark-
+#  parses only the body.
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CPPTonComment(tok, state);
+    o = CPPTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = CPPTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -112,8 +121,8 @@ fsuf = [fFlLdD]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- raw strings R"delim(...)delim" (DOG-007) ----
     # capture <delim>, the action skips the opaque body to `)<delim>"`.

@@ -1,10 +1,10 @@
 
-/* #line 1 "HST.c.rl" */
+/* #line 1 "dog/tok/HST.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "HST.h"
 
-ok64 HSTonComment (u8cs tok, HSTstate* state);
+ok64 HSTonComment (u8cs tok, u32 olen, u32 clen, HSTstate* state);
 ok64 HSTonString (u8cs tok, HSTstate* state);
 ok64 HSTonNumber (u8cs tok, HSTstate* state);
 ok64 HSTonPragma (u8cs tok, HSTstate* state);
@@ -13,11 +13,11 @@ ok64 HSTonPunct (u8cs tok, HSTstate* state);
 ok64 HSTonSpace (u8cs tok, HSTstate* state);
 
 
-/* #line 116 "HST.c.rl" */
+/* #line 123 "dog/tok/HST.c.rl" */
 
 
 
-/* #line 16 "HST.rl.c" */
+/* #line 16 "dog/tok/HST.rl.c" */
 static const char _HST_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 4, 1, 5, 1, 6, 1, 
@@ -150,7 +150,7 @@ static const int HST_error = 0;
 static const int HST_en_main = 18;
 
 
-/* #line 119 "HST.c.rl" */
+/* #line 126 "dog/tok/HST.c.rl" */
 
 ok64 HSTLexer(HSTstate* state) {
 
@@ -169,7 +169,7 @@ ok64 HSTLexer(HSTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 164 "HST.rl.c" */
+/* #line 164 "dog/tok/HST.rl.c" */
 	{
 	cs = HST_start;
 	ts = 0;
@@ -177,9 +177,9 @@ ok64 HSTLexer(HSTstate* state) {
 	act = 0;
 	}
 
-/* #line 137 "HST.c.rl" */
+/* #line 144 "dog/tok/HST.c.rl" */
     
-/* #line 170 "HST.rl.c" */
+/* #line 170 "dog/tok/HST.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -200,7 +200,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 189 "HST.rl.c" */
+/* #line 189 "dog/tok/HST.rl.c" */
 		}
 	}
 
@@ -271,16 +271,16 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 32 "HST.c.rl" */
+/* #line 33 "dog/tok/HST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HSTonComment(tok, state);
+    o = HSTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 4:
-/* #line 38 "HST.c.rl" */
+/* #line 45 "dog/tok/HST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -289,7 +289,7 @@ _eof_trans:
 }}
 	break;
 	case 5:
-/* #line 38 "HST.c.rl" */
+/* #line 45 "dog/tok/HST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -298,7 +298,7 @@ _eof_trans:
 }}
 	break;
 	case 6:
-/* #line 62 "HST.c.rl" */
+/* #line 69 "dog/tok/HST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -307,7 +307,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 62 "HST.c.rl" */
+/* #line 69 "dog/tok/HST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -316,7 +316,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 62 "HST.c.rl" */
+/* #line 69 "dog/tok/HST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -325,16 +325,16 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 32 "HST.c.rl" */
+/* #line 39 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HSTonComment(tok, state);
+    o = HSTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -343,7 +343,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -352,7 +352,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -361,7 +361,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -370,7 +370,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -379,7 +379,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -388,7 +388,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 56 "HST.c.rl" */
+/* #line 63 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -397,7 +397,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 62 "HST.c.rl" */
+/* #line 69 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -406,7 +406,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 68 "HST.c.rl" */
+/* #line 75 "dog/tok/HST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -415,7 +415,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -424,7 +424,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 44 "HST.c.rl" */
+/* #line 51 "dog/tok/HST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -433,7 +433,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 62 "HST.c.rl" */
+/* #line 69 "dog/tok/HST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -441,7 +441,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-/* #line 409 "HST.rl.c" */
+/* #line 409 "dog/tok/HST.rl.c" */
 		}
 	}
 
@@ -454,7 +454,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 420 "HST.rl.c" */
+/* #line 420 "dog/tok/HST.rl.c" */
 		}
 	}
 
@@ -474,7 +474,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 138 "HST.c.rl" */
+/* #line 145 "dog/tok/HST.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < HST_first_final)

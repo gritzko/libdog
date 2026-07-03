@@ -1,10 +1,10 @@
 
-/* #line 1 "SCSST.c.rl" */
+/* #line 1 "dog/tok/SCSST.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "SCSST.h"
 
-ok64 SCSSTonComment (u8cs tok, SCSSTstate* state);
+ok64 SCSSTonComment (u8cs tok, u32 olen, u32 clen, SCSSTstate* state);
 ok64 SCSSTonString (u8cs tok, SCSSTstate* state);
 ok64 SCSSTonNumber (u8cs tok, SCSSTstate* state);
 ok64 SCSSTonAtRule (u8cs tok, SCSSTstate* state);
@@ -14,11 +14,11 @@ ok64 SCSSTonPunct (u8cs tok, SCSSTstate* state);
 ok64 SCSSTonSpace (u8cs tok, SCSSTstate* state);
 
 
-/* #line 120 "SCSST.c.rl" */
+/* #line 127 "dog/tok/SCSST.c.rl" */
 
 
 
-/* #line 17 "SCSST.rl.c" */
+/* #line 17 "dog/tok/SCSST.rl.c" */
 static const char _SCSST_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 4, 1, 5, 1, 6, 1, 
@@ -155,7 +155,7 @@ static const int SCSST_error = 0;
 static const int SCSST_en_main = 15;
 
 
-/* #line 123 "SCSST.c.rl" */
+/* #line 130 "dog/tok/SCSST.c.rl" */
 
 ok64 SCSSTLexer(SCSSTstate* state) {
 
@@ -174,7 +174,7 @@ ok64 SCSSTLexer(SCSSTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 169 "SCSST.rl.c" */
+/* #line 169 "dog/tok/SCSST.rl.c" */
 	{
 	cs = SCSST_start;
 	ts = 0;
@@ -182,9 +182,9 @@ ok64 SCSSTLexer(SCSSTstate* state) {
 	act = 0;
 	}
 
-/* #line 141 "SCSST.c.rl" */
+/* #line 148 "dog/tok/SCSST.c.rl" */
     
-/* #line 175 "SCSST.rl.c" */
+/* #line 175 "dog/tok/SCSST.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -205,7 +205,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 194 "SCSST.rl.c" */
+/* #line 194 "dog/tok/SCSST.rl.c" */
 		}
 	}
 
@@ -276,16 +276,16 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 29 "SCSST.c.rl" */
+/* #line 36 "dog/tok/SCSST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SCSSTonComment(tok, state);
+    o = SCSSTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 4:
-/* #line 35 "SCSST.c.rl" */
+/* #line 42 "dog/tok/SCSST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -294,7 +294,7 @@ _eof_trans:
 }}
 	break;
 	case 5:
-/* #line 35 "SCSST.c.rl" */
+/* #line 42 "dog/tok/SCSST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -303,7 +303,7 @@ _eof_trans:
 }}
 	break;
 	case 6:
-/* #line 41 "SCSST.c.rl" */
+/* #line 48 "dog/tok/SCSST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -312,7 +312,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 65 "SCSST.c.rl" */
+/* #line 72 "dog/tok/SCSST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -321,7 +321,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 65 "SCSST.c.rl" */
+/* #line 72 "dog/tok/SCSST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -330,16 +330,16 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 29 "SCSST.c.rl" */
+/* #line 30 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SCSSTonComment(tok, state);
+    o = SCSSTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 41 "SCSST.c.rl" */
+/* #line 48 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -348,7 +348,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 41 "SCSST.c.rl" */
+/* #line 48 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -357,7 +357,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 41 "SCSST.c.rl" */
+/* #line 48 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -366,7 +366,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 47 "SCSST.c.rl" */
+/* #line 54 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -375,7 +375,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 59 "SCSST.c.rl" */
+/* #line 66 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -384,7 +384,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 53 "SCSST.c.rl" */
+/* #line 60 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -393,7 +393,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 53 "SCSST.c.rl" */
+/* #line 60 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -402,7 +402,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 65 "SCSST.c.rl" */
+/* #line 72 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -411,7 +411,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 65 "SCSST.c.rl" */
+/* #line 72 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -420,7 +420,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 71 "SCSST.c.rl" */
+/* #line 78 "dog/tok/SCSST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -429,7 +429,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 41 "SCSST.c.rl" */
+/* #line 48 "dog/tok/SCSST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -438,7 +438,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 65 "SCSST.c.rl" */
+/* #line 72 "dog/tok/SCSST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -446,7 +446,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-/* #line 414 "SCSST.rl.c" */
+/* #line 414 "dog/tok/SCSST.rl.c" */
 		}
 	}
 
@@ -459,7 +459,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 425 "SCSST.rl.c" */
+/* #line 425 "dog/tok/SCSST.rl.c" */
 		}
 	}
 
@@ -479,7 +479,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 142 "SCSST.c.rl" */
+/* #line 149 "dog/tok/SCSST.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < SCSST_first_final)

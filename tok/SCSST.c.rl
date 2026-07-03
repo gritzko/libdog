@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "SCSST.h"
 
-ok64 SCSSTonComment (u8cs tok, SCSSTstate* state);
+ok64 SCSSTonComment (u8cs tok, u32 olen, u32 clen, SCSSTstate* state);
 ok64 SCSSTonString (u8cs tok, SCSSTstate* state);
 ok64 SCSSTonNumber (u8cs tok, SCSSTstate* state);
 ok64 SCSSTonAtRule (u8cs tok, SCSSTstate* state);
@@ -26,10 +26,17 @@ xdgt = [0-9a-fA-F];
 
 esc = [\\] any8;
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0) and "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SCSSTonComment(tok, state);
+    o = SCSSTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SCSSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -81,8 +88,8 @@ unit = [a-zA-Z%]+;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- strings ----
     0x22 ( esc | any8 - [\\] - 0x22 )* 0x22                     => on_string;

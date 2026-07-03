@@ -28,7 +28,7 @@ static b8 VIMTIsKeyword(u8cs tok) {
 
 ok64 VIMTonComment(u8cs tok, VIMTstate *state) {
     sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+    if (state->cb) return FREECommentFeedN(tok, 1, 0, state->cb, state->ctx);  // DOG-006
     done;
 }
 

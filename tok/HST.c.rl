@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "HST.h"
 
-ok64 HSTonComment (u8cs tok, HSTstate* state);
+ok64 HSTonComment (u8cs tok, u32 olen, u32 clen, HSTstate* state);
 ok64 HSTonString (u8cs tok, HSTstate* state);
 ok64 HSTonNumber (u8cs tok, HSTstate* state);
 ok64 HSTonPragma (u8cs tok, HSTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\\x27\x220&]
            | [o] odgt+
            | dgt+ );
 
-action on_comment {
+# DOG-006: block "{-".."-}" (2,2), line "--" (2,0) — delimiter 'D', body StrictMark
+action on_block_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HSTonComment(tok, state);
+    o = HSTonComment(tok, 2, 2, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = HSTonComment(tok, 2, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -75,10 +82,10 @@ action on_space {
 main := |*
 
     # ---- block comments (not nested for simplicity) ----
-    "{-" ( any8 - 0x2d | 0x2d (any8 - 0x7d) )* "-}"             => on_comment;
+    "{-" ( any8 - 0x2d | 0x2d (any8 - 0x7d) )* "-}"             => on_block_comment;
 
     # ---- line comments ----
-    "--" [^\n]*                                                   => on_comment;
+    "--" [^\n]*                                                   => on_line_comment;
 
     # ---- strings ----
     0x22 ( [\\] any8 | any8 - 0x22 - [\\] )* 0x22               => on_string;

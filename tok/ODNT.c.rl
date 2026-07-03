@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "ODNT.h"
 
-ok64 ODNTonComment (u8cs tok, ODNTstate* state);
+ok64 ODNTonComment (u8cs tok, u32 olen, u32 clen, ODNTstate* state);
 ok64 ODNTonString (u8cs tok, ODNTstate* state);
 ok64 ODNTonNumber (u8cs tok, ODNTstate* state);
 ok64 ODNTonWord (u8cs tok, ODNTstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abefnrtv\\'\"0]
            | [u] xdgt{4}
            | [U] xdgt{8} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0), "/* */" (2,2)
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = ODNTonComment(tok, state);
+    o = ODNTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = ODNTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -73,8 +80,8 @@ odig = odgt ( [_]? odgt )*;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- string literals ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

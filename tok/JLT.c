@@ -27,9 +27,9 @@ static b8 JLTIsKeyword(u8cs tok) {
     return NO;
 }
 
-ok64 JLTonComment(u8cs tok, JLTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 JLTonComment(u8cs tok, u32 olen, u32 clen, JLTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

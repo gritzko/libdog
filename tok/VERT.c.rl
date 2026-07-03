@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "VERT.h"
 
-ok64 VERTonComment (u8cs tok, VERTstate* state);
+ok64 VERTonComment (u8cs tok, u32 olen, u32 clen, VERTstate* state);
 ok64 VERTonString (u8cs tok, VERTstate* state);
 ok64 VERTonNumber (u8cs tok, VERTstate* state);
 ok64 VERTonPreproc (u8cs tok, VERTstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abefnrtv\\'\"?0]
            | odgt{1,3}
            | [x] xdgt+ );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0) and "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = VERTonComment(tok, state);
+    o = VERTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = VERTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -74,8 +81,8 @@ action on_space {
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- strings ----
     ["] ( esc | any8 - ["\\] )* ["]                               => on_string;

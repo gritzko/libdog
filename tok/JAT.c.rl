@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "JAT.h"
 
-ok64 JATonComment (u8cs tok, JATstate* state);
+ok64 JATonComment (u8cs tok, u32 olen, u32 clen, JATstate* state);
 ok64 JATonString (u8cs tok, JATstate* state);
 ok64 JATonNumber (u8cs tok, JATstate* state);
 ok64 JATonAnnotation (u8cs tok, JATstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\'\"?0]
            | [x] xdgt+
            | [u] xdgt{4} );
 
-action on_comment {
+# DOG-006: "//" (2,0) and "/* */" (2,2); delimiters emit 'D', body StrictMark.
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JATonComment(tok, state);
+    o = JATonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = JATonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -86,8 +93,8 @@ fsuf = [fFdD]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- text blocks (triple-quoted strings) ----
     ["] ["] ["] ( any8 - ["] | ["] (any8 - ["]) | ["] ["] (any8 - ["]) )* ["] ["] ["]   => on_string;

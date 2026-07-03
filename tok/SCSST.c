@@ -3,9 +3,9 @@
 #include "abc/PRO.h"
 #include "dog/tok/FREE.h"
 
-ok64 SCSSTonComment(u8cs tok, SCSSTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 SCSSTonComment(u8cs tok, u32 olen, u32 clen, SCSSTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006: delimiter as 'D', body StrictMark
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

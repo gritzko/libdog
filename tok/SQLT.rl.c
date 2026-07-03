@@ -1,10 +1,10 @@
 
-/* #line 1 "SQLT.c.rl" */
+/* #line 1 "dog/tok/SQLT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "SQLT.h"
 
-ok64 SQLTonComment (u8cs tok, SQLTstate* state);
+ok64 SQLTonComment (u8cs tok, u32 olen, u32 clen, SQLTstate* state);
 ok64 SQLTonString (u8cs tok, SQLTstate* state);
 ok64 SQLTonNumber (u8cs tok, SQLTstate* state);
 ok64 SQLTonWord (u8cs tok, SQLTstate* state);
@@ -12,11 +12,11 @@ ok64 SQLTonPunct (u8cs tok, SQLTstate* state);
 ok64 SQLTonSpace (u8cs tok, SQLTstate* state);
 
 
-/* #line 93 "SQLT.c.rl" */
+/* #line 100 "dog/tok/SQLT.c.rl" */
 
 
 
-/* #line 15 "SQLT.rl.c" */
+/* #line 15 "dog/tok/SQLT.rl.c" */
 static const char _SQLT_actions[] = {
 	0, 1, 2, 1, 3, 1, 5, 1, 
 	6, 1, 7, 1, 8, 1, 9, 1, 
@@ -132,7 +132,7 @@ static const int SQLT_error = 0;
 static const int SQLT_en_main = 11;
 
 
-/* #line 96 "SQLT.c.rl" */
+/* #line 103 "dog/tok/SQLT.c.rl" */
 
 ok64 SQLTLexer(SQLTstate* state) {
 
@@ -151,7 +151,7 @@ ok64 SQLTLexer(SQLTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 146 "SQLT.rl.c" */
+/* #line 146 "dog/tok/SQLT.rl.c" */
 	{
 	cs = SQLT_start;
 	ts = 0;
@@ -159,9 +159,9 @@ ok64 SQLTLexer(SQLTstate* state) {
 	act = 0;
 	}
 
-/* #line 114 "SQLT.c.rl" */
+/* #line 121 "dog/tok/SQLT.c.rl" */
     
-/* #line 152 "SQLT.rl.c" */
+/* #line 152 "dog/tok/SQLT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -182,7 +182,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 171 "SQLT.rl.c" */
+/* #line 171 "dog/tok/SQLT.rl.c" */
 		}
 	}
 
@@ -252,20 +252,20 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 4:
-/* #line 30 "SQLT.c.rl" */
+/* #line 37 "dog/tok/SQLT.c.rl" */
 	{act = 3;}
 	break;
 	case 5:
-/* #line 24 "SQLT.c.rl" */
+/* #line 31 "dog/tok/SQLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SQLTonComment(tok, state);
+    o = SQLTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 6:
-/* #line 30 "SQLT.c.rl" */
+/* #line 37 "dog/tok/SQLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -274,7 +274,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 48 "SQLT.c.rl" */
+/* #line 55 "dog/tok/SQLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -283,7 +283,7 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 48 "SQLT.c.rl" */
+/* #line 55 "dog/tok/SQLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -292,16 +292,16 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 24 "SQLT.c.rl" */
+/* #line 25 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SQLTonComment(tok, state);
+    o = SQLTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 30 "SQLT.c.rl" */
+/* #line 37 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -310,7 +310,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 36 "SQLT.c.rl" */
+/* #line 43 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -319,7 +319,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 36 "SQLT.c.rl" */
+/* #line 43 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -328,7 +328,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 36 "SQLT.c.rl" */
+/* #line 43 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -337,7 +337,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 42 "SQLT.c.rl" */
+/* #line 49 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -346,7 +346,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 48 "SQLT.c.rl" */
+/* #line 55 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -355,7 +355,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 48 "SQLT.c.rl" */
+/* #line 55 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -364,7 +364,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 54 "SQLT.c.rl" */
+/* #line 61 "dog/tok/SQLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -373,7 +373,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 36 "SQLT.c.rl" */
+/* #line 43 "dog/tok/SQLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -382,7 +382,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 36 "SQLT.c.rl" */
+/* #line 43 "dog/tok/SQLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -391,7 +391,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 36 "SQLT.c.rl" */
+/* #line 43 "dog/tok/SQLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -400,7 +400,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 48 "SQLT.c.rl" */
+/* #line 55 "dog/tok/SQLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -425,7 +425,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 393 "SQLT.rl.c" */
+/* #line 393 "dog/tok/SQLT.rl.c" */
 		}
 	}
 
@@ -442,7 +442,7 @@ _again:
 /* #line 1 "NONE" */
 	{act = 0;}
 	break;
-/* #line 407 "SQLT.rl.c" */
+/* #line 407 "dog/tok/SQLT.rl.c" */
 		}
 	}
 
@@ -462,7 +462,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 115 "SQLT.c.rl" */
+/* #line 122 "dog/tok/SQLT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < SQLT_first_final)

@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "SWFT.h"
 
-ok64 SWFTonComment (u8cs tok, SWFTstate* state);
+ok64 SWFTonComment (u8cs tok, u32 olen, u32 clen, SWFTstate* state);
 ok64 SWFTonString (u8cs tok, SWFTstate* state);
 ok64 SWFTonNumber (u8cs tok, SWFTstate* state);
 ok64 SWFTonWord (u8cs tok, SWFTstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abefnrtv\\'\"?0]
            | [u] "{" xdgt{1,8} "}"
            | [\n] );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0), "/* */" (2,2)
+action on_c20 {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SWFTonComment(tok, state);
+    o = SWFTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_c22 {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SWFTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -74,8 +81,8 @@ odig = odgt ( [_]? odgt )*;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_c20;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_c22;
 
     # ---- extended string delimiters #"..."# ----
     [#] ["] ( any8 - ["] | ["] (any8 - [#]) )* ["] [#]           => on_string;

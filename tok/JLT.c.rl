@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "JLT.h"
 
-ok64 JLTonComment (u8cs tok, JLTstate* state);
+ok64 JLTonComment (u8cs tok, u32 olen, u32 clen, JLTstate* state);
 ok64 JLTonString (u8cs tok, JLTstate* state);
 ok64 JLTonNumber (u8cs tok, JLTstate* state);
 ok64 JLTonWord (u8cs tok, JLTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\'\"0$]
            | [U] xdgt{8}
            | [\n] );
 
-action on_comment {
+# DOG-006: block "#=".."=#" (2,2), line "#" (1,0) — delimiter 'D', body StrictMark
+action on_block_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JLTonComment(tok, state);
+    o = JLTonComment(tok, 2, 2, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = JLTonComment(tok, 1, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -74,10 +81,10 @@ bdig = [01] ( [_]? [01] )*;
 main := |*
 
     # ---- nested block comments #= ... =# (flat approximation) ----
-    "#=" ( any8 - [=] | [=] (any8 - [#]) )* "=#"                => on_comment;
+    "#=" ( any8 - [=] | [=] (any8 - [#]) )* "=#"                => on_block_comment;
 
     # ---- line comments ----
-    [#] [^\n]*                                                    => on_comment;
+    [#] [^\n]*                                                    => on_line_comment;
 
     # ---- triple-quoted strings ----
     ["] ["] ["] ( any8 - ["] | ["] (any8 - ["]) | ["] ["] (any8 - ["]) )* ["] ["] ["]   => on_string;

@@ -1,10 +1,10 @@
 
-/* #line 1 "NIMT.c.rl" */
+/* #line 1 "dog/tok/NIMT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "NIMT.h"
 
-ok64 NIMTonComment (u8cs tok, NIMTstate* state);
+ok64 NIMTonComment (u8cs tok, u32 olen, u32 clen, NIMTstate* state);
 ok64 NIMTonString (u8cs tok, NIMTstate* state);
 ok64 NIMTonNumber (u8cs tok, NIMTstate* state);
 ok64 NIMTonWord (u8cs tok, NIMTstate* state);
@@ -12,11 +12,11 @@ ok64 NIMTonPunct (u8cs tok, NIMTstate* state);
 ok64 NIMTonSpace (u8cs tok, NIMTstate* state);
 
 
-/* #line 120 "NIMT.c.rl" */
+/* #line 127 "dog/tok/NIMT.c.rl" */
 
 
 
-/* #line 15 "NIMT.rl.c" */
+/* #line 15 "dog/tok/NIMT.rl.c" */
 static const char _NIMT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	12, 1, 13, 1, 14, 1, 15, 1, 
@@ -313,7 +313,7 @@ static const int NIMT_error = 0;
 static const int NIMT_en_main = 59;
 
 
-/* #line 123 "NIMT.c.rl" */
+/* #line 130 "dog/tok/NIMT.c.rl" */
 
 ok64 NIMTLexer(NIMTstate* state) {
 
@@ -332,7 +332,7 @@ ok64 NIMTLexer(NIMTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 327 "NIMT.rl.c" */
+/* #line 327 "dog/tok/NIMT.rl.c" */
 	{
 	cs = NIMT_start;
 	ts = 0;
@@ -340,9 +340,9 @@ ok64 NIMTLexer(NIMTstate* state) {
 	act = 0;
 	}
 
-/* #line 141 "NIMT.c.rl" */
+/* #line 148 "dog/tok/NIMT.c.rl" */
     
-/* #line 333 "NIMT.rl.c" */
+/* #line 333 "dog/tok/NIMT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -363,7 +363,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 352 "NIMT.rl.c" */
+/* #line 352 "dog/tok/NIMT.rl.c" */
 		}
 	}
 
@@ -434,52 +434,52 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 29 "NIMT.c.rl" */
+/* #line 30 "dog/tok/NIMT.c.rl" */
 	{act = 1;}
 	break;
 	case 4:
-/* #line 29 "NIMT.c.rl" */
+/* #line 36 "dog/tok/NIMT.c.rl" */
 	{act = 2;}
 	break;
 	case 5:
-/* #line 35 "NIMT.c.rl" */
+/* #line 42 "dog/tok/NIMT.c.rl" */
 	{act = 4;}
 	break;
 	case 6:
-/* #line 35 "NIMT.c.rl" */
+/* #line 42 "dog/tok/NIMT.c.rl" */
 	{act = 5;}
 	break;
 	case 7:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{act = 7;}
 	break;
 	case 8:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{act = 8;}
 	break;
 	case 9:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{act = 9;}
 	break;
 	case 10:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{act = 11;}
 	break;
 	case 11:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{act = 12;}
 	break;
 	case 12:
-/* #line 29 "NIMT.c.rl" */
+/* #line 30 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIMTonComment(tok, state);
+    o = NIMTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 13:
-/* #line 35 "NIMT.c.rl" */
+/* #line 42 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -488,7 +488,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 35 "NIMT.c.rl" */
+/* #line 42 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -497,7 +497,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 35 "NIMT.c.rl" */
+/* #line 42 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -506,7 +506,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 35 "NIMT.c.rl" */
+/* #line 42 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -515,7 +515,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -524,7 +524,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -533,7 +533,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -542,7 +542,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -551,7 +551,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -560,7 +560,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -569,7 +569,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 53 "NIMT.c.rl" */
+/* #line 60 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -578,7 +578,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 53 "NIMT.c.rl" */
+/* #line 60 "dog/tok/NIMT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -587,16 +587,16 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 29 "NIMT.c.rl" */
+/* #line 36 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIMTonComment(tok, state);
+    o = NIMTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 26:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -605,7 +605,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -614,7 +614,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -623,7 +623,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -632,7 +632,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -641,7 +641,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -650,7 +650,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 47 "NIMT.c.rl" */
+/* #line 54 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -659,7 +659,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 53 "NIMT.c.rl" */
+/* #line 60 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -668,7 +668,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 53 "NIMT.c.rl" */
+/* #line 60 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -677,7 +677,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 53 "NIMT.c.rl" */
+/* #line 60 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -686,7 +686,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 59 "NIMT.c.rl" */
+/* #line 66 "dog/tok/NIMT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -695,16 +695,16 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 29 "NIMT.c.rl" */
+/* #line 36 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIMTonComment(tok, state);
+    o = NIMTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 38:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -713,7 +713,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -722,7 +722,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -731,7 +731,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -740,7 +740,7 @@ _eof_trans:
 }}
 	break;
 	case 42:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -749,7 +749,7 @@ _eof_trans:
 }}
 	break;
 	case 43:
-/* #line 41 "NIMT.c.rl" */
+/* #line 48 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -758,7 +758,7 @@ _eof_trans:
 }}
 	break;
 	case 44:
-/* #line 47 "NIMT.c.rl" */
+/* #line 54 "dog/tok/NIMT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -773,7 +773,7 @@ _eof_trans:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIMTonComment(tok, state);
+    o = NIMTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }
 	break;
@@ -781,7 +781,7 @@ _eof_trans:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIMTonComment(tok, state);
+    o = NIMTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }
 	break;
@@ -844,7 +844,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 788 "NIMT.rl.c" */
+/* #line 788 "dog/tok/NIMT.rl.c" */
 		}
 	}
 
@@ -857,7 +857,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 799 "NIMT.rl.c" */
+/* #line 799 "dog/tok/NIMT.rl.c" */
 		}
 	}
 
@@ -877,7 +877,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 142 "NIMT.c.rl" */
+/* #line 149 "dog/tok/NIMT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < NIMT_first_final)

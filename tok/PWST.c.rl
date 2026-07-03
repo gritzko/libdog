@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "PWST.h"
 
-ok64 PWSTonComment (u8cs tok, PWSTstate* state);
+ok64 PWSTonComment (u8cs tok, u32 olen, u32 clen, PWSTstate* state);
 ok64 PWSTonString (u8cs tok, PWSTstate* state);
 ok64 PWSTonNumber (u8cs tok, PWSTstate* state);
 ok64 PWSTonVar (u8cs tok, PWSTstate* state);
@@ -23,10 +23,17 @@ idalnum = [a-zA-Z_0-9];
 dgt = [0-9];
 xdgt = [0-9a-fA-F];
 
-action on_comment {
+# DOG-006: line "#" (1,0), block "<#".."#>" (2,2) — delimiter 'D', body StrictMark
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PWSTonComment(tok, state);
+    o = PWSTonComment(tok, 1, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = PWSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -69,8 +76,8 @@ action on_space {
 main := |*
 
     # ---- comments ----
-    [#] [^\n]*                                                    => on_comment;
-    "<#" ( any8 - [#] | [#]+ (any8 - [#>]) )* [#]+ ">"          => on_comment;
+    [#] [^\n]*                                                    => on_line_comment;
+    "<#" ( any8 - [#] | [#]+ (any8 - [#>]) )* [#]+ ">"          => on_block_comment;
 
     # ---- here-strings ----
     "@" ["] ( any8 - ["] | ["] (any8 - [@]) )* ["] "@"           => on_string;

@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "SCLT.h"
 
-ok64 SCLTonComment (u8cs tok, SCLTstate* state);
+ok64 SCLTonComment (u8cs tok, u32 olen, u32 clen, SCLTstate* state);
 ok64 SCLTonString (u8cs tok, SCLTstate* state);
 ok64 SCLTonNumber (u8cs tok, SCLTstate* state);
 ok64 SCLTonAnnotation (u8cs tok, SCLTstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abefnrtv\\'\"?0$]
            | [x] xdgt{2}
            | [u] xdgt{4} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0) and "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SCLTonComment(tok, state);
+    o = SCLTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SCLTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -83,8 +90,8 @@ fsuf = [fFdD]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- triple-quoted strings ----
     ["] ["] ["] ( any8 - ["] | ["] (any8 - ["]) | ["] ["] (any8 - ["]) )* ["] ["] ["]   => on_string;

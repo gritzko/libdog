@@ -27,9 +27,9 @@ static b8 HCLTIsKeyword(u8cs tok) {
     return NO;
 }
 
-ok64 HCLTonComment(u8cs tok, HCLTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 HCLTonComment(u8cs tok, u32 olen, u32 clen, HCLTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006: delimiter as 'D', body StrictMark
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

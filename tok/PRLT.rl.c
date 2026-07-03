@@ -1,10 +1,10 @@
 
-/* #line 1 "PRLT.c.rl" */
+/* #line 1 "dog/tok/PRLT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "PRLT.h"
 
-ok64 PRLTonComment (u8cs tok, PRLTstate* state);
+ok64 PRLTonComment (u8cs tok, u32 olen, u32 clen, PRLTstate* state);
 ok64 PRLTonString (u8cs tok, PRLTstate* state);
 ok64 PRLTonNumber (u8cs tok, PRLTstate* state);
 ok64 PRLTonWord (u8cs tok, PRLTstate* state);
@@ -12,11 +12,11 @@ ok64 PRLTonPunct (u8cs tok, PRLTstate* state);
 ok64 PRLTonSpace (u8cs tok, PRLTstate* state);
 
 
-/* #line 129 "PRLT.c.rl" */
+/* #line 136 "dog/tok/PRLT.c.rl" */
 
 
 
-/* #line 15 "PRLT.rl.c" */
+/* #line 15 "dog/tok/PRLT.rl.c" */
 static const char _PRLT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	10, 1, 11, 1, 12, 1, 13, 1, 
@@ -297,7 +297,7 @@ static const int PRLT_error = -1;
 static const int PRLT_en_main = 56;
 
 
-/* #line 132 "PRLT.c.rl" */
+/* #line 139 "dog/tok/PRLT.c.rl" */
 
 ok64 PRLTLexer(PRLTstate* state) {
 
@@ -316,7 +316,7 @@ ok64 PRLTLexer(PRLTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 311 "PRLT.rl.c" */
+/* #line 311 "dog/tok/PRLT.rl.c" */
 	{
 	cs = PRLT_start;
 	ts = 0;
@@ -324,9 +324,9 @@ ok64 PRLTLexer(PRLTstate* state) {
 	act = 0;
 	}
 
-/* #line 150 "PRLT.c.rl" */
+/* #line 157 "dog/tok/PRLT.c.rl" */
     
-/* #line 317 "PRLT.rl.c" */
+/* #line 317 "dog/tok/PRLT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -345,7 +345,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 334 "PRLT.rl.c" */
+/* #line 334 "dog/tok/PRLT.rl.c" */
 		}
 	}
 
@@ -416,35 +416,35 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{act = 10;}
 	break;
 	case 4:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{act = 11;}
 	break;
 	case 5:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{act = 12;}
 	break;
 	case 6:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{act = 15;}
 	break;
 	case 7:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{act = 16;}
 	break;
 	case 8:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{act = 20;}
 	break;
 	case 9:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{act = 21;}
 	break;
 	case 10:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -453,7 +453,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -462,7 +462,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -471,7 +471,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -480,7 +480,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -489,7 +489,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 48 "PRLT.c.rl" */
+/* #line 55 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -498,7 +498,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -507,7 +507,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -516,25 +516,25 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 30 "PRLT.c.rl" */
+/* #line 31 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PRLTonComment(tok, state);
+    o = PRLTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 19:
-/* #line 30 "PRLT.c.rl" */
+/* #line 37 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PRLTonComment(tok, state);
+    o = PRLTonComment(tok, 0, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 20:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -543,7 +543,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 36 "PRLT.c.rl" */
+/* #line 43 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -552,7 +552,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -561,7 +561,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -570,7 +570,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -579,7 +579,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -588,7 +588,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -597,7 +597,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -606,7 +606,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -615,7 +615,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 48 "PRLT.c.rl" */
+/* #line 55 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -624,7 +624,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 48 "PRLT.c.rl" */
+/* #line 55 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -633,7 +633,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -642,7 +642,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -651,7 +651,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -660,7 +660,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 60 "PRLT.c.rl" */
+/* #line 67 "dog/tok/PRLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -669,7 +669,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -678,7 +678,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -687,7 +687,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -696,7 +696,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 42 "PRLT.c.rl" */
+/* #line 49 "dog/tok/PRLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -705,7 +705,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 48 "PRLT.c.rl" */
+/* #line 55 "dog/tok/PRLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -714,7 +714,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 54 "PRLT.c.rl" */
+/* #line 61 "dog/tok/PRLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -784,7 +784,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 732 "PRLT.rl.c" */
+/* #line 732 "dog/tok/PRLT.rl.c" */
 		}
 	}
 
@@ -797,7 +797,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 743 "PRLT.rl.c" */
+/* #line 743 "dog/tok/PRLT.rl.c" */
 		}
 	}
 
@@ -815,7 +815,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 151 "PRLT.c.rl" */
+/* #line 158 "dog/tok/PRLT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < PRLT_first_final)

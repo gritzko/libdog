@@ -1,10 +1,10 @@
 
-/* #line 1 "SWFT.c.rl" */
+/* #line 1 "dog/tok/SWFT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "SWFT.h"
 
-ok64 SWFTonComment (u8cs tok, SWFTstate* state);
+ok64 SWFTonComment (u8cs tok, u32 olen, u32 clen, SWFTstate* state);
 ok64 SWFTonString (u8cs tok, SWFTstate* state);
 ok64 SWFTonNumber (u8cs tok, SWFTstate* state);
 ok64 SWFTonWord (u8cs tok, SWFTstate* state);
@@ -12,11 +12,11 @@ ok64 SWFTonPunct (u8cs tok, SWFTstate* state);
 ok64 SWFTonSpace (u8cs tok, SWFTstate* state);
 
 
-/* #line 120 "SWFT.c.rl" */
+/* #line 127 "dog/tok/SWFT.c.rl" */
 
 
 
-/* #line 15 "SWFT.rl.c" */
+/* #line 15 "dog/tok/SWFT.rl.c" */
 static const char _SWFT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	10, 1, 11, 1, 12, 1, 13, 1, 
@@ -215,7 +215,7 @@ static const int SWFT_error = 0;
 static const int SWFT_en_main = 37;
 
 
-/* #line 123 "SWFT.c.rl" */
+/* #line 130 "dog/tok/SWFT.c.rl" */
 
 ok64 SWFTLexer(SWFTstate* state) {
 
@@ -234,7 +234,7 @@ ok64 SWFTLexer(SWFTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 229 "SWFT.rl.c" */
+/* #line 229 "dog/tok/SWFT.rl.c" */
 	{
 	cs = SWFT_start;
 	ts = 0;
@@ -242,9 +242,9 @@ ok64 SWFTLexer(SWFTstate* state) {
 	act = 0;
 	}
 
-/* #line 141 "SWFT.c.rl" */
+/* #line 148 "dog/tok/SWFT.c.rl" */
     
-/* #line 235 "SWFT.rl.c" */
+/* #line 235 "dog/tok/SWFT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -265,7 +265,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 254 "SWFT.rl.c" */
+/* #line 254 "dog/tok/SWFT.rl.c" */
 		}
 	}
 
@@ -336,44 +336,44 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{act = 7;}
 	break;
 	case 5:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{act = 8;}
 	break;
 	case 6:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{act = 11;}
 	break;
 	case 7:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{act = 12;}
 	break;
 	case 8:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{act = 15;}
 	break;
 	case 9:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{act = 16;}
 	break;
 	case 10:
-/* #line 31 "SWFT.c.rl" */
+/* #line 38 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SWFTonComment(tok, state);
+    o = SWFTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 11:
-/* #line 37 "SWFT.c.rl" */
+/* #line 44 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -382,7 +382,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 37 "SWFT.c.rl" */
+/* #line 44 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -391,7 +391,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 37 "SWFT.c.rl" */
+/* #line 44 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -400,7 +400,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 49 "SWFT.c.rl" */
+/* #line 56 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -409,7 +409,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -418,7 +418,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -427,16 +427,16 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 31 "SWFT.c.rl" */
+/* #line 32 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SWFTonComment(tok, state);
+    o = SWFTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 18:
-/* #line 37 "SWFT.c.rl" */
+/* #line 44 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -445,7 +445,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -454,7 +454,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -463,7 +463,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -472,7 +472,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -481,7 +481,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -490,7 +490,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -499,7 +499,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -508,7 +508,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 49 "SWFT.c.rl" */
+/* #line 56 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -517,7 +517,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -526,7 +526,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -535,7 +535,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -544,7 +544,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 61 "SWFT.c.rl" */
+/* #line 68 "dog/tok/SWFT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -553,7 +553,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 37 "SWFT.c.rl" */
+/* #line 44 "dog/tok/SWFT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -562,7 +562,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -571,7 +571,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -580,7 +580,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 43 "SWFT.c.rl" */
+/* #line 50 "dog/tok/SWFT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -589,7 +589,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 55 "SWFT.c.rl" */
+/* #line 62 "dog/tok/SWFT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -659,7 +659,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 612 "SWFT.rl.c" */
+/* #line 612 "dog/tok/SWFT.rl.c" */
 		}
 	}
 
@@ -672,7 +672,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 623 "SWFT.rl.c" */
+/* #line 623 "dog/tok/SWFT.rl.c" */
 		}
 	}
 
@@ -692,7 +692,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 142 "SWFT.c.rl" */
+/* #line 149 "dog/tok/SWFT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < SWFT_first_final)

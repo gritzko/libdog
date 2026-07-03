@@ -1,10 +1,10 @@
 
-/* #line 1 "VERT.c.rl" */
+/* #line 1 "dog/tok/VERT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "VERT.h"
 
-ok64 VERTonComment (u8cs tok, VERTstate* state);
+ok64 VERTonComment (u8cs tok, u32 olen, u32 clen, VERTstate* state);
 ok64 VERTonString (u8cs tok, VERTstate* state);
 ok64 VERTonNumber (u8cs tok, VERTstate* state);
 ok64 VERTonPreproc (u8cs tok, VERTstate* state);
@@ -13,11 +13,11 @@ ok64 VERTonPunct (u8cs tok, VERTstate* state);
 ok64 VERTonSpace (u8cs tok, VERTstate* state);
 
 
-/* #line 117 "VERT.c.rl" */
+/* #line 124 "dog/tok/VERT.c.rl" */
 
 
 
-/* #line 16 "VERT.rl.c" */
+/* #line 16 "dog/tok/VERT.rl.c" */
 static const char _VERT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 4, 1, 5, 1, 6, 1, 
@@ -185,7 +185,7 @@ static const int VERT_error = 0;
 static const int VERT_en_main = 16;
 
 
-/* #line 120 "VERT.c.rl" */
+/* #line 127 "dog/tok/VERT.c.rl" */
 
 ok64 VERTLexer(VERTstate* state) {
 
@@ -204,7 +204,7 @@ ok64 VERTLexer(VERTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 199 "VERT.rl.c" */
+/* #line 199 "dog/tok/VERT.rl.c" */
 	{
 	cs = VERT_start;
 	ts = 0;
@@ -212,9 +212,9 @@ ok64 VERTLexer(VERTstate* state) {
 	act = 0;
 	}
 
-/* #line 138 "VERT.c.rl" */
+/* #line 145 "dog/tok/VERT.c.rl" */
     
-/* #line 205 "VERT.rl.c" */
+/* #line 205 "dog/tok/VERT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -235,7 +235,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 224 "VERT.rl.c" */
+/* #line 224 "dog/tok/VERT.rl.c" */
 		}
 	}
 
@@ -306,16 +306,16 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 31 "VERT.c.rl" */
+/* #line 38 "dog/tok/VERT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = VERTonComment(tok, state);
+    o = VERTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 4:
-/* #line 37 "VERT.c.rl" */
+/* #line 44 "dog/tok/VERT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -324,7 +324,7 @@ _eof_trans:
 }}
 	break;
 	case 5:
-/* #line 61 "VERT.c.rl" */
+/* #line 68 "dog/tok/VERT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -333,7 +333,7 @@ _eof_trans:
 }}
 	break;
 	case 6:
-/* #line 61 "VERT.c.rl" */
+/* #line 68 "dog/tok/VERT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -342,7 +342,7 @@ _eof_trans:
 }}
 	break;
 	case 7:
-/* #line 61 "VERT.c.rl" */
+/* #line 68 "dog/tok/VERT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -351,16 +351,16 @@ _eof_trans:
 }}
 	break;
 	case 8:
-/* #line 31 "VERT.c.rl" */
+/* #line 32 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = VERTonComment(tok, state);
+    o = VERTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 9:
-/* #line 43 "VERT.c.rl" */
+/* #line 50 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -369,7 +369,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 43 "VERT.c.rl" */
+/* #line 50 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -378,7 +378,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 43 "VERT.c.rl" */
+/* #line 50 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -387,7 +387,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 49 "VERT.c.rl" */
+/* #line 56 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -396,7 +396,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 55 "VERT.c.rl" */
+/* #line 62 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -405,7 +405,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 55 "VERT.c.rl" */
+/* #line 62 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -414,7 +414,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 61 "VERT.c.rl" */
+/* #line 68 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -423,7 +423,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 61 "VERT.c.rl" */
+/* #line 68 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -432,7 +432,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 67 "VERT.c.rl" */
+/* #line 74 "dog/tok/VERT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -441,7 +441,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 43 "VERT.c.rl" */
+/* #line 50 "dog/tok/VERT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -450,7 +450,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 61 "VERT.c.rl" */
+/* #line 68 "dog/tok/VERT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -458,7 +458,7 @@ _eof_trans:
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
-/* #line 428 "VERT.rl.c" */
+/* #line 428 "dog/tok/VERT.rl.c" */
 		}
 	}
 
@@ -471,7 +471,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 439 "VERT.rl.c" */
+/* #line 439 "dog/tok/VERT.rl.c" */
 		}
 	}
 
@@ -491,7 +491,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 139 "VERT.c.rl" */
+/* #line 146 "dog/tok/VERT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < VERT_first_final)

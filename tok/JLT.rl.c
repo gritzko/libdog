@@ -1,10 +1,10 @@
 
-/* #line 1 "JLT.c.rl" */
+/* #line 1 "dog/tok/JLT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "JLT.h"
 
-ok64 JLTonComment (u8cs tok, JLTstate* state);
+ok64 JLTonComment (u8cs tok, u32 olen, u32 clen, JLTstate* state);
 ok64 JLTonString (u8cs tok, JLTstate* state);
 ok64 JLTonNumber (u8cs tok, JLTstate* state);
 ok64 JLTonWord (u8cs tok, JLTstate* state);
@@ -12,11 +12,11 @@ ok64 JLTonPunct (u8cs tok, JLTstate* state);
 ok64 JLTonSpace (u8cs tok, JLTstate* state);
 
 
-/* #line 125 "JLT.c.rl" */
+/* #line 132 "dog/tok/JLT.c.rl" */
 
 
 
-/* #line 15 "JLT.rl.c" */
+/* #line 15 "dog/tok/JLT.rl.c" */
 static const char _JLT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	12, 1, 13, 1, 14, 1, 15, 1, 
@@ -277,7 +277,7 @@ static const int JLT_error = 0;
 static const int JLT_en_main = 49;
 
 
-/* #line 128 "JLT.c.rl" */
+/* #line 135 "dog/tok/JLT.c.rl" */
 
 ok64 JLTLexer(JLTstate* state) {
 
@@ -296,7 +296,7 @@ ok64 JLTLexer(JLTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 291 "JLT.rl.c" */
+/* #line 291 "dog/tok/JLT.rl.c" */
 	{
 	cs = JLT_start;
 	ts = 0;
@@ -304,9 +304,9 @@ ok64 JLTLexer(JLTstate* state) {
 	act = 0;
 	}
 
-/* #line 146 "JLT.c.rl" */
+/* #line 153 "dog/tok/JLT.c.rl" */
     
-/* #line 297 "JLT.rl.c" */
+/* #line 297 "dog/tok/JLT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -327,7 +327,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 316 "JLT.rl.c" */
+/* #line 316 "dog/tok/JLT.rl.c" */
 		}
 	}
 
@@ -398,52 +398,52 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 32 "JLT.c.rl" */
+/* #line 33 "dog/tok/JLT.c.rl" */
 	{act = 1;}
 	break;
 	case 4:
-/* #line 32 "JLT.c.rl" */
+/* #line 39 "dog/tok/JLT.c.rl" */
 	{act = 2;}
 	break;
 	case 5:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{act = 7;}
 	break;
 	case 6:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{act = 8;}
 	break;
 	case 7:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{act = 9;}
 	break;
 	case 8:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{act = 12;}
 	break;
 	case 9:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{act = 13;}
 	break;
 	case 10:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{act = 15;}
 	break;
 	case 11:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{act = 16;}
 	break;
 	case 12:
-/* #line 32 "JLT.c.rl" */
+/* #line 33 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JLTonComment(tok, state);
+    o = JLTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 13:
-/* #line 38 "JLT.c.rl" */
+/* #line 45 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -452,7 +452,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 38 "JLT.c.rl" */
+/* #line 45 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -461,7 +461,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 38 "JLT.c.rl" */
+/* #line 45 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -470,7 +470,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 38 "JLT.c.rl" */
+/* #line 45 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -479,7 +479,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -488,7 +488,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -497,7 +497,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -506,7 +506,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -515,7 +515,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -524,7 +524,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -533,16 +533,16 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 32 "JLT.c.rl" */
+/* #line 39 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JLTonComment(tok, state);
+    o = JLTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 24:
-/* #line 38 "JLT.c.rl" */
+/* #line 45 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -551,7 +551,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -560,7 +560,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -569,7 +569,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -578,7 +578,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -587,7 +587,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -596,7 +596,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -605,7 +605,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -614,7 +614,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 50 "JLT.c.rl" */
+/* #line 57 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -623,7 +623,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -632,7 +632,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -641,7 +641,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -650,7 +650,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 62 "JLT.c.rl" */
+/* #line 69 "dog/tok/JLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -659,16 +659,16 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 32 "JLT.c.rl" */
+/* #line 39 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JLTonComment(tok, state);
+    o = JLTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 38:
-/* #line 38 "JLT.c.rl" */
+/* #line 45 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -677,7 +677,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -686,7 +686,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -695,7 +695,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -704,7 +704,7 @@ _eof_trans:
 }}
 	break;
 	case 42:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -713,7 +713,7 @@ _eof_trans:
 }}
 	break;
 	case 43:
-/* #line 44 "JLT.c.rl" */
+/* #line 51 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -722,7 +722,7 @@ _eof_trans:
 }}
 	break;
 	case 44:
-/* #line 50 "JLT.c.rl" */
+/* #line 57 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -731,7 +731,7 @@ _eof_trans:
 }}
 	break;
 	case 45:
-/* #line 56 "JLT.c.rl" */
+/* #line 63 "dog/tok/JLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -746,7 +746,7 @@ _eof_trans:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JLTonComment(tok, state);
+    o = JLTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }
 	break;
@@ -754,7 +754,7 @@ _eof_trans:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = JLTonComment(tok, state);
+    o = JLTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }
 	break;
@@ -817,7 +817,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 760 "JLT.rl.c" */
+/* #line 760 "dog/tok/JLT.rl.c" */
 		}
 	}
 
@@ -830,7 +830,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 771 "JLT.rl.c" */
+/* #line 771 "dog/tok/JLT.rl.c" */
 		}
 	}
 
@@ -850,7 +850,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 147 "JLT.c.rl" */
+/* #line 154 "dog/tok/JLT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < JLT_first_final)

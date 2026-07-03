@@ -1,10 +1,10 @@
 
-/* #line 1 "SCLT.c.rl" */
+/* #line 1 "dog/tok/SCLT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "SCLT.h"
 
-ok64 SCLTonComment (u8cs tok, SCLTstate* state);
+ok64 SCLTonComment (u8cs tok, u32 olen, u32 clen, SCLTstate* state);
 ok64 SCLTonString (u8cs tok, SCLTstate* state);
 ok64 SCLTonNumber (u8cs tok, SCLTstate* state);
 ok64 SCLTonAnnotation (u8cs tok, SCLTstate* state);
@@ -13,11 +13,11 @@ ok64 SCLTonPunct (u8cs tok, SCLTstate* state);
 ok64 SCLTonSpace (u8cs tok, SCLTstate* state);
 
 
-/* #line 134 "SCLT.c.rl" */
+/* #line 141 "dog/tok/SCLT.c.rl" */
 
 
 
-/* #line 16 "SCLT.rl.c" */
+/* #line 16 "dog/tok/SCLT.rl.c" */
 static const char _SCLT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	9, 1, 10, 1, 11, 1, 12, 1, 
@@ -249,7 +249,7 @@ static const int SCLT_error = 0;
 static const int SCLT_en_main = 38;
 
 
-/* #line 137 "SCLT.c.rl" */
+/* #line 144 "dog/tok/SCLT.c.rl" */
 
 ok64 SCLTLexer(SCLTstate* state) {
 
@@ -268,7 +268,7 @@ ok64 SCLTLexer(SCLTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 263 "SCLT.rl.c" */
+/* #line 263 "dog/tok/SCLT.rl.c" */
 	{
 	cs = SCLT_start;
 	ts = 0;
@@ -276,9 +276,9 @@ ok64 SCLTLexer(SCLTstate* state) {
 	act = 0;
 	}
 
-/* #line 155 "SCLT.c.rl" */
+/* #line 162 "dog/tok/SCLT.c.rl" */
     
-/* #line 269 "SCLT.rl.c" */
+/* #line 269 "dog/tok/SCLT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -299,7 +299,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 288 "SCLT.rl.c" */
+/* #line 288 "dog/tok/SCLT.rl.c" */
 		}
 	}
 
@@ -370,40 +370,40 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{act = 8;}
 	break;
 	case 4:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{act = 9;}
 	break;
 	case 5:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{act = 12;}
 	break;
 	case 6:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{act = 13;}
 	break;
 	case 7:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{act = 16;}
 	break;
 	case 8:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{act = 17;}
 	break;
 	case 9:
-/* #line 31 "SCLT.c.rl" */
+/* #line 38 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SCLTonComment(tok, state);
+    o = SCLTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -412,7 +412,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -421,7 +421,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -430,7 +430,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -439,7 +439,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -448,7 +448,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -457,7 +457,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -466,7 +466,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -475,7 +475,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -484,7 +484,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -493,7 +493,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -502,7 +502,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -511,7 +511,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -520,16 +520,16 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 31 "SCLT.c.rl" */
+/* #line 32 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SCLTonComment(tok, state);
+    o = SCLTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 24:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -538,7 +538,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -547,7 +547,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -556,7 +556,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -565,7 +565,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -574,7 +574,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -583,7 +583,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -592,7 +592,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 49 "SCLT.c.rl" */
+/* #line 56 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -601,7 +601,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 55 "SCLT.c.rl" */
+/* #line 62 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -610,7 +610,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -619,7 +619,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -628,7 +628,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 67 "SCLT.c.rl" */
+/* #line 74 "dog/tok/SCLT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -637,7 +637,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 37 "SCLT.c.rl" */
+/* #line 44 "dog/tok/SCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -646,7 +646,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -655,7 +655,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -664,7 +664,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 43 "SCLT.c.rl" */
+/* #line 50 "dog/tok/SCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -673,7 +673,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 55 "SCLT.c.rl" */
+/* #line 62 "dog/tok/SCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -682,7 +682,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 61 "SCLT.c.rl" */
+/* #line 68 "dog/tok/SCLT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -744,7 +744,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 691 "SCLT.rl.c" */
+/* #line 691 "dog/tok/SCLT.rl.c" */
 		}
 	}
 
@@ -757,7 +757,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 702 "SCLT.rl.c" */
+/* #line 702 "dog/tok/SCLT.rl.c" */
 		}
 	}
 
@@ -777,7 +777,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 156 "SCLT.c.rl" */
+/* #line 163 "dog/tok/SCLT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < SCLT_first_final)

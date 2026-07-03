@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "SQLT.h"
 
-ok64 SQLTonComment (u8cs tok, SQLTstate* state);
+ok64 SQLTonComment (u8cs tok, u32 olen, u32 clen, SQLTstate* state);
 ok64 SQLTonString (u8cs tok, SQLTstate* state);
 ok64 SQLTonNumber (u8cs tok, SQLTstate* state);
 ok64 SQLTonWord (u8cs tok, SQLTstate* state);
@@ -21,10 +21,17 @@ idalpha = [a-zA-Z_];
 idalnum = [a-zA-Z_0-9];
 dgt = [0-9];
 
-action on_comment {
+# DOG-006: split delimiter from body — "--" (2,0), "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = SQLTonComment(tok, state);
+    o = SQLTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = SQLTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -61,8 +68,8 @@ action on_space {
 main := |*
 
     # ---- comments ----
-    "--" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "--" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- single-quoted strings ('' for escape) ----
     0x27 ( 0x27 0x27 | any8 - 0x27 )* 0x27                      => on_string;

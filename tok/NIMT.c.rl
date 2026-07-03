@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "NIMT.h"
 
-ok64 NIMTonComment (u8cs tok, NIMTstate* state);
+ok64 NIMTonComment (u8cs tok, u32 olen, u32 clen, NIMTstate* state);
 ok64 NIMTonString (u8cs tok, NIMTstate* state);
 ok64 NIMTonNumber (u8cs tok, NIMTstate* state);
 ok64 NIMTonWord (u8cs tok, NIMTstate* state);
@@ -26,10 +26,17 @@ esc = [\\] ( [abcefnlrtv\\'\"?0\n]
            | [x] xdgt{2}
            | dgt{1,3} );
 
-action on_comment {
+# DOG-006: block "#[".."]#" (2,2), line "#" (1,0) — delimiter 'D', body StrictMark
+action on_block_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = NIMTonComment(tok, state);
+    o = NIMTonComment(tok, 2, 2, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = NIMTonComment(tok, 1, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -74,9 +81,9 @@ tsuf = ( ['] ( "i8" | "i16" | "i32" | "i64" | "u" | "u8" | "u16" | "u32" | "u64"
 main := |*
 
     # ---- block comments #[ ... ]# ----
-    "#[" ( any8 - [\]] | [\]] (any8 - [#]) )* "]#"                => on_comment;
+    "#[" ( any8 - [\]] | [\]] (any8 - [#]) )* "]#"                => on_block_comment;
     # ---- line comments ----
-    [#] [^\n]*                                                     => on_comment;
+    [#] [^\n]*                                                     => on_line_comment;
 
     # ---- triple-quoted raw strings ----
     [rR]? ["] ["] ["] ( any8 - ["] | ["] (any8 - ["]) | ["] ["] (any8 - ["]) )* ["] ["] ["]  => on_string;

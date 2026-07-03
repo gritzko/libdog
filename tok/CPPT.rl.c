@@ -1,10 +1,10 @@
 
-/* #line 1 "CPPT.c.rl" */
+/* #line 1 "dog/tok/CPPT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "CPPT.h"
 
-ok64 CPPTonComment (u8cs tok, CPPTstate* state);
+ok64 CPPTonComment (u8cs tok, u32 olen, u32 clen, CPPTstate* state);
 ok64 CPPTonString (u8cs tok, CPPTstate* state);
 ok64 CPPTonNumber (u8cs tok, CPPTstate* state);
 ok64 CPPTonPreproc (u8cs tok, CPPTstate* state);
@@ -13,11 +13,11 @@ ok64 CPPTonPunct (u8cs tok, CPPTstate* state);
 ok64 CPPTonSpace (u8cs tok, CPPTstate* state);
 
 
-/* #line 166 "CPPT.c.rl" */
+/* #line 175 "dog/tok/CPPT.c.rl" */
 
 
 
-/* #line 16 "CPPT.rl.c" */
+/* #line 16 "dog/tok/CPPT.rl.c" */
 static const char _CPPT_actions[] = {
 	0, 1, 0, 1, 4, 1, 5, 1, 
 	17, 1, 19, 1, 20, 1, 21, 1, 
@@ -463,7 +463,7 @@ static const int CPPT_error = 0;
 static const int CPPT_en_main = 59;
 
 
-/* #line 169 "CPPT.c.rl" */
+/* #line 178 "dog/tok/CPPT.c.rl" */
 
 ok64 CPPTLexer(CPPTstate* state) {
 
@@ -484,7 +484,7 @@ ok64 CPPTLexer(CPPTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 479 "CPPT.rl.c" */
+/* #line 479 "dog/tok/CPPT.rl.c" */
 	{
 	cs = CPPT_start;
 	ts = 0;
@@ -492,9 +492,9 @@ ok64 CPPTLexer(CPPTstate* state) {
 	act = 0;
 	}
 
-/* #line 189 "CPPT.c.rl" */
+/* #line 198 "dog/tok/CPPT.c.rl" */
     
-/* #line 485 "CPPT.rl.c" */
+/* #line 485 "dog/tok/CPPT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -515,7 +515,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 504 "CPPT.rl.c" */
+/* #line 504 "dog/tok/CPPT.rl.c" */
 		}
 	}
 
@@ -582,11 +582,11 @@ _eof_trans:
 		switch ( *_acts++ )
 		{
 	case 0:
-/* #line 80 "CPPT.c.rl" */
+/* #line 89 "dog/tok/CPPT.c.rl" */
 	{ rsd[0] = (u8c*)p; }
 	break;
 	case 1:
-/* #line 81 "CPPT.c.rl" */
+/* #line 90 "dog/tok/CPPT.c.rl" */
 	{ rsd[1] = (u8c*)p; }
 	break;
 	case 5:
@@ -594,60 +594,60 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 6:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{act = 6;}
 	break;
 	case 7:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{act = 7;}
 	break;
 	case 8:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{act = 8;}
 	break;
 	case 9:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{act = 9;}
 	break;
 	case 10:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{act = 12;}
 	break;
 	case 11:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{act = 13;}
 	break;
 	case 12:
-/* #line 53 "CPPT.c.rl" */
+/* #line 62 "dog/tok/CPPT.c.rl" */
 	{act = 14;}
 	break;
 	case 13:
-/* #line 53 "CPPT.c.rl" */
+/* #line 62 "dog/tok/CPPT.c.rl" */
 	{act = 15;}
 	break;
 	case 14:
-/* #line 59 "CPPT.c.rl" */
+/* #line 68 "dog/tok/CPPT.c.rl" */
 	{act = 17;}
 	break;
 	case 15:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{act = 18;}
 	break;
 	case 16:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{act = 19;}
 	break;
 	case 17:
-/* #line 35 "CPPT.c.rl" */
+/* #line 44 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CPPTonComment(tok, state);
+    o = CPPTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 18:
-/* #line 82 "CPPT.c.rl" */
+/* #line 91 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     size_t n = $size(rsd);
     u8c* q = (u8c*)rsd[1] + 1;       // first body byte, just past the `(`
@@ -670,7 +670,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 41 "CPPT.c.rl" */
+/* #line 50 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -679,7 +679,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 41 "CPPT.c.rl" */
+/* #line 50 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -688,7 +688,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -697,7 +697,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -706,7 +706,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -715,7 +715,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -724,7 +724,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -733,7 +733,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -742,7 +742,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -751,7 +751,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -760,7 +760,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -769,16 +769,16 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 35 "CPPT.c.rl" */
+/* #line 38 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CPPTonComment(tok, state);
+    o = CPPTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 31:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -787,7 +787,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -796,7 +796,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -805,7 +805,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -814,7 +814,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -823,7 +823,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -832,7 +832,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -841,7 +841,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -850,7 +850,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 53 "CPPT.c.rl" */
+/* #line 62 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -859,7 +859,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 53 "CPPT.c.rl" */
+/* #line 62 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -868,7 +868,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -877,7 +877,7 @@ _eof_trans:
 }}
 	break;
 	case 42:
-/* #line 59 "CPPT.c.rl" */
+/* #line 68 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -886,7 +886,7 @@ _eof_trans:
 }}
 	break;
 	case 43:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -895,7 +895,7 @@ _eof_trans:
 }}
 	break;
 	case 44:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -904,7 +904,7 @@ _eof_trans:
 }}
 	break;
 	case 45:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -913,7 +913,7 @@ _eof_trans:
 }}
 	break;
 	case 46:
-/* #line 71 "CPPT.c.rl" */
+/* #line 80 "dog/tok/CPPT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -922,7 +922,7 @@ _eof_trans:
 }}
 	break;
 	case 47:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -931,7 +931,7 @@ _eof_trans:
 }}
 	break;
 	case 48:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -940,7 +940,7 @@ _eof_trans:
 }}
 	break;
 	case 49:
-/* #line 47 "CPPT.c.rl" */
+/* #line 56 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -949,7 +949,7 @@ _eof_trans:
 }}
 	break;
 	case 50:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -958,7 +958,7 @@ _eof_trans:
 }}
 	break;
 	case 51:
-/* #line 59 "CPPT.c.rl" */
+/* #line 68 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -967,7 +967,7 @@ _eof_trans:
 }}
 	break;
 	case 52:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -976,7 +976,7 @@ _eof_trans:
 }}
 	break;
 	case 53:
-/* #line 65 "CPPT.c.rl" */
+/* #line 74 "dog/tok/CPPT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -1081,7 +1081,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 1017 "CPPT.rl.c" */
+/* #line 1017 "dog/tok/CPPT.rl.c" */
 		}
 	}
 
@@ -1098,7 +1098,7 @@ _again:
 /* #line 1 "NONE" */
 	{act = 0;}
 	break;
-/* #line 1031 "CPPT.rl.c" */
+/* #line 1031 "dog/tok/CPPT.rl.c" */
 		}
 	}
 
@@ -1118,7 +1118,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 190 "CPPT.c.rl" */
+/* #line 199 "dog/tok/CPPT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < CPPT_first_final)

@@ -1,10 +1,10 @@
 
-/* #line 1 "DT.c.rl" */
+/* #line 1 "dog/tok/DT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "DT.h"
 
-ok64 DTonComment (u8cs tok, DTstate* state);
+ok64 DTonComment (u8cs tok, u32 olen, u32 clen, DTstate* state);
 ok64 DTonString (u8cs tok, DTstate* state);
 ok64 DTonNumber (u8cs tok, DTstate* state);
 ok64 DTonWord (u8cs tok, DTstate* state);
@@ -12,11 +12,11 @@ ok64 DTonPunct (u8cs tok, DTstate* state);
 ok64 DTonSpace (u8cs tok, DTstate* state);
 
 
-/* #line 133 "DT.c.rl" */
+/* #line 140 "dog/tok/DT.c.rl" */
 
 
 
-/* #line 15 "DT.rl.c" */
+/* #line 15 "dog/tok/DT.rl.c" */
 static const char _DT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	9, 1, 10, 1, 11, 1, 12, 1, 
@@ -260,7 +260,7 @@ static const int DT_error = 0;
 static const int DT_en_main = 41;
 
 
-/* #line 136 "DT.c.rl" */
+/* #line 143 "dog/tok/DT.c.rl" */
 
 ok64 DTLexer(DTstate* state) {
 
@@ -279,7 +279,7 @@ ok64 DTLexer(DTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 274 "DT.rl.c" */
+/* #line 274 "dog/tok/DT.rl.c" */
 	{
 	cs = DT_start;
 	ts = 0;
@@ -287,9 +287,9 @@ ok64 DTLexer(DTstate* state) {
 	act = 0;
 	}
 
-/* #line 154 "DT.c.rl" */
+/* #line 161 "dog/tok/DT.c.rl" */
     
-/* #line 280 "DT.rl.c" */
+/* #line 280 "dog/tok/DT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -310,7 +310,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 299 "DT.rl.c" */
+/* #line 299 "dog/tok/DT.rl.c" */
 		}
 	}
 
@@ -381,49 +381,49 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{act = 8;}
 	break;
 	case 4:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{act = 10;}
 	break;
 	case 5:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{act = 13;}
 	break;
 	case 6:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{act = 14;}
 	break;
 	case 7:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{act = 16;}
 	break;
 	case 8:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{act = 17;}
 	break;
 	case 9:
-/* #line 32 "DT.c.rl" */
+/* #line 39 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = DTonComment(tok, state);
+    o = DTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 32 "DT.c.rl" */
+/* #line 39 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = DTonComment(tok, state);
+    o = DTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 11:
-/* #line 38 "DT.c.rl" */
+/* #line 45 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -432,7 +432,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 38 "DT.c.rl" */
+/* #line 45 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -441,7 +441,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 38 "DT.c.rl" */
+/* #line 45 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -450,7 +450,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 38 "DT.c.rl" */
+/* #line 45 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -459,7 +459,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -468,7 +468,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -477,7 +477,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -486,7 +486,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -495,7 +495,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -504,7 +504,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -513,7 +513,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -522,7 +522,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -531,7 +531,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -540,16 +540,16 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 32 "DT.c.rl" */
+/* #line 33 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = DTonComment(tok, state);
+    o = DTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 25:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -558,7 +558,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -567,7 +567,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -576,7 +576,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -585,7 +585,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -594,7 +594,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -603,7 +603,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -612,7 +612,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 50 "DT.c.rl" */
+/* #line 57 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -621,7 +621,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -630,7 +630,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -639,7 +639,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -648,7 +648,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 62 "DT.c.rl" */
+/* #line 69 "dog/tok/DT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -657,7 +657,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -666,7 +666,7 @@ _eof_trans:
 }}
 	break;
 	case 38:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -675,7 +675,7 @@ _eof_trans:
 }}
 	break;
 	case 39:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -684,7 +684,7 @@ _eof_trans:
 }}
 	break;
 	case 40:
-/* #line 44 "DT.c.rl" */
+/* #line 51 "dog/tok/DT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -693,7 +693,7 @@ _eof_trans:
 }}
 	break;
 	case 41:
-/* #line 50 "DT.c.rl" */
+/* #line 57 "dog/tok/DT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -702,7 +702,7 @@ _eof_trans:
 }}
 	break;
 	case 42:
-/* #line 56 "DT.c.rl" */
+/* #line 63 "dog/tok/DT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -764,7 +764,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 710 "DT.rl.c" */
+/* #line 710 "dog/tok/DT.rl.c" */
 		}
 	}
 
@@ -777,7 +777,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 721 "DT.rl.c" */
+/* #line 721 "dog/tok/DT.rl.c" */
 		}
 	}
 
@@ -797,7 +797,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 155 "DT.c.rl" */
+/* #line 162 "dog/tok/DT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < DT_first_final)

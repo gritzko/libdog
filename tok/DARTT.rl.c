@@ -1,10 +1,10 @@
 
-/* #line 1 "DARTT.c.rl" */
+/* #line 1 "dog/tok/DARTT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "DARTT.h"
 
-ok64 DARTTonComment (u8cs tok, DARTTstate* state);
+ok64 DARTTonComment (u8cs tok, u32 olen, u32 clen, DARTTstate* state);
 ok64 DARTTonString (u8cs tok, DARTTstate* state);
 ok64 DARTTonNumber (u8cs tok, DARTTstate* state);
 ok64 DARTTonAnnotation (u8cs tok, DARTTstate* state);
@@ -13,11 +13,11 @@ ok64 DARTTonPunct (u8cs tok, DARTTstate* state);
 ok64 DARTTonSpace (u8cs tok, DARTTstate* state);
 
 
-/* #line 129 "DARTT.c.rl" */
+/* #line 136 "dog/tok/DARTT.c.rl" */
 
 
 
-/* #line 16 "DARTT.rl.c" */
+/* #line 16 "dog/tok/DARTT.rl.c" */
 static const char _DARTT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	8, 1, 9, 1, 10, 1, 11, 1, 
@@ -252,7 +252,7 @@ static const int DARTT_error = 0;
 static const int DARTT_en_main = 48;
 
 
-/* #line 132 "DARTT.c.rl" */
+/* #line 139 "dog/tok/DARTT.c.rl" */
 
 ok64 DARTTLexer(DARTTstate* state) {
 
@@ -271,7 +271,7 @@ ok64 DARTTLexer(DARTTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 266 "DARTT.rl.c" */
+/* #line 266 "dog/tok/DARTT.rl.c" */
 	{
 	cs = DARTT_start;
 	ts = 0;
@@ -279,9 +279,9 @@ ok64 DARTTLexer(DARTTstate* state) {
 	act = 0;
 	}
 
-/* #line 150 "DARTT.c.rl" */
+/* #line 157 "dog/tok/DARTT.c.rl" */
     
-/* #line 272 "DARTT.rl.c" */
+/* #line 272 "dog/tok/DARTT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -302,7 +302,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 291 "DARTT.rl.c" */
+/* #line 291 "dog/tok/DARTT.rl.c" */
 		}
 	}
 
@@ -373,36 +373,36 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{act = 9;}
 	break;
 	case 4:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{act = 12;}
 	break;
 	case 5:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{act = 13;}
 	break;
 	case 6:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{act = 16;}
 	break;
 	case 7:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{act = 17;}
 	break;
 	case 8:
-/* #line 31 "DARTT.c.rl" */
+/* #line 38 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = DARTTonComment(tok, state);
+    o = DARTTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 9:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -411,7 +411,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -420,7 +420,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -429,7 +429,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -438,7 +438,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -447,7 +447,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -456,7 +456,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -465,7 +465,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -474,16 +474,16 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 31 "DARTT.c.rl" */
+/* #line 32 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = DARTTonComment(tok, state);
+    o = DARTTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 18:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -492,7 +492,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -501,7 +501,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -510,7 +510,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -519,7 +519,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -528,7 +528,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -537,7 +537,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -546,7 +546,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 49 "DARTT.c.rl" */
+/* #line 56 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -555,7 +555,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 55 "DARTT.c.rl" */
+/* #line 62 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -564,7 +564,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -573,7 +573,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -582,7 +582,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -591,7 +591,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 67 "DARTT.c.rl" */
+/* #line 74 "dog/tok/DARTT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -600,7 +600,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -609,7 +609,7 @@ _eof_trans:
 }}
 	break;
 	case 32:
-/* #line 37 "DARTT.c.rl" */
+/* #line 44 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -618,7 +618,7 @@ _eof_trans:
 }}
 	break;
 	case 33:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -627,7 +627,7 @@ _eof_trans:
 }}
 	break;
 	case 34:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -636,7 +636,7 @@ _eof_trans:
 }}
 	break;
 	case 35:
-/* #line 43 "DARTT.c.rl" */
+/* #line 50 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -645,7 +645,7 @@ _eof_trans:
 }}
 	break;
 	case 36:
-/* #line 55 "DARTT.c.rl" */
+/* #line 62 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -654,7 +654,7 @@ _eof_trans:
 }}
 	break;
 	case 37:
-/* #line 61 "DARTT.c.rl" */
+/* #line 68 "dog/tok/DARTT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -708,7 +708,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 659 "DARTT.rl.c" */
+/* #line 659 "dog/tok/DARTT.rl.c" */
 		}
 	}
 
@@ -721,7 +721,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 670 "DARTT.rl.c" */
+/* #line 670 "dog/tok/DARTT.rl.c" */
 		}
 	}
 
@@ -741,7 +741,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 151 "DARTT.c.rl" */
+/* #line 158 "dog/tok/DARTT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < DARTT_first_final)

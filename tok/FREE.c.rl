@@ -17,6 +17,8 @@ ascii_alnum = [a-zA-Z_0-9];
 uc          = [A-Z];
 ucnum       = [A-Z0-9_];
 hibyte      = (0x80..0xff);
+nl          = [\n];
+nws         = any8 - [ \t\r\n\f\v];
 
 wordstart   = ascii_alpha | hibyte;
 wordcont    = ascii_alnum | hibyte;
@@ -46,11 +48,38 @@ action on_space {
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('W', tok, state->ctx); if (o!=OK) fbreak; }
 }
+#  DOG-006: StrictMark inline spans inside comment/prose bodies.  Code -> 'H',
+#  emphasis/strike/link -> 'G'; overlay keeps them sticky so markup pops.
+action on_code {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    if (state->cb) { o = state->cb('H', tok, state->ctx); if (o!=OK) fbreak; }
+}
+action on_emph {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) fbreak; }
+}
+action on_link {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) fbreak; }
+}
 
 main := |*
 
     # ---- issue keys (ABC-123) — wins over plain word by longest match ----
     uc ucnum* "-" dgt+                                   => on_key;
+
+    # ---- StrictMark inline (DOG-006): code > strong > emph > strike > link.
+    # No backslash-escape rule here — comments must not eat "\n"/"\t" bytes.
+    "`" ( any8 - [`\n] )+ "`"                            => on_code;
+    "*" (nws - [*]) (any8 - [*\n])* "*"                  => on_emph;
+    "_" (nws - [_]) (any8 - [_\n])* "_"                  => on_emph;
+    "~~" (nws - [~]) ( any8 - [~\n] | [~] (any8 - [~\n]) )* "~~" => on_emph;
+    "[" (any8 - [\]\n])+ "][" [0-9A-Za-z] "]"           => on_link;
+    "![" (any8 - [\]\n])+ "][" [0-9A-Za-z] "]"          => on_link;
+    "[" (any8 - [\]\n])+ "]"                             => on_link;
 
     # ---- numbers ----
     "0" [xX] xdgt+                                       => on_number;

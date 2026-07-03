@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "RST.h"
 
-ok64 RSTonComment (u8cs tok, RSTstate* state);
+ok64 RSTonComment (u8cs tok, u32 olen, u32 clen, RSTstate* state);
 ok64 RSTonString (u8cs tok, RSTstate* state);
 ok64 RSTonNumber (u8cs tok, RSTstate* state);
 ok64 RSTonAttr (u8cs tok, RSTstate* state);
@@ -29,10 +29,23 @@ esc = [\\] ( [abefnrtv\\'\"0\\]
            | [u] "{" xdgt{1,6} "}"
            | [\n] );
 
-action on_comment {
+# DOG-006: doc "///" and "//!" both (3,0); line "//" (2,0); block "/* */" (2,2)
+action on_doc_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = RSTonComment(tok, state);
+    o = RSTonComment(tok, 3, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = RSTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = RSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -84,14 +97,14 @@ typsuf = ( [uif] ("8" | "16" | "32" | "64" | "128" | "size") )?;
 main := |*
 
     # ---- doc comments ----
-    "///" [^\n]*                                                  => on_comment;
-    "//!" [^\n]*                                                  => on_comment;
+    "///" [^\n]*                                                  => on_doc_comment;
+    "//!" [^\n]*                                                  => on_doc_comment;
 
     # ---- line comments ----
-    "//" [^\n]*                                                   => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
 
     # ---- block comments (not nested for simplicity) ----
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- raw strings r#"..."# (up to 3 hashes) ----
     [b]? "r###" ["] ( any8 - ["] | ["] (any8 - [#]) | ["] [#] (any8 - [#]) | ["] [#] [#] (any8 - [#]) )* ["] "###"  => on_string;

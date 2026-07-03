@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "DT.h"
 
-ok64 DTonComment (u8cs tok, DTstate* state);
+ok64 DTonComment (u8cs tok, u32 olen, u32 clen, DTstate* state);
 ok64 DTonString (u8cs tok, DTstate* state);
 ok64 DTonNumber (u8cs tok, DTstate* state);
 ok64 DTonWord (u8cs tok, DTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\'\"?0]
            | [u] xdgt{4}
            | [U] xdgt{8} );
 
-action on_comment {
+# DOG-006: line "//" (2,0); block "/* */" & "/+ +/" (2,2) — delim 'D', body StrictMark
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = DTonComment(tok, state);
+    o = DTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = DTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -80,13 +87,13 @@ fsuf = [fFL]?;
 main := |*
 
     # ---- line comments ----
-    "//" [^\n]*                                                   => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
 
     # ---- block comments ----
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- nesting comments /+ ... +/ (simplified: no nesting) ----
-    "/+" ( any8 - [+] | [+]+ (any8 - [+/]) )* [+]+ "/"          => on_comment;
+    "/+" ( any8 - [+] | [+]+ (any8 - [+/]) )* [+]+ "/"          => on_block_comment;
 
     # ---- raw strings (backtick) ----
     0x60 ( any8 - 0x60 )* 0x60                                   => on_string;

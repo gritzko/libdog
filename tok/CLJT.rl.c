@@ -1,10 +1,10 @@
 
-/* #line 1 "CLJT.c.rl" */
+/* #line 1 "dog/tok/CLJT.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "CLJT.h"
 
-ok64 CLJTonComment (u8cs tok, CLJTstate* state);
+ok64 CLJTonComment (u8cs tok, u32 olen, u32 clen, CLJTstate* state);
 ok64 CLJTonString (u8cs tok, CLJTstate* state);
 ok64 CLJTonNumber (u8cs tok, CLJTstate* state);
 ok64 CLJTonWord (u8cs tok, CLJTstate* state);
@@ -12,11 +12,11 @@ ok64 CLJTonPunct (u8cs tok, CLJTstate* state);
 ok64 CLJTonSpace (u8cs tok, CLJTstate* state);
 
 
-/* #line 112 "CLJT.c.rl" */
+/* #line 118 "dog/tok/CLJT.c.rl" */
 
 
 
-/* #line 15 "CLJT.rl.c" */
+/* #line 15 "dog/tok/CLJT.rl.c" */
 static const char _CLJT_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	7, 1, 8, 1, 9, 1, 10, 1, 
@@ -154,7 +154,7 @@ static const int CLJT_error = 0;
 static const int CLJT_en_main = 14;
 
 
-/* #line 115 "CLJT.c.rl" */
+/* #line 121 "dog/tok/CLJT.c.rl" */
 
 ok64 CLJTLexer(CLJTstate* state) {
 
@@ -173,7 +173,7 @@ ok64 CLJTLexer(CLJTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 168 "CLJT.rl.c" */
+/* #line 168 "dog/tok/CLJT.rl.c" */
 	{
 	cs = CLJT_start;
 	ts = 0;
@@ -181,9 +181,9 @@ ok64 CLJTLexer(CLJTstate* state) {
 	act = 0;
 	}
 
-/* #line 133 "CLJT.c.rl" */
+/* #line 139 "dog/tok/CLJT.c.rl" */
     
-/* #line 174 "CLJT.rl.c" */
+/* #line 174 "dog/tok/CLJT.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -204,7 +204,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 193 "CLJT.rl.c" */
+/* #line 193 "dog/tok/CLJT.rl.c" */
 		}
 	}
 
@@ -275,32 +275,32 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{act = 6;}
 	break;
 	case 4:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{act = 11;}
 	break;
 	case 5:
-/* #line 54 "CLJT.c.rl" */
+/* #line 60 "dog/tok/CLJT.c.rl" */
 	{act = 15;}
 	break;
 	case 6:
-/* #line 60 "CLJT.c.rl" */
+/* #line 66 "dog/tok/CLJT.c.rl" */
 	{act = 17;}
 	break;
 	case 7:
-/* #line 30 "CLJT.c.rl" */
+/* #line 36 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CLJTonComment(tok, state);
+    o = CLJTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 8:
-/* #line 36 "CLJT.c.rl" */
+/* #line 42 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -309,7 +309,7 @@ _eof_trans:
 }}
 	break;
 	case 9:
-/* #line 36 "CLJT.c.rl" */
+/* #line 42 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -318,7 +318,7 @@ _eof_trans:
 }}
 	break;
 	case 10:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -327,7 +327,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -336,7 +336,7 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -345,7 +345,7 @@ _eof_trans:
 }}
 	break;
 	case 13:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -354,7 +354,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 54 "CLJT.c.rl" */
+/* #line 60 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -363,7 +363,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 54 "CLJT.c.rl" */
+/* #line 60 "dog/tok/CLJT.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -372,16 +372,16 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 30 "CLJT.c.rl" */
+/* #line 30 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CLJTonComment(tok, state);
+    o = CLJTonComment(tok, 1, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 17:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -390,7 +390,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -399,7 +399,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -408,7 +408,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -417,7 +417,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -426,7 +426,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -435,7 +435,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -444,7 +444,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 36 "CLJT.c.rl" */
+/* #line 42 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -453,7 +453,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 48 "CLJT.c.rl" */
+/* #line 54 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -462,7 +462,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 54 "CLJT.c.rl" */
+/* #line 60 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -471,7 +471,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 54 "CLJT.c.rl" */
+/* #line 60 "dog/tok/CLJT.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -480,7 +480,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -489,7 +489,7 @@ _eof_trans:
 }}
 	break;
 	case 29:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -498,7 +498,7 @@ _eof_trans:
 }}
 	break;
 	case 30:
-/* #line 42 "CLJT.c.rl" */
+/* #line 48 "dog/tok/CLJT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -507,7 +507,7 @@ _eof_trans:
 }}
 	break;
 	case 31:
-/* #line 54 "CLJT.c.rl" */
+/* #line 60 "dog/tok/CLJT.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -553,7 +553,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 510 "CLJT.rl.c" */
+/* #line 510 "dog/tok/CLJT.rl.c" */
 		}
 	}
 
@@ -566,7 +566,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 521 "CLJT.rl.c" */
+/* #line 521 "dog/tok/CLJT.rl.c" */
 		}
 	}
 
@@ -586,7 +586,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 134 "CLJT.c.rl" */
+/* #line 140 "dog/tok/CLJT.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < CLJT_first_final)

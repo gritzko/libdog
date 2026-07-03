@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "CLJT.h"
 
-ok64 CLJTonComment (u8cs tok, CLJTstate* state);
+ok64 CLJTonComment (u8cs tok, u32 olen, u32 clen, CLJTstate* state);
 ok64 CLJTonString (u8cs tok, CLJTstate* state);
 ok64 CLJTonNumber (u8cs tok, CLJTstate* state);
 ok64 CLJTonWord (u8cs tok, CLJTstate* state);
@@ -27,10 +27,16 @@ odgt = [0-7];
 symc = [a-zA-Z_0-9!\?\-\*\+\/\.><=%&];
 symalpha = [a-zA-Z_!\?\*\+\-\/><=%&];
 
-action on_comment {
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = CLJTonComment(tok, state);
+    o = CLJTonComment(tok, 1, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_discard_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = CLJTonComment(tok, 2, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -67,8 +73,8 @@ action on_space {
 main := |*
 
     # ---- comments ----
-    ";" [^\n]*                                                    => on_comment;
-    "#_"                                                          => on_comment;
+    ";" [^\n]*                                                    => on_line_comment;
+    "#_"                                                          => on_discard_comment;
 
     # ---- string literals ----
     ["] ( [\\] any8 | any8 - ["\\] )* ["]                        => on_string;

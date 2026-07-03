@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "PRLT.h"
 
-ok64 PRLTonComment (u8cs tok, PRLTstate* state);
+ok64 PRLTonComment (u8cs tok, u32 olen, u32 clen, PRLTstate* state);
 ok64 PRLTonString (u8cs tok, PRLTstate* state);
 ok64 PRLTonNumber (u8cs tok, PRLTstate* state);
 ok64 PRLTonWord (u8cs tok, PRLTstate* state);
@@ -27,10 +27,17 @@ esc = [\\] ( [abefnrtv\\'\"?0\n]
            | [u] xdgt{4}
            | [N] "{" [a-zA-Z ]+ "}" );
 
-action on_comment {
+# DOG-006: "#" line comment splits delim (1,0); POD block stays (0,0)
+action on_hash {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PRLTonComment(tok, state);
+    o = PRLTonComment(tok, 1, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = PRLTonComment(tok, 0, 0, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -72,10 +79,10 @@ odig = [0-7] ( [_]? [0-7] )*;
 main := |*
 
     # ---- comments ----
-    [#] [^\n]*                                                     => on_comment;
+    [#] [^\n]*                                                     => on_hash;
 
     # ---- POD documentation (=head1 ... =cut) ----
-    "=" ("head1"|"head2"|"head3"|"head4"|"over"|"item"|"back"|"begin"|"end"|"pod"|"for"|"encoding"|"cut") [^\n]*  => on_comment;
+    "=" ("head1"|"head2"|"head3"|"head4"|"over"|"item"|"back"|"begin"|"end"|"pod"|"for"|"encoding"|"cut") [^\n]*  => on_block;
 
     # ---- qw/qq/q quoting ----
     "qw" [({[/|!] ( any8 - [)}\]/|!] )* [)}\]/|!]               => on_string;

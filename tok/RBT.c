@@ -29,9 +29,9 @@ static b8 RBTIsKeyword(u8cs tok) {
     return NO;
 }
 
-ok64 RBTonComment(u8cs tok, RBTstate *state) {
-    sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+ok64 RBTonComment(u8cs tok, u32 olen, u32 clen, RBTstate *state) {
+    sane($ok(tok) && state != NULL);  // DOG-006: delimiter as 'D', body StrictMark
+    if (state->cb) return FREECommentFeedN(tok, olen, clen, state->cb, state->ctx);
     done;
 }
 

@@ -22,7 +22,7 @@ static b8 TOMLTIsKeyword(u8cs tok) {
 
 ok64 TOMLTonComment(u8cs tok, TOMLTstate *state) {
     sane($ok(tok) && state != NULL);
-    if (state->cb) return FREEu8sFeed('D', tok, state->cb, state->ctx);
+    if (state->cb) return FREECommentFeedN(tok, 1, 0, state->cb, state->ctx);  // DOG-006
     done;
 }
 

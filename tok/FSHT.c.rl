@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "FSHT.h"
 
-ok64 FSHTonComment (u8cs tok, FSHTstate* state);
+ok64 FSHTonComment (u8cs tok, u32 olen, u32 clen, FSHTstate* state);
 ok64 FSHTonString (u8cs tok, FSHTstate* state);
 ok64 FSHTonNumber (u8cs tok, FSHTstate* state);
 ok64 FSHTonWord (u8cs tok, FSHTstate* state);
@@ -28,10 +28,17 @@ esc = [\\] ( [abefnrtv\\'\"0]
            | [u] xdgt{4}
            | [U] xdgt{8} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0), "(* *)" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = FSHTonComment(tok, state);
+    o = FSHTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = FSHTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -73,8 +80,8 @@ odig = odgt ( [_]? odgt )*;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "(*" ( any8 - [*] | [*]+ (any8 - [*)] ) )* [*]+ ")"         => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "(*" ( any8 - [*] | [*]+ (any8 - [*)] ) )* [*]+ ")"         => on_block_comment;
 
     # ---- triple-quoted strings ----
     "\"\"\"" ( any8 - ["] | ["] (any8 - ["]) | ["]["] (any8 - ["]) )* "\"\"\""  => on_string;

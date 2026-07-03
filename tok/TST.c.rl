@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "TST.h"
 
-ok64 TSTonComment (u8cs tok, TSTstate* state);
+ok64 TSTonComment (u8cs tok, u32 olen, u32 clen, TSTstate* state);
 ok64 TSTonString (u8cs tok, TSTstate* state);
 ok64 TSTonNumber (u8cs tok, TSTstate* state);
 ok64 TSTonWord (u8cs tok, TSTstate* state);
@@ -29,10 +29,17 @@ esc = [\\] ( [abefnrtv\\'\"?0/]
            | [u] xdgt{4}
            | [u] "{" xdgt{1,6} "}" );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0) and "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = TSTonComment(tok, state);
+    o = TSTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = TSTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -78,8 +85,8 @@ nsuf = [n]?;
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- template strings (backtick) ----
     0x60 ( [\\] any8 | any8 - 0x60 - [\\] )* 0x60                => on_string;

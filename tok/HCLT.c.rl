@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "HCLT.h"
 
-ok64 HCLTonComment (u8cs tok, HCLTstate* state);
+ok64 HCLTonComment (u8cs tok, u32 olen, u32 clen, HCLTstate* state);
 ok64 HCLTonString (u8cs tok, HCLTstate* state);
 ok64 HCLTonNumber (u8cs tok, HCLTstate* state);
 ok64 HCLTonWord (u8cs tok, HCLTstate* state);
@@ -23,10 +23,23 @@ dgt = [0-9];
 
 esc = [\\] ( [nrt"\\] | [u] [0-9a-fA-F]{4} | [U] [0-9a-fA-F]{8} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "#" (1,0), "//" (2,0), "/* */" (2,2).
+action on_hash_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = HCLTonComment(tok, state);
+    o = HCLTonComment(tok, 1, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_line_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = HCLTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = HCLTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -63,9 +76,9 @@ action on_space {
 main := |*
 
     # ---- comments ----
-    [#] [^\n]*                                                    => on_comment;
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    [#] [^\n]*                                                    => on_hash_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- strings (with ${} interpolation treated flat) ----
     0x22 ( esc | "${" | any8 - [\\] - 0x22 )* 0x22              => on_string;

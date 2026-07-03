@@ -1,10 +1,10 @@
 
-/* #line 1 "GLST.c.rl" */
+/* #line 1 "dog/tok/GLST.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "GLST.h"
 
-ok64 GLSTonComment (u8cs tok, GLSTstate* state);
+ok64 GLSTonComment (u8cs tok, u32 olen, u32 clen, GLSTstate* state);
 ok64 GLSTonNumber (u8cs tok, GLSTstate* state);
 ok64 GLSTonPreproc (u8cs tok, GLSTstate* state);
 ok64 GLSTonWord (u8cs tok, GLSTstate* state);
@@ -12,11 +12,11 @@ ok64 GLSTonPunct (u8cs tok, GLSTstate* state);
 ok64 GLSTonSpace (u8cs tok, GLSTstate* state);
 
 
-/* #line 104 "GLST.c.rl" */
+/* #line 111 "dog/tok/GLST.c.rl" */
 
 
 
-/* #line 15 "GLST.rl.c" */
+/* #line 15 "dog/tok/GLST.rl.c" */
 static const char _GLST_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	9, 1, 10, 1, 11, 1, 12, 1, 
@@ -248,7 +248,7 @@ static const int GLST_error = 0;
 static const int GLST_en_main = 11;
 
 
-/* #line 107 "GLST.c.rl" */
+/* #line 114 "dog/tok/GLST.c.rl" */
 
 ok64 GLSTLexer(GLSTstate* state) {
 
@@ -267,7 +267,7 @@ ok64 GLSTLexer(GLSTstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 262 "GLST.rl.c" */
+/* #line 262 "dog/tok/GLST.rl.c" */
 	{
 	cs = GLST_start;
 	ts = 0;
@@ -275,9 +275,9 @@ ok64 GLSTLexer(GLSTstate* state) {
 	act = 0;
 	}
 
-/* #line 125 "GLST.c.rl" */
+/* #line 132 "dog/tok/GLST.c.rl" */
     
-/* #line 268 "GLST.rl.c" */
+/* #line 268 "dog/tok/GLST.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -298,7 +298,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 287 "GLST.rl.c" */
+/* #line 287 "dog/tok/GLST.rl.c" */
 		}
 	}
 
@@ -369,40 +369,40 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 38 "GLST.c.rl" */
+/* #line 45 "dog/tok/GLST.c.rl" */
 	{act = 3;}
 	break;
 	case 4:
-/* #line 38 "GLST.c.rl" */
+/* #line 45 "dog/tok/GLST.c.rl" */
 	{act = 4;}
 	break;
 	case 5:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{act = 6;}
 	break;
 	case 6:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{act = 10;}
 	break;
 	case 7:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{act = 12;}
 	break;
 	case 8:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{act = 13;}
 	break;
 	case 9:
-/* #line 26 "GLST.c.rl" */
+/* #line 33 "dog/tok/GLST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = GLSTonComment(tok, state);
+    o = GLSTonComment(tok, 2, 2, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -411,7 +411,7 @@ _eof_trans:
 }}
 	break;
 	case 11:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -420,16 +420,16 @@ _eof_trans:
 }}
 	break;
 	case 12:
-/* #line 26 "GLST.c.rl" */
+/* #line 27 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = GLSTonComment(tok, state);
+    o = GLSTonComment(tok, 2, 0, state);
     if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 13:
-/* #line 38 "GLST.c.rl" */
+/* #line 45 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -438,7 +438,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 38 "GLST.c.rl" */
+/* #line 45 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -447,7 +447,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -456,7 +456,7 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -465,7 +465,7 @@ _eof_trans:
 }}
 	break;
 	case 17:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -474,7 +474,7 @@ _eof_trans:
 }}
 	break;
 	case 18:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -483,7 +483,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -492,7 +492,7 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -501,7 +501,7 @@ _eof_trans:
 }}
 	break;
 	case 21:
-/* #line 44 "GLST.c.rl" */
+/* #line 51 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -510,7 +510,7 @@ _eof_trans:
 }}
 	break;
 	case 22:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -519,7 +519,7 @@ _eof_trans:
 }}
 	break;
 	case 23:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -528,7 +528,7 @@ _eof_trans:
 }}
 	break;
 	case 24:
-/* #line 56 "GLST.c.rl" */
+/* #line 63 "dog/tok/GLST.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -537,7 +537,7 @@ _eof_trans:
 }}
 	break;
 	case 25:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -546,7 +546,7 @@ _eof_trans:
 }}
 	break;
 	case 26:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -555,7 +555,7 @@ _eof_trans:
 }}
 	break;
 	case 27:
-/* #line 32 "GLST.c.rl" */
+/* #line 39 "dog/tok/GLST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -564,7 +564,7 @@ _eof_trans:
 }}
 	break;
 	case 28:
-/* #line 50 "GLST.c.rl" */
+/* #line 57 "dog/tok/GLST.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -626,7 +626,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 586 "GLST.rl.c" */
+/* #line 586 "dog/tok/GLST.rl.c" */
 		}
 	}
 
@@ -639,7 +639,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 597 "GLST.rl.c" */
+/* #line 597 "dog/tok/GLST.rl.c" */
 		}
 	}
 
@@ -659,7 +659,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 126 "GLST.c.rl" */
+/* #line 133 "dog/tok/GLST.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < GLST_first_final)

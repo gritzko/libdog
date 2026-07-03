@@ -2,7 +2,7 @@
 #include "abc/PRO.h"
 #include "PRTT.h"
 
-ok64 PRTTonComment (u8cs tok, PRTTstate* state);
+ok64 PRTTonComment (u8cs tok, u32 olen, u32 clen, PRTTstate* state);
 ok64 PRTTonString (u8cs tok, PRTTstate* state);
 ok64 PRTTonNumber (u8cs tok, PRTTstate* state);
 ok64 PRTTonWord (u8cs tok, PRTTstate* state);
@@ -25,10 +25,17 @@ odgt = [0-7];
 
 esc = [\\] ( [abfnrtv\\'"] | odgt{1,3} | [x] xdgt{2} );
 
-action on_comment {
+# DOG-006: split delimiter from body — "//" (2,0) and "/* */" (2,2).
+action on_line_comment {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    o = PRTTonComment(tok, state);
+    o = PRTTonComment(tok, 2, 0, state);
+    if (o!=OK) fbreak;
+}
+action on_block_comment {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = PRTTonComment(tok, 2, 2, state);
     if (o!=OK) fbreak;
 }
 action on_string {
@@ -65,8 +72,8 @@ action on_space {
 main := |*
 
     # ---- comments ----
-    "//" [^\n]*                                                   => on_comment;
-    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_comment;
+    "//" [^\n]*                                                   => on_line_comment;
+    "/*" ( any8 - [*] | [*]+ (any8 - [*/]) )* [*]+ "/"          => on_block_comment;
 
     # ---- double-quoted strings ----
     0x22 ( esc | any8 - [\\] - 0x22 - [\n] )* 0x22              => on_string;
