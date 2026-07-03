@@ -38,6 +38,14 @@ ok64 MKDTonWord(u8cs tok, MKDTstate *state) {
     done;
 }
 
+//  Issue key ABC-123: one filename-tagged token so the pager can navigate it
+//  (BRO-012).  Same 'F' tag MDTonKey emits for `.md`.
+ok64 MKDTonKey(u8cs tok, MKDTstate *state) {
+    sane($ok(tok) && state != NULL);
+    if (state->cb) return state->cb('F', tok, state->ctx);
+    done;
+}
+
 ok64 MKDTonPunct(u8cs tok, MKDTstate *state) {
     sane($ok(tok) && state != NULL);
     if (state->cb) return state->cb('P', tok, state->ctx);

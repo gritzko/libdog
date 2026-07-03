@@ -7,6 +7,7 @@ ok64 MKDTonCode (u8cs tok, MKDTstate* state);
 ok64 MKDTonLink (u8cs tok, MKDTstate* state);
 ok64 MKDTonNumber (u8cs tok, MKDTstate* state);
 ok64 MKDTonWord (u8cs tok, MKDTstate* state);
+ok64 MKDTonKey (u8cs tok, MKDTstate* state);
 ok64 MKDTonPunct (u8cs tok, MKDTstate* state);
 ok64 MKDTonSpace (u8cs tok, MKDTstate* state);
 ok64 MKDTonEscape (u8cs tok, MKDTstate* state);
@@ -54,6 +55,12 @@ action on_word {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     o = MKDTonWord(tok, state);
+    if (o!=OK) fbreak;
+}
+action on_key {
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = MKDTonKey(tok, state);
     if (o!=OK) fbreak;
 }
 action on_punct {
@@ -114,6 +121,11 @@ main := |*
 
     # ---- unmatched delimiters ----
     "~~"                                                 => on_punct;
+
+    # ---- issue keys: ABC-123, PROJ-1234 (uppercase letters + digits) ----
+    # A bare ticket code fuses to one 'F' token (nav target); the code/link/
+    # emph rules above outrank this, so a decorated ref stays in its span.
+    [A-Z] [A-Z0-9_]* "-" dgt+                            => on_key;
 
     # ---- identifiers / words ----
     idalpha idalnum*                                     => on_word;

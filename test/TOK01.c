@@ -54,6 +54,7 @@
 #include "TYST.h"
 #include "LLT.h"
 #include "MDT.h"
+#include "MKDT.h"
 #include "FREE.h"
 #include "TOK.h"
 #include "git/CFG.h"
@@ -1253,6 +1254,37 @@ ok64 MDTIssueKeyTest() {
     done;
 }
 
+//  BRO-012: `.mkd` must fuse a plain-text ticket code into ONE 'F' token, like
+//  `.md` (MDTIssueKeyTest) — a decorated ref (code/link/emph) stays in its span.
+ok64 MKDTIssueKeyTest() {
+    sane(1);
+    TOK01Case cases[] = {
+        // canonical issue keys — one F token
+        {"ABC-123", "F"},
+        {"PROJ-1", "F"},
+        {"X-99", "F"},
+        {"JIRA-1234", "F"},
+        // digits/underscore allowed after the leading uppercase letter
+        {"A1B2-7", "F"},
+        {"A_B-9", "F"},
+        // followed by punct/space/word — only the key fuses
+        {"See ABC-123.", "SWFP"},
+        {"ABC-123 fixed", "FWS"},
+        // lowercase / no digits / dangling dash: NOT a key
+        {"abc-123", "SPL"},
+        {"ABC-DEF", "SPS"},
+        {"ABC-", "SP"},
+        {"multi-word", "SPS"},
+        // decorated ref stays in its span (higher precedence): no F token
+        {"`ABC-123`", "H"},
+        {"[ABC-123]", "G"},
+        {"*ABC-123*", "G"},
+    };
+    int ncases = sizeof(cases) / sizeof(cases[0]);
+    RUN_CASES(MKDTLexer, MKDT, cases, ncases);
+    done;
+}
+
 ok64 MDTEmphTest() {
     sane(1);
     // emphasis in context
@@ -1420,6 +1452,7 @@ ok64 TOK01test() {
     call(FREECommentSplitTest);
     call(MDTBasicTest);
     call(MDTIssueKeyTest);
+    call(MKDTIssueKeyTest);
     call(MDTEmphTest);
     call(MDTCodeFenceTest);
     call(MDTFenceIsolationTest);
