@@ -312,7 +312,7 @@ ok64 DOGNormalizeArg(urip u, u8csc arg) {
     //   `<scheme>:` transport or projector.
     // Plain whitespace tokens — `fix the typo`, `URI/verb routing`,
     // `#wild msg` — get the bypass into the fragment slot.  This way
-    // `spot:'u8sFeed( a, b )'` reaches URILexer, but `URI/verb routing`
+    // `spot:u8sFeed` reaches URILexer, but `URI/verb routing` (a space)
     // doesn't get parsed as a path-form URI.
     // A `#`-led arg is a commit message (POST's fragment slot), NOT a
     // URI to lex.  RFC 3986 `fragment = *( pchar / "/" / "?" )` cannot
@@ -366,8 +366,9 @@ ok64 DOGNormalizeArg(urip u, u8csc arg) {
     }
 
     if (starts_uri) {
-        // Path may contain whitespace per RFC pchar's `unwise` set;
-        // URILexer handles it.
+        // URILexer is RFC-strict — no raw whitespace in any slot.  A
+        // scheme-led free-form body (`spot: multi word`) thus fails here
+        // for now; splitting free-form text out of the URI is deferred.
         return DOGParseURI(u, arg);
     }
 
