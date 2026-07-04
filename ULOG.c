@@ -244,6 +244,49 @@ static ok64 ulog_scan_log(u8bp data, wh128bp idx) {
     done;
 }
 
+//  ULOG-002: position the DATA/IDLE division by scanning BACKWARD over the
+//  trailing zero pad instead of forward-walking the whole log — O(pad+partial),
+//  not O(content).  On RW opens FILEBook grew the file to a page and mapped
+//  [content_end, term) as a NUL pad; abnormal exit left rows below it.  We skip
+//  trailing NULs from the mapped end down to the last non-NUL byte:
+//    - last non-NUL is '\n' (a row terminator): DATA ends just after it, the
+//      skipped pad becomes IDLE (RW append room).  Common clean-close case:
+//      the last on-disk byte IS that '\n' with zero pad, so DATA=content_end.
+//    - last non-NUL is NOT a '\n' (a crash-mid-append partial trailing row):
+//      SELF-HEAL — continue back to the previous '\n' and end DATA there,
+//      dropping the incomplete last row; the interrupted append never bricks
+//      the log.  No earlier '\n' → the log is empty (0 rows).
+//  Genuine mid-content corruption stays caught by the stale-sidecar forward
+//  ulog_scan_log rebuild; we do NOT scan the content for embedded NULs here.
+static ok64 ulog_backscan_tail(u8bp data) {
+    sane(data);
+    a_dup(u8c, dat, u8bDataC(data));                  // [base, content_end)
+    a_dup(u8c, idle, u8bIdleC(data));                 // [content_end, term)
+    u8 const *base = dat[0];
+    u8 const *term = idle[1];
+
+    //  Walk back from the mapped end over trailing NULs.
+    u8 const *p = term;
+    while (p > base && *(p - 1) == 0) p--;
+    //  [p, term) is all-NUL; p is one-past the last non-NUL byte (or base
+    //  when the whole map is NUL — a genuinely empty/all-NUL log).
+    if (p == base) { u8bReset(data); done; }          // empty: no rows, no IDLE
+
+    //  Self-heal a partial trailing row: if the last non-NUL byte is not a
+    //  row terminator (interrupted append), back up to the previous '\n' and
+    //  drop the incomplete row.  No earlier '\n' → the log is empty.
+    if (*(p - 1) != '\n') {
+        u8 const *q = p - 1;
+        while (q > base && *(q - 1) != '\n') q--;
+        if (q == base) { u8bReset(data); done; }      // only a partial row
+        p = q;                                        // DATA ends after prev '\n'
+    }
+
+    u8bReset(data);
+    u8bFed(data, (size_t)u8csLen((u8cs){(u8 *)base, (u8 *)p}));
+    done;
+}
+
 //  Compose `<dir>/.<base>.idx` (NUL-terminated) into `out`.  `out` is
 //  reset before writing.  `log_path` is a NUL-terminated path slice;
 //  trailing NUL bytes (the caller's path-buffer convention) are
@@ -500,15 +543,9 @@ ok64 ULOGOpenBooked(u8bp *data, wh128bp *idx, path8s path,
     //  sidecar's sentinel recorded the close-time mtime.  This is the
     //  value we hand to the freshness check below.
     ron60 pre_mtime = 0;
-    u64   pre_size  = 0;
-    b8    existed   = NO;
     {
         filestat fs = {};
-        if (FILEStat(&fs, path) == OK) {
-            pre_mtime = fs.mtime;
-            pre_size  = fs.size;
-            existed   = YES;
-        }
+        if (FILEStat(&fs, path) == OK) pre_mtime = fs.mtime;
     }
 
     ok64 o = FILEBook(data, path, book_size);
@@ -526,26 +563,15 @@ ok64 ULOGOpenBooked(u8bp *data, wh128bp *idx, path8s path,
     }
 
     //  Position the log's idle head past the last complete row before
-    //  the idx scan/load — we need the byte size right.
+    //  the idx scan/load.  ULOG-002: back-scan the trailing zero pad
+    //  (O(pad)) instead of forward-walking + parsing the whole log; the
+    //  idx itself is loaded/rebuilt by ULOGOpenIdx below.
     {
-        wh128bp tmp = NULL;
-        ok64 ao = ulog_idx_alloc_anon(&tmp, ulog_idx_scan_cap(*data));
-        if (ao != OK) {                 // scratch alloc failed AFTER book
-            if (*data && (*data)[0]) FILEUnBook(*data);
-            return ao;
-        }
-        ok64 so = ulog_scan_log(*data, tmp);
-        ulog_idx_free_anon(tmp);
+        //  ULOG-002: the back-scan self-heals a partial trailing row, so it
+        //  no longer refuses on a crash-mid-append; a non-OK here is a real
+        //  buffer error — unbook and propagate.
+        ok64 so = ulog_backscan_tail(*data);
         if (so != OK) {
-            //  Scan refused the log (ULOGTORN / ULOGCLOCK / ULOGBADFMT).
-            //  FILEBook's open-time ftruncate-up grew the file to a page
-            //  boundary; restore the ORIGINAL on-disk size so the
-            //  surviving bytes are left exactly as found — never zeroed,
-            //  never spuriously grown — for an out-of-band repair.
-            if (existed && *data && (*data)[0]) {
-                int fd = FILEBookedFD(*data);
-                if (fd >= 0) (void)FILEResize(&fd, (size_t)pre_size);
-            }
             if (*data && (*data)[0]) FILEUnBook(*data);
             return so;
         }
@@ -581,17 +607,11 @@ ok64 ULOGOpenRO(u8bp *data, wh128bp *idx, path8s path) {
     //  RO map only — fails if file is missing (no implicit create).
     call(FILEBookRO, data, path, ULOG_BOOK_DEFAULT);
 
-    //  Fix up data's idle head via a throw-away scan (read-only path —
-    //  we won't write the sidecar from here).
+    //  Fix up data's idle head via the backward zero-pad scan (ULOG-002).
+    //  RO opens never grew the file (term==content_end): zeros past the
+    //  last row are simply ignored, no IDLE.
     {
-        wh128bp tmp = NULL;
-        ok64 ao = ulog_idx_alloc_anon(&tmp, ulog_idx_scan_cap(*data));
-        if (ao != OK) {                 // scratch alloc failed AFTER book
-            if (*data && (*data)[0]) FILEUnBook(*data);
-            return ao;
-        }
-        ok64 so = ulog_scan_log(*data, tmp);
-        ulog_idx_free_anon(tmp);
+        ok64 so = ulog_backscan_tail(*data);
         if (so != OK) {
             if (*data && (*data)[0]) FILEUnBook(*data);
             return so;

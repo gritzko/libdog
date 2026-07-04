@@ -980,20 +980,23 @@ static int open_fd_count(void) {
 //  Test hook (dog/ULOG.c): force the next ulog_idx_alloc_anon to fail.
 extern u32 ULOG_FAULT_ALLOC_ANON;
 
-//  MEM-016 repro: ULOGOpenBooked / ULOGOpenRO FILEBook the log, then
-//  call ulog_idx_alloc_anon for a scratch scan idx.  When that scratch
-//  alloc fails (memory pressure), the old `call()` returned immediately
+//  MEM-016 repro: ULOGOpen* FILEBook the log, then a downstream
+//  ulog_idx_alloc_anon (the anonymous-mmap idx fallback in ULOGOpenIdx)
+//  may fail under memory pressure.  The old `call()` returned immediately
 //  WITHOUT unbooking the log — leaking the mmap + fd for the process
-//  lifetime.  We force the alloc failure right after the book and assert
-//  the open fails AND the booked fd was released (no leak), for both the
-//  RW and RO open paths.
+//  lifetime.  ULOG-002 removed the pre-scan throw-away anon alloc (the
+//  open now back-scans the zero pad in place), so the surviving anon-alloc
+//  site is ULOGOpenIdx's fallback: RO with no on-disk sidecar rebuilds
+//  into an anonymous mmap.  We drop the sidecar, force that alloc to fail,
+//  and assert the open fails AND the booked log fd was released (no leak).
 static ok64 T_open_alloc_fail_no_leak(void) {
     sane(1);
     call(FILEInit);
     rm_tmp("/tmp/ulog-leak.log");
+    rm_tmp("/tmp/.ulog-leak.log.idx");
     LOGPATH(path, "/tmp/ulog-leak.log");
 
-    //  Seed a valid one-row log so the file exists for both opens.
+    //  Seed a valid one-row log so the file exists for the open.
     u8bp l_data = NULL; wh128bp l_idx = NULL;
     call(ULOGOpen, &l_data, &l_idx, path);
     saved_uri s1 = {};
@@ -1002,28 +1005,25 @@ static ok64 T_open_alloc_fail_no_leak(void) {
     call(ULOGAppendAt, l_data, l_idx, &r1);
     call(ULOGClose, l_data, &l_idx, YES);
 
-    //  --- RW open path (ULOGOpenBooked) ---
+    //  Drop the sidecar so the RO open must rebuild via the anonymous
+    //  mmap fallback — the remaining ulog_idx_alloc_anon call site.
+    rm_tmp("/tmp/.ulog-leak.log.idx");
+
     int fd0 = open_fd_count();
     want(fd0 >= 0);
 
-    ULOG_FAULT_ALLOC_ANON = 1;       // trip the scratch alloc after book
-    u8bp d2 = NULL; wh128bp i2 = NULL;
-    ok64 rc = ULOGOpenBooked(&d2, &i2, path, 4096, 4096);
-    ULOG_FAULT_ALLOC_ANON = 0;
-    want(rc != OK);                  // the forced alloc failure propagates
-    want(d2 == NULL || d2[0] == NULL);   // booked slot was unbooked
-    want(open_fd_count() == fd0);    // no leaked fd
-
-    //  --- RO open path (ULOGOpenRO) ---
+    //  --- RO open path (ULOGOpenRO): FILEBookRO the log, then fault the
+    //  anon idx alloc in ULOGOpenIdx.  The booked log must be unbooked. ---
     ULOG_FAULT_ALLOC_ANON = 1;
     u8bp d3 = NULL; wh128bp i3 = NULL;
     ok64 rc2 = ULOGOpenRO(&d3, &i3, path);
     ULOG_FAULT_ALLOC_ANON = 0;
-    want(rc2 != OK);
-    want(d3 == NULL || d3[0] == NULL);
-    want(open_fd_count() == fd0);    // still no leaked fd
+    want(rc2 != OK);                 // the forced alloc failure propagates
+    want(d3 == NULL || d3[0] == NULL);   // booked slot was unbooked
+    want(open_fd_count() == fd0);    // no leaked fd
 
     rm_tmp("/tmp/ulog-leak.log");
+    rm_tmp("/tmp/.ulog-leak.log.idx");
     done;
 }
 
@@ -1197,6 +1197,282 @@ static ok64 T_torn_mid_no_zero(void) {
     done;
 }
 
+//  ULOG-002 repro: abnormal exit skips FILETrimBook, leaving the file at
+//  its page-aligned size with a trailing zero pad below the last row.  The
+//  next open must BACK-SCAN that pad: DATA ends at the last complete row's
+//  '\n' and the NUL pad becomes IDLE (writable RW append room) — the rows
+//  read back identically, and a fresh append lands right after the tail.
+//  We simulate the un-trimmed file by growing it with a page of NULs after
+//  a clean close and unlinking the sidecar (so the size mismatch forces the
+//  rebuild path to observe the back-scanned DATA end).
+static ok64 T_backscan_zero_pad(void) {
+    sane(1);
+    call(FILEInit);
+    rm_tmp("/tmp/ulog-pad.log");
+    rm_tmp("/tmp/.ulog-pad.log.idx");
+    LOGPATH(path, "/tmp/ulog-pad.log");
+
+    //  Seed three rows, close cleanly (trims to exact content).
+    u8bp d = NULL; wh128bp i = NULL;
+    call(ULOGOpen, &d, &i, path);
+    saved_uri s1 = {}, s2 = {}, s3 = {};
+    call(parse_uri_lit, &s1, "?heads/master");
+    call(parse_uri_lit, &s2, "?heads/main");
+    call(parse_uri_lit, &s3, "?heads/dev");
+    ulogrec r1 = rec_of(5001, verb_of("put"), &s1);
+    ulogrec r2 = rec_of(5002, verb_of("put"), &s2);
+    ulogrec r3 = rec_of(5003, verb_of("put"), &s3);
+    call(ULOGAppendAt, d, i, &r1);
+    call(ULOGAppendAt, d, i, &r2);
+    call(ULOGAppendAt, d, i, &r3);
+    call(ULOGClose, d, &i, YES);
+
+    struct stat st0 = {};
+    want(stat("/tmp/ulog-pad.log", &st0) == 0);
+    off_t content = st0.st_size;
+    want(content > 0);
+
+    //  Grow the file with a 4 KiB NUL pad (un-trimmed abnormal-exit shape)
+    //  and drop the sidecar so the open cannot short-circuit on freshness.
+    {
+        int fd = open("/tmp/ulog-pad.log", O_RDWR);
+        want(fd >= 0);
+        want(ftruncate(fd, content + 4096) == 0);
+        close(fd);
+    }
+    rm_tmp("/tmp/.ulog-pad.log.idx");
+
+    //  Reopen RW: back-scan must level DATA at the real tail, pad -> IDLE.
+    u8bp d2 = NULL; wh128bp i2 = NULL;
+    call(ULOGOpen, &d2, &i2, path);
+    want(ULOGCount(i2) == 3);                 // all rows, none lost to the pad
+    ulogrec g = {};
+    call(ULOGTail, d2, i2, &g);
+    want(g.ts == 5003);                       // last complete row is the tail
+
+    //  A fresh append lands right after the tail (IDLE was real append room).
+    saved_uri s4 = {};
+    call(parse_uri_lit, &s4, "?heads/next");
+    ulogrec r4 = rec_of(5004, verb_of("put"), &s4);
+    call(ULOGAppendAt, d2, i2, &r4);
+    want(ULOGCount(i2) == 4);
+    call(ULOGClose, d2, &i2, YES);
+
+    //  Close trimmed to PAST+DATA: the pad is gone, only real content left.
+    struct stat st1 = {};
+    want(stat("/tmp/ulog-pad.log", &st1) == 0);
+    want(st1.st_size > content);              // grew by the new row
+    want(st1.st_size < content + 4096);       // but the NUL pad was dropped
+
+    //  Reopen once more: four rows survive the round-trip byte-for-byte.
+    u8bp d3 = NULL; wh128bp i3 = NULL;
+    call(ULOGOpen, &d3, &i3, path);
+    want(ULOGCount(i3) == 4);
+    call(ULOGTail, d3, i3, &g);
+    want(g.ts == 5004);
+    call(ULOGClose, d3, &i3, YES);
+
+    rm_tmp("/tmp/ulog-pad.log");
+    rm_tmp("/tmp/.ulog-pad.log.idx");
+    done;
+}
+
+//  ULOG-002 repro: a torn PARTIAL last row (bytes written but no terminating
+//  '\n' before the zero pad) SELF-HEALS — the back-scan sees the last non-NUL
+//  byte is not a '\n', backs up to the previous '\n', and drops the incomplete
+//  row.  The log opens SUCCESSFULLY with exactly the complete prior rows; a
+//  crash-mid-append never bricks the log.  (Before the ULOG-002 self-heal fix
+//  this returned ULOGTORN — the interrupted append made the log un-openable.)
+static ok64 T_backscan_torn_partial_row(void) {
+    sane(1);
+    call(FILEInit);
+    rm_tmp("/tmp/ulog-part.log");
+    rm_tmp("/tmp/.ulog-part.log.idx");
+    LOGPATH(path, "/tmp/ulog-part.log");
+
+    u8bp d = NULL; wh128bp i = NULL;
+    call(ULOGOpen, &d, &i, path);
+    saved_uri s1 = {}, s2 = {};
+    call(parse_uri_lit, &s1, "?heads/master");
+    call(parse_uri_lit, &s2, "?heads/main");
+    ulogrec r1 = rec_of(6001, verb_of("put"), &s1);
+    ulogrec r2 = rec_of(6002, verb_of("put"), &s2);
+    call(ULOGAppendAt, d, i, &r1);
+    call(ULOGAppendAt, d, i, &r2);
+    call(ULOGClose, d, &i, YES);
+
+    struct stat st0 = {};
+    want(stat("/tmp/ulog-part.log", &st0) == 0);
+    off_t content = st0.st_size;
+
+    //  Snapshot the two prior rows' bytes so we can prove they survive intact.
+    char prior_bytes[512] = {};
+    want(content > 0 && content < (off_t)sizeof(prior_bytes));
+    {
+        int fd = open("/tmp/ulog-part.log", O_RDONLY);
+        want(fd >= 0);
+        want(pread(fd, prior_bytes, (size_t)content, 0) == (ssize_t)content);
+        close(fd);
+    }
+
+    //  Append a partial row (no '\n') then a NUL pad — the crash-mid-append
+    //  shape: real bytes with no terminator, trailing zeros beyond.
+    {
+        int fd = open("/tmp/ulog-part.log", O_RDWR);
+        want(fd >= 0);
+        const char *frag = "6003\tput\t?heads/de";   // no '\n'
+        want(pwrite(fd, frag, strlen(frag), content) == (ssize_t)strlen(frag));
+        want(ftruncate(fd, content + strlen(frag) + 4096) == 0);
+        close(fd);
+    }
+    rm_tmp("/tmp/.ulog-part.log.idx");
+
+    //  The open must SELF-HEAL: succeed with exactly the two complete rows,
+    //  the incomplete third dropped.
+    u8bp d2 = NULL; wh128bp i2 = NULL;
+    call(ULOGOpen, &d2, &i2, path);
+    want(ULOGCount(i2) == 2);                  // partial row dropped
+    ulogrec g = {};
+    call(ULOGRow, d2, i2, 0, &g);
+    want(g.ts == 6001);
+    call(ULOGTail, d2, i2, &g);
+    want(g.ts == 6002);                        // last COMPLETE row is the tail
+    call(ULOGClose, d2, &i2, YES);
+
+    //  Prior rows byte-intact: the healed close trims to exactly the two rows,
+    //  matching the original committed bytes verbatim.
+    struct stat st2 = {};
+    want(stat("/tmp/ulog-part.log", &st2) == 0);
+    want(st2.st_size == content);
+    {
+        char now[512] = {};
+        int fd = open("/tmp/ulog-part.log", O_RDONLY);
+        want(fd >= 0);
+        want(pread(fd, now, (size_t)content, 0) == (ssize_t)content);
+        close(fd);
+        want(memcmp(now, prior_bytes, (size_t)content) == 0);
+    }
+
+    rm_tmp("/tmp/ulog-part.log");
+    rm_tmp("/tmp/.ulog-part.log.idx");
+    done;
+}
+
+//  ULOG-001 H5 repro (crash-safety, coupled to ULOG-002): a SIGKILL/interrupt
+//  mid-append SELF-HEALS — the reopen drops the interrupted partial row and
+//  recovers the PRIOR rows byte-intact in a SINGLE open (no out-of-band repair
+//  needed).  We model the interrupted append directly: seed a good log, then
+//  simulate the writer dying after growing+padding the file but before the
+//  row's '\n' landed (partial trailing bytes + NUL pad).  (Before the ULOG-002
+//  self-heal fix this returned ULOGTORN and needed a manual truncate to reopen.)
+static ok64 T_crash_mid_append_prior_intact(void) {
+    sane(1);
+    call(FILEInit);
+    rm_tmp("/tmp/ulog-h5.log");
+    rm_tmp("/tmp/.ulog-h5.log.idx");
+    LOGPATH(path, "/tmp/ulog-h5.log");
+
+    u8bp d = NULL; wh128bp i = NULL;
+    call(ULOGOpen, &d, &i, path);
+    saved_uri s1 = {}, s2 = {};
+    call(parse_uri_lit, &s1, "?heads/master");
+    call(parse_uri_lit, &s2, "?heads/main");
+    ulogrec r1 = rec_of(7001, verb_of("put"), &s1);
+    ulogrec r2 = rec_of(7002, verb_of("put"), &s2);
+    call(ULOGAppendAt, d, i, &r1);
+    call(ULOGAppendAt, d, i, &r2);
+    call(ULOGClose, d, &i, YES);
+
+    struct stat st0 = {};
+    want(stat("/tmp/ulog-h5.log", &st0) == 0);
+    off_t prior = st0.st_size;                // the PRIOR (committed) content
+
+    //  Snapshot the prior committed bytes to prove they survive verbatim.
+    char prior_bytes[512] = {};
+    want(prior > 0 && prior < (off_t)sizeof(prior_bytes));
+    {
+        int fd = open("/tmp/ulog-h5.log", O_RDONLY);
+        want(fd >= 0);
+        want(pread(fd, prior_bytes, (size_t)prior, 0) == (ssize_t)prior);
+        close(fd);
+    }
+
+    //  Interrupted append: a half-written third row (no '\n') + NUL pad.
+    {
+        int fd = open("/tmp/ulog-h5.log", O_RDWR);
+        want(fd >= 0);
+        const char *frag = "7003\tput\t?hea";   // torn: no terminator
+        want(pwrite(fd, frag, strlen(frag), prior) == (ssize_t)strlen(frag));
+        want(ftruncate(fd, prior + strlen(frag) + 8192) == 0);
+        close(fd);
+    }
+    rm_tmp("/tmp/.ulog-h5.log.idx");
+
+    //  Reopen SELF-HEALS in one shot: the partial third row is dropped and the
+    //  two prior rows are recovered — no manual repair, prior bytes untouched.
+    u8bp d2 = NULL; wh128bp i2 = NULL;
+    call(ULOGOpen, &d2, &i2, path);
+    want(ULOGCount(i2) == 2);                  // both prior rows survived
+    ulogrec g = {};
+    call(ULOGTail, d2, i2, &g);
+    want(g.ts == 7002);
+    call(ULOGClose, d2, &i2, YES);
+
+    //  The healed close trims to exactly the two prior rows, byte-for-byte.
+    struct stat st1 = {};
+    want(stat("/tmp/ulog-h5.log", &st1) == 0);
+    want(st1.st_size == prior);
+    {
+        char now[512] = {};
+        int fd = open("/tmp/ulog-h5.log", O_RDONLY);
+        want(fd >= 0);
+        want(pread(fd, now, (size_t)prior, 0) == (ssize_t)prior);
+        close(fd);
+        want(memcmp(now, prior_bytes, (size_t)prior) == 0);
+    }
+
+    rm_tmp("/tmp/ulog-h5.log");
+    rm_tmp("/tmp/.ulog-h5.log.idx");
+    done;
+}
+
+//  ULOG-001 H4-adjacent repro: a 0-byte / all-NUL log opens as EMPTY (a
+//  legitimate freshly-created or trimmed-to-nothing log), NOT trusted as a
+//  short truncation of surviving content.  An all-NUL file with NO real
+//  bytes is empty by construction; the back-scan reaches base and levels
+//  DATA to zero with no torn error.  (When objects DO survive, the rebuild
+//  is the store's job; here we prove the log-level "0 bytes == empty" rule.)
+static ok64 T_zero_byte_log_empty(void) {
+    sane(1);
+    call(FILEInit);
+    rm_tmp("/tmp/ulog-zero.log");
+    rm_tmp("/tmp/.ulog-zero.log.idx");
+    LOGPATH(path, "/tmp/ulog-zero.log");
+
+    //  (a) genuinely 0-byte file.
+    { int fd = open("/tmp/ulog-zero.log", O_RDWR | O_CREAT, 0644);
+      want(fd >= 0); close(fd); }
+    u8bp d = NULL; wh128bp i = NULL;
+    call(ULOGOpen, &d, &i, path);
+    want(ULOGCount(i) == 0);                   // empty, not torn
+    call(ULOGClose, d, &i, YES);
+
+    //  (b) all-NUL file (e.g. a page ftruncate'd but never written).
+    rm_tmp("/tmp/.ulog-zero.log.idx");
+    { int fd = open("/tmp/ulog-zero.log", O_RDWR | O_TRUNC, 0644);
+      want(fd >= 0);
+      want(ftruncate(fd, 4096) == 0);          // sparse all-NUL page
+      close(fd); }
+    u8bp d2 = NULL; wh128bp i2 = NULL;
+    call(ULOGOpen, &d2, &i2, path);
+    want(ULOGCount(i2) == 0);                   // all-NUL == empty, not torn
+    call(ULOGClose, d2, &i2, YES);
+
+    rm_tmp("/tmp/ulog-zero.log");
+    rm_tmp("/tmp/.ulog-zero.log.idx");
+    done;
+}
+
 //  STATUS-003 regression: a long-lived worktree's wtlog accumulates one
 //  ULOG row per put/get/post over its lifetime — easily thousands.  The
 //  open path (ULOGOpenBooked RW and ULOGOpenRO) runs a THROW-AWAY scan
@@ -1264,6 +1540,10 @@ ok64 ULOGtest(void) {
     fprintf(stderr, "T_open_over_1024_rows...\n");  call(T_open_over_1024_rows);
     fprintf(stderr, "T_torn_first_byte_no_zero...\n"); call(T_torn_first_byte_no_zero);
     fprintf(stderr, "T_torn_mid_no_zero...\n");        call(T_torn_mid_no_zero);
+    fprintf(stderr, "T_backscan_zero_pad...\n");       call(T_backscan_zero_pad);
+    fprintf(stderr, "T_backscan_torn_partial_row...\n"); call(T_backscan_torn_partial_row);
+    fprintf(stderr, "T_crash_mid_append_prior_intact...\n"); call(T_crash_mid_append_prior_intact);
+    fprintf(stderr, "T_zero_byte_log_empty...\n");     call(T_zero_byte_log_empty);
     fprintf(stderr, "T_open_alloc_fail_no_leak...\n"); call(T_open_alloc_fail_no_leak);
     fprintf(stderr, "T_no_truncate_on_book_fail...\n"); call(T_no_truncate_on_book_fail);
     fprintf(stderr, "T_scanwt_big_ignored...\n"); call(T_scanwt_big_ignored);
