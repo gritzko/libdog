@@ -1473,6 +1473,64 @@ static ok64 T_zero_byte_log_empty(void) {
     done;
 }
 
+//  ULOG-003: a STALE booked sidecar with >256 rows must rebuild in place.
+//  The booked sidecar grows on demand past its 4096-byte init.
+static ok64 T_stale_rebuild_over_256_rows(void) {
+    sane(1);
+    call(FILEInit);
+    rm_tmp("/tmp/ulog-g256.log");
+    rm_tmp("/tmp/.ulog-g256.log.idx");
+    LOGPATH(path, "/tmp/ulog-g256.log");
+
+    saved_uri s = {};
+    call(parse_uri_lit, &s, "?heads/main");
+
+    //  4096/sizeof(wh128) = 256 entries fit the init; N rows need N+1.
+    u32 const N = 300;
+    {
+        u8bp    l_data = NULL;
+        wh128bp l_idx  = NULL;
+        call(ULOGOpen, &l_data, &l_idx, path);
+        for (u32 i = 0; i < N; i++) {
+            ulogrec r = rec_of((ron60)(1 + i), verb_of("put"), &s);
+            call(ULOGAppendAt, l_data, l_idx, &r);
+        }
+        want(ULOGCount(l_idx) == N);
+        call(ULOGClose, l_data, &l_idx, YES);
+    }
+
+    //  Force a stale sidecar (bogus size=0 sentinel) so the next RW open
+    //  cannot take the fresh fast path and must rebuild the >256 rows in
+    //  place on the 4096-byte-init booked map — the ULOG-003 grow path.
+    {
+        int fd = open("/tmp/.ulog-g256.log.idx", O_RDWR | O_TRUNC);
+        if (fd < 0) fail(TESTFAIL);
+        u8 sentinel[16] = {};
+        if (write(fd, sentinel, 16) != 16) { close(fd); fail(TESTFAIL); }
+        close(fd);
+    }
+
+    //  RW reopen must rebuild without SNOROOM and surface every row.
+    {
+        u8bp    l_data = NULL;
+        wh128bp l_idx  = NULL;
+        call(ULOGOpen, &l_data, &l_idx, path);
+        want(ULOGCount(l_idx) == N);
+        ulogrec g = {};
+        call(ULOGTail, l_data, l_idx, &g);
+        want(g.ts == (ron60)N);
+        //  Append past the rebuilt tail: the booked idx must still grow.
+        ulogrec r = rec_of((ron60)(N + 1), verb_of("put"), &s);
+        call(ULOGAppendAt, l_data, l_idx, &r);
+        want(ULOGCount(l_idx) == N + 1);
+        call(ULOGClose, l_data, &l_idx, YES);
+    }
+
+    rm_tmp("/tmp/ulog-g256.log");
+    rm_tmp("/tmp/.ulog-g256.log.idx");
+    done;
+}
+
 //  STATUS-003 regression: a long-lived worktree's wtlog accumulates one
 //  ULOG row per put/get/post over its lifetime — easily thousands.  The
 //  open path (ULOGOpenBooked RW and ULOGOpenRO) runs a THROW-AWAY scan
@@ -1537,6 +1595,7 @@ static ok64 T_open_over_1024_rows(void) {
 
 ok64 ULOGtest(void) {
     sane(1);
+    fprintf(stderr, "T_stale_rebuild_over_256_rows...\n"); call(T_stale_rebuild_over_256_rows);
     fprintf(stderr, "T_open_over_1024_rows...\n");  call(T_open_over_1024_rows);
     fprintf(stderr, "T_torn_first_byte_no_zero...\n"); call(T_torn_first_byte_no_zero);
     fprintf(stderr, "T_torn_mid_no_zero...\n");        call(T_torn_mid_no_zero);

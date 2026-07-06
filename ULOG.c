@@ -144,10 +144,11 @@ static wh128 *ulog_idx_slot(wh128bp idx, u32 i) {
     return (wh128 *)idx[0] + i;
 }
 
-//  Push one wh128 into idx.  Wraps wh128bPush; callers expect the
-//  underlying buffer to have idle room (booked sidecars grow on demand
-//  via FILEBookEnsure; anonymous fallbacks pre-size for the rebuild).
+//  ULOG-003: grow the booked sidecar on demand before each push (wh128bPush
+//  itself never triggers FILEBookGrow); anon fallbacks (fd<0) are pre-sized.
 static ok64 ulog_idx_push(wh128bp idx, wh128 e) {
+    sane(idx);
+    if (FILEBookedFD((u8bp)idx) >= 0) call(FILEBookEnsure, (u8bp)idx, sizeof(wh128));
     return wh128bPush(idx, &e);
 }
 
