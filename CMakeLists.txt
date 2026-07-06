@@ -5,7 +5,24 @@ set(CMAKE_C_STANDARD 23)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
+#  DOG-007: dual-mode — standalone repo root (own abc/ submodule) or an
+#  add_subdirectory child of beagle (sibling abc/ already provides targets).
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")
+    set(DOG_BIN_DIR ${CMAKE_BINARY_DIR}/bin)
+    include(CTest)
+    #  Sources self-include as "dog/..."; synthesize that prefix via a
+    #  build-dir symlink instead of rewriting the generated tokenizers.
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/selfinclude)
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/selfinclude/dog SYMBOLIC)
+    include_directories(${CMAKE_BINARY_DIR}/selfinclude)
+endif()
+
 find_package(ZLIB REQUIRED)
+
+if (NOT TARGET abc-core)
+    add_subdirectory(abc)
+endif()
 
 include_directories(.. . tok git)
 

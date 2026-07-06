@@ -573,7 +573,9 @@ ok64 ULOGOpenBooked(u8bp *data, wh128bp *idx, path8s path,
         //  buffer error — unbook and propagate.
         ok64 so = ulog_backscan_tail(*data);
         if (so != OK) {
-            if (*data && (*data)[0]) FILEUnBook(*data);
+            //  Undo FILEBook's page-align grow before unbooking, or a
+            //  refused open leaves the log ftruncate'd up (58→4096 pad).
+            if (*data && (*data)[0]) { FILETrimBook(*data); FILEUnBook(*data); }
             return so;
         }
     }
@@ -581,7 +583,7 @@ ok64 ULOGOpenBooked(u8bp *data, wh128bp *idx, path8s path,
     if (idx) {
         ok64 io = ULOGOpenIdx(idx, path, *data, NO, pre_mtime);
         if (io != OK) {
-            if (*data && (*data)[0]) FILEUnBook(*data);
+            if (*data && (*data)[0]) { FILETrimBook(*data); FILEUnBook(*data); }
             return io;
         }
     }
