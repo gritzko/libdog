@@ -555,8 +555,9 @@ static ok64 dog_pup_path(path8b out, path8s dir, u64 pup_key, u8cs ext) {
     sane(u8bOK(out));
     call(PATHu8bDup, out, dir);
     a_pad(u8, name, DOG_PUP_SEQNO_W + 32);
+    //  JAB-008: RONu8sFeedPad advances the idle cursor itself (ABC-008
+    //  contract); the old manual advance here double-counted → PATHBAD.
     call(RONu8sFeedPad, u8bIdle(name), (ok64)pup_key, DOG_PUP_SEQNO_W);
-    ((u8 **)name)[2] += DOG_PUP_SEQNO_W;
     call(u8bFeed, name, ext);
     call(PATHu8bPush, out, u8bDataC(name));
     done;
