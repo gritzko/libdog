@@ -895,6 +895,56 @@ static ok64 HUNKTestHeadRowColor(void) {
     done;
 }
 
+// =====================================================================
+// JAB-009 — HUNKu32bTokenize tok32 ends must tile the source.
+//
+// mkd `\X` escapes emit a callback token 1 byte shorter than the span
+// the grammar consumed (MKDTonEscape drops the backslash for the HTML
+// path).  Accumulating callback lengths shifted every later end left,
+// putting 'W' tags on letter bytes; ends must come from source offsets.
+// =====================================================================
+static ok64 HUNKTestTokenizeEscape(void) {
+    sane(1);
+    HUNK_SLICE(src, "a \\r b\n");
+    a_cstr(ext, "mkd");
+    a_pad(tok32, tb, 64);
+    call(HUNKu32bTokenize, tb, src, ext);
+    tok32cs toks;
+    $mv(toks, tok32bData(tb));
+
+    static const u8  want_tags[] = {'S', 'W', 'P', 'W', 'S', 'W'};
+    static const u32 want_ends[] = {1, 2, 4, 5, 6, 7};
+    int n = (int)$len(toks);
+    same(n, 6);
+    for (int i = 0; i < n; i++) {
+        if (tok32Tag(toks[0][i]) != want_tags[i] ||
+            tok32Offset(toks[0][i]) != want_ends[i]) {
+            fprintf(stderr, "FAIL escape tok[%d]: got %c%u want %c%u\n", i,
+                    tok32Tag(toks[0][i]), tok32Offset(toks[0][i]),
+                    want_tags[i], want_ends[i]);
+            fail(TESTFAIL);
+        }
+    }
+
+    //  Two escapes on one line: the drift was cumulative; ends must
+    //  still be strictly increasing and the last must equal the length.
+    HUNK_SLICE(src2, "x \\a y \\b z\n");
+    a_pad(tok32, tb2, 64);
+    call(HUNKu32bTokenize, tb2, src2, ext);
+    tok32cs toks2;
+    $mv(toks2, tok32bData(tb2));
+    int n2 = (int)$len(toks2);
+    want(n2 > 0);
+    u32 prev = 0;
+    for (int i = 0; i < n2; i++) {
+        u32 end = tok32Offset(toks2[0][i]);
+        want(end > prev);
+        prev = end;
+    }
+    same(prev, (u32)$len(src2));
+    done;
+}
+
 ok64 HUNKtest() {
     sane(1);
     call(HUNKTestRebase);
@@ -906,6 +956,7 @@ ok64 HUNKtest() {
     call(HUNKTestMakeURIEsc);
     call(HUNKTestStatusBanner);
     call(HUNKTestHeadRowColor);
+    call(HUNKTestTokenizeEscape);
     done;
 }
 

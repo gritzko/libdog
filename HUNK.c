@@ -1542,16 +1542,17 @@ void HUNKu32sClip(Bu8 arena, u32cs out, u32cs toks, u32 lo, u32 hi) {
 
 typedef struct {
     u32bp toks;
-    u32   off;
+    u8cp  base;
 } HUNKTokCtx;
 
+//  JAB-009: end = token end pointer minus source base — accumulating
+//  callback lengths desyncs on shrinking callbacks (MKDTonEscape).
 static ok64 HUNKTokCB(u8 tag, u8cs tok, void *ctx) {
     sane(ctx != NULL);
     HUNKTokCtx *c = (HUNKTokCtx *)ctx;
-    u32 end = c->off + (u32)$len(tok);
+    u32 end = (u32)(tok[1] - c->base);
     u32 packed = tok32Pack(tag, end);
     call(u32bFeed1, c->toks, packed);
-    c->off = end;
     return OK;
 }
 
@@ -1559,7 +1560,7 @@ ok64 HUNKu32bTokenize(u32bp toks, u8csc source, u8csc ext) {
     sane(toks != NULL && $ok(source));
     if ($empty(source)) done;
 
-    HUNKTokCtx ctx = {.toks = toks, .off = 0};
+    HUNKTokCtx ctx = {.toks = toks, .base = source[0]};
 
     u8cs ext_nodot = {};
     if (!$empty(ext) && ext[0][0] == '.') {
