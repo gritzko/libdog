@@ -188,8 +188,8 @@ static ok64 neil_check_idents(e32 const *pre, u32 pre_n,
 
     for (u32 i = 0; i < pn; i++) {
         if (!hash_in(pre_h[i], post_hh, ph)) {
-            fprintf(stderr, "NEIL01: prop4 ident hash %016lx dropped\n",
-                    pre_h[i]);
+            fprintf(stderr, "NEIL01: prop4 ident hash %016llx dropped\n",
+                    (unsigned long long)pre_h[i]);
             fail(TESTFAIL);
         }
     }
