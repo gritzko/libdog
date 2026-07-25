@@ -1,4 +1,4 @@
-#   libdog — revision control toolkit
+#   libdog: token-level revision control lib
 
 <img src="blob/dogs.jpg" align="right" width="40%" alt="M. C. Escher, dogs tessellation">
 
