@@ -1,11 +1,9 @@
-#   libdog: token-level revision control lib
+#   libdog: token-level revision control
 
 <img src="blob/dogs.jpg" align="right" width="40%" alt="M. C. Escher, dogs tessellation">
 
-`libdog` is a revision control toolkit library that mostly focuses on
-token-level revision control (e.g. git is line-based for all practical
-purposes).  It contains lots of primitives, algorithms and data
-structures, including:
+libdog is a token-level revision control toolkit library.  It contains
+various primitives, algorithms and data structures, including:
 
  0. source code *dogenizers* for about 60 languages,
  1. git compatibility utils: object and file formats, git's sync protocol,
@@ -16,22 +14,24 @@ structures, including:
  6. through `libabc`, various on-disk formats (hashmaps, sorted sets, etc).
  7. many other things.
 
-`libdog` is not "git reimplemented" like [libgit][g] or [gitoxide][o].
-Reimplementing git's highly idiosyncratic legacy behavior was not the
-objective here. Instead, `libdog` contains all the necessary and
-performance-critical primitives that absolutely have to be implemented
-in a native lib.  The size tells the story: [gitoxide][o] is about 270
-KLoC of Rust.  libdog's core is 14 KLoC of C, 24 counting its tests.
-The tokenizers are another 54 KLoC, but those are [Ragel][r]
-generated.
+libdog is not "git reimplemented" like [libgit2][g] or [gitoxide][o].
+That was not the objective here as git's commands and formats are
+highly idiosyncratic legacy, to put that bluntly, and all of its
+diff/merge/blame logic is line-based.  Meanwhile, git's object model
+is very much an Internet-standard-level thing.  For that reason,
+libdog contains all the necessary and performance-critical revision
+control primitives that absolutely have to be implemented in a native
+lib.  The size tells the story: [gitoxide][o] is about 270 KLoC of
+Rust.  libdog's core is 14 KLoC of C, 24 counting its tests.  The
+tokenizers are another 54 KLoC, but those are [Ragel][r] generated.
 
-The revision control system per se is supposed to be using all these
-primitives from safer environment. In particular, `libdog` [jab][j]
-bindings make the foundation of [Beagle][B] the SCM system which is
-fully malleable JavaScript.  This is similar to git's plumbing vs
-porcelain division, but deeper.
+The revision control system per se uses all these primitives from a
+safer environment. In particular, libdog [jab][j] bindings form the
+foundation of [Beagle][B] the SCM system that is written in fully
+malleable JavaScript.  This is similar to git's plumbing vs porcelain
+division, but deeper.
 
-`libdog` is written in ABC, a very minimalistic zero-alloc C dialect.
+libdog is written in ABC, a very minimalistic zero-alloc C dialect.
 
 
 ##  Tokenizers
@@ -39,18 +39,18 @@ porcelain division, but deeper.
 Line-granular history is a historical accident of `diff(1)`. Rename
 one variable and a line-based tool reports the whole line rewritten;
 two people editing opposite ends of the same line get a conflict that
-isn't one. `libdog` versions the language's native tokens. 60 languages
+isn't one. libdog versions each language's native tokens. 60 languages
 are supported. For unknown grammars it falls back to the generic-text
 tokenizer. 
 
 Each tokenizer is a hand-written Ragel scanner that classifies source
 bytes into tagged tokens. The brilliance of Ragel is that there is no
 parse tree, no allocation, and no dependencies. For example, the `C`
-dogenizer can process 250MB/s, which effectively means tokenization is
-free for any practical purpose. That was in fact the critical finding
-in applying CRDTs to the git's data model: blobs can be parsed on the
-fly, so all the [CausalTree][c] logic can be applied transparently to 
-very regular git blobs.
+dogenizer can process 250MB/s on a laptop, which effectively means
+tokenization is free for any practical purpose. That was in fact the
+critical finding in applying CRDTs to the git data model: blobs can be
+parsed on the fly, so all the [CausalTree][c] logic can be applied
+transparently to very regular git blobs.
 
 ````sh
 $ dogtok example.c
@@ -80,26 +80,26 @@ D	fold
 ###  Tag alphabet
 
 A token is a `tok32`: a 5-bit tag, a display bit, a 2-bit diff side, a 24-bit
-end offset. `dog/THEME.h` paints the tags.
+end offset. `THEME.h` paints the tags.
 
-| Tag | Meaning                  | Colour  |
-|-----|--------------------------|---------|
-| `D` | comment                  | gray    |
-| `G` | string literal           | green   |
-| `L` | number literal           | cyan    |
-| `H` | preprocessor, annotation | pink    |
-| `R` | keyword                  | red     |
-| `P` | punctuation              | gray    |
-| `S` | default — identifiers    | default |
-| `W` | whitespace               | default |
-| `U` | URI — invisible click target | —   |
+| Tag | Meaning                  | 
+|-----|--------------------------|
+| `D` | comment                  |
+| `G` | string literal           |
+| `L` | number literal           |
+| `H` | preprocessor, annotation |
+| `R` | keyword                  |
+| `P` | punctuation              |
+| `S` | default — identifiers    |
+| `W` | whitespace               |
+| `U` | URI — invisible click target |
 
-A second pass (`dog/tok/DEF.h`) enriches these with `N` for a defined name and
+A second pass (`tok/DEF.h`) enriches these with `N` for a defined name and
 `C` for a call site; `F` marks a filename column.
 
 ###  Languages
 
-60 lexers, dispatched by extension — or by filename, for the files whose name
+60 dogenizers, dispatched by extension or by filename, for files whose name
 is their type (`Makefile`, `Dockerfile`, `.gitignore`, `.clang-format`).
 Unknown extensions fall back to the plain-text lexer rather than failing.
 
@@ -115,7 +115,7 @@ Unknown extensions fall back to the plain-text lexer rather than failing.
 | Build & ops   | CMake `.cmake` · Make `.mk` · Docker `.dockerfile` · VimL `.vim` · Fortran `.f90` `.f95` `.f03` `.f08` |
 | Prose         | Markdown `.md` `.markdown` · StrictMark `.mkd` `.sm` · plain text `.txt` `.rst` |
 
-Adding a language is one `.c.rl` scanner, one keyword table, and one row in
+Adding a language takes one `.c.rl` scanner, one keyword table, and one row in
 `tok/TOK.c`. To regenerate a lexer after editing its scanner:
 
 ````sh
@@ -131,6 +131,7 @@ Needs a C23 compiler, CMake 3.20+, and zlib.
 
 ````sh
 git clone --recursive https://github.com/gritzko/libdog
+cd libdog
 cmake -B build -G Ninja
 ninja -C build          # libdog.a and dogtok
 ctest --test-dir build  # 23 test binaries
@@ -140,10 +141,10 @@ ctest --test-dir build  # 23 test binaries
 
 [INDEX.md][i] lists every module and function. Starting points:
 
-- [DOG.md][d] — the dog API, URI grammar, verb vocabulary, `.be` layout
-- [ULOG.md][u] — the event log format, on-disk and in-RAM
-- [tok/DEF.md][def], [tok/BRCT.md][brct] — definition marking, bracket matching
-- [abc/README.md][a] — the C dialect all of this is written in
+- [DOG.md][d] the dog API, URI grammar, verb vocabulary, `.be` layout
+- [ULOG.md][u] the event log format, on-disk and in-RAM
+- [tok/DEF.md][def], [tok/BRCT.md][brct] definition marking, bracket matching
+- [abc/README.md][a] the C dialect all of this is written in
 
 [i]: ./INDEX.md
 [d]: ./DOG.md
