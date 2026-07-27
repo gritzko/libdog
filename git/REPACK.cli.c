@@ -46,6 +46,14 @@ ok64 repack_cli() {
         a_path(capstr, a3);
         cap = strtoull((char const *)capstr[0], NULL, 10);
     }
+    //  Optional first file id: a second ingest into the same shard must not
+    //  reopen 0000000000.keeper over the first one's log.
+    u32 log0 = 0;
+    if ($arglen > 4) {
+        a$rg(a4, 4);
+        a_path(l0str, a4);
+        log0 = (u32)strtoul((char const *)l0str[0], NULL, 10);
+    }
 
     u8b buf = {};
     Bwh128 idx = {};
@@ -54,7 +62,7 @@ ok64 repack_cli() {
     //  but keep a floor so a tiny --cap test still has room to read.
     call(u8bMap, buf, (size_t)(cap > RP_BUF_MIN ? cap : RP_BUF_MIN));
     call(wh128bMap, idx, RP_IDX_SLOTS);
-    repack_conf conf = {.cap = cap, .log0 = 0, .every = 100000,
+    repack_conf conf = {.cap = cap, .log0 = log0, .every = 100000,
                         .watch = rp_progress, .user = NULL};
     repack_stat st = {};
     a_path(shard, a2);

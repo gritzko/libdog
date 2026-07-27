@@ -8,6 +8,12 @@
 //  The input buffer, the index region and the log directory are all the
 //  caller's (JABC rule #4: emit into the caller's region, hold nothing).
 //
+//  The pack's 20-byte trailer is NOT verified (RULING 2026-07-27, gritzko):
+//  the header's object count already catches a cut stream and zlib's adler32
+//  covers every payload, so a running sha1 would only add damage that leaves
+//  both of those intact.  The trailer is left unread in the caller's buffer;
+//  the code for the check is commented out in REPACK.c, not deleted.
+//
 //  Per record: parse the self-delimiting object header, inflate ONCE (that
 //  also yields the record extent -- a zlib stream carries no length),
 //  resolve any delta against OUR ALREADY-WRITTEN LOG (never by seeking back
@@ -28,6 +34,7 @@ con ok64 REPACKBASE = 0x6ce64a3142ca70e;   //  a delta base was never seen
 con ok64 REPACKROOM = 0x6ce64a3146d8616;   //  the caller's index region is full
 con ok64 REPACKLOGS = 0x6ce64a31455841c;   //  more logs than REPACK_MAX_LOGS
 con ok64 REPACKHDR  = 0x1b39928c51135b;    //  no pack header at the front
+con ok64 REPACKSUM  = 0x1b39928c51c796;    //  trailing sha1 mismatch (dormant)
 
 //  Earlier logs stay mapped for the whole run (a delta base may live in
 //  one), so this bounds address space, not memory: 64 * 2 GiB of VA.
@@ -62,13 +69,19 @@ typedef struct {
 //  that doesn't fit a log cannot be stored anyway (REPACKBIG).  Its DATA
 //  and IDLE heads advance in place, so the caller sees what was consumed.
 //
+//  Log `log0` may ALREADY EXIST: a pack log carries many packs, so the run
+//  appends behind what is there (its header untouched, our records starting
+//  at the old end) and rotates from there.  Every log past it is fresh.
+//
 //  `idx` collects index entries in emission order (sorting, run naming and
 //  persistence stay the caller's): one per object, plus one PACK summary
 //  per log --
 //    object:  key = WHIFFKeyPack(type, hashlet60(sha))
 //             val = wh64Pack(1, file_id, record offset)
-//    PACK:    key = wh64Pack(0xF, file_id, 12)
-//             val = (record count << 32) | (log bytes - 12)
+//    PACK:    key = wh64Pack(0xF, file_id, first offset)
+//             val = (record count << 32) | (log bytes - first offset)
+//  `first offset` is 12 in a log we created, the pre-append size in one we
+//  appended to -- the bookmark that makes our records findable either way.
 ok64 REPACKRun(int fd, u8b buf, path8sc shard, repack_conf const *conf,
                Bwh128 idx, repack_stat *st);
 
