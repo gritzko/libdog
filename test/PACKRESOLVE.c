@@ -12,9 +12,12 @@
 //         - underflow0 : ofs_delta == cur → cur underflows to 0 → PACKFAIL;
 //         - past-tail  : start offset past the pack tail → PACKFAIL;
 //    3. REF backstop: a REF_DELTA record → PACKREF (bounded, loud),
-//       never a silent success/empty (GIT-004 assert-guarded dead arm).
+//       never a silent success/empty (GIT-004 assert-guarded dead arm);
+//    4. KEEP-006 cross-log chase: with a base finder, a REF_DELTA chain
+//       spanning three logs resolves; without one it is still (3).
 
 #include "git/PACK.h"
+#include "git/GIT.h"   //  GIT_SHA1_LEN
 
 #include <stdio.h>
 #include <string.h>
@@ -63,6 +66,59 @@ static ok64 feed_ofs(u8bp log, u8csc base, u8csc target, u64 base_off,
     a_dup(u8c, dz, u8bDataC(dscratch));
     call(ZINFDeflate, u8bIdle(log), dz);
     done;
+}
+
+//  Append one REF_DELTA record (delta of `target` against `base`) citing
+//  `base_sha`, wherever that base may live.  Returns the record offset.
+static ok64 feed_ref(u8bp log, u8csc base, u8csc target, u8csc base_sha,
+                     u8bp dscratch, u64 *off_out) {
+    sane(u8bOK(log));
+    *off_out = (u64)u8bDataLen(log);
+    u8bReset(dscratch);
+    call(DELTEncode, base, target, dscratch);
+    u64 dlen = (u64)u8bDataLen(dscratch);
+    a_pad(u8, hdr, 16);
+    call(PACKu8sFeedObjHdr, hdr, PACK_OBJ_REF_DELTA, dlen);
+    a_dup(u8c, hb, u8bData(hdr));
+    call(u8bFeed, log, hb);
+    call(u8bFeed, log, base_sha);
+    a_dup(u8c, dz, u8bDataC(dscratch));
+    call(ZINFDeflate, u8bIdle(log), dz);
+    done;
+}
+
+//  A caller's REF base finder, as a flat table: sha → (which log, where).
+//  The real one is an index probe; the contract under test is the same.
+typedef struct {
+    u8 sha[GIT_SHA1_LEN];
+    u8cp p0;
+    u64 len, off;
+} ref_row;
+
+typedef struct {
+    ref_row row[4];
+    u32 n;
+} ref_tab;
+
+static void tab_add(ref_tab *t, u8 mark, u8cs pack, u64 off) {
+    ref_row *r = &t->row[t->n++];
+    memset(r->sha, mark, GIT_SHA1_LEN);
+    r->p0 = pack[0];
+    r->len = (u64)u8csLen(pack);
+    r->off = off;
+}
+
+static ok64 tab_find(void *user, u8csc sha, u8csp base_out, u64 *off_out) {
+    sane(user != NULL && base_out != NULL && off_out != NULL);
+    ref_tab *t = (ref_tab *)user;
+    for (u32 i = 0; i < t->n; i++) {
+        if (memcmp(t->row[i].sha, sha[0], GIT_SHA1_LEN) != 0) continue;
+        base_out[0] = t->row[i].p0;
+        base_out[1] = t->row[i].p0 + t->row[i].len;
+        *off_out = t->row[i].off;
+        done;
+    }
+    return PACKREF;   //  "not mine" — the chase stops loudly, never silently
 }
 
 //  Resolve `off` in `log` and compare to `want`.
@@ -214,12 +270,118 @@ static ok64 bounds() {
     done;
 }
 
+//  Resolve `off` in `log` through a finder and compare to `want`.
+static ok64 expect_resolve_ref(u8cs log, u64 off, u8csc want, ref_tab *t) {
+    sane($ok(log));
+    a_carve(u8, bb, SCRATCH);
+    a_carve(u8, db, SCRATCH);
+    u8s bsc = {u8bHead(bb), u8bTerm(bb)};
+    u8s dsc = {u8bHead(db), u8bTerm(db)};
+    u8cs body = {};
+    u8 type = 0;
+    call(PACKResolve, log, off, bsc, dsc, tab_find, t, body, &type);
+    if (type != PACK_OBJ_BLOB) {
+        fprintf(stderr, "ref resolve: type=%u want blob\n", type);
+        fail(TESTFAIL);
+    }
+    if ((u64)u8csLen(body) != (u64)u8csLen(want) ||
+        memcmp(body[0], want[0], u8csLen(want)) != 0) {
+        fprintf(stderr, "ref resolve @%llu: %llu bytes, want %llu\n",
+                (unsigned long long)off, (unsigned long long)u8csLen(body),
+                (unsigned long long)u8csLen(want));
+        fail(TESTFAIL);
+    }
+    done;
+}
+
+//  Resolve `off` through a finder and assert a specific bounded error.
+static ok64 expect_fail_ref(u8cs log, u64 off, ref_tab *t, ok64 want) {
+    sane($ok(log));
+    a_carve(u8, bb, SCRATCH);
+    a_carve(u8, db, SCRATCH);
+    u8s bsc = {u8bHead(bb), u8bTerm(bb)};
+    u8s dsc = {u8bHead(db), u8bTerm(db)};
+    u8cs body = {};
+    u8 type = 0;
+    ok64 got = PACKResolve(log, off, bsc, dsc, tab_find, t, body, &type);
+    if (got != want) {
+        fprintf(stderr, "ref resolve @%llu: got %llx want %llx\n",
+                (unsigned long long)off, (unsigned long long)got,
+                (unsigned long long)want);
+        fail(TESTFAIL);
+    }
+    done;
+}
+
+//  (4) KEEP-006: a delta chain that CROSSES logs — the shape a rotated
+//  repack log has, where every base that stayed behind is cited by sha.
+//  Log A holds the raw object, B a REF_DELTA onto it, C a REF_DELTA onto
+//  B's (itself a delta): each hop must re-inflate from ITS OWN log.
+static ok64 cross_log() {
+    sane(1);
+    a_cstr(v0, "the quick brown fox jumps over the lazy dog, take 0");
+    a_cstr(v1, "the quick brown fox jumps over the lazy dog, take 1!!");
+    a_cstr(v2, "the quick brown fox jumps over the lazy dog, take 22?");
+
+    a_carve(u8, ac, SCRATCH); zerob(ac);
+    a_carve(u8, bc, SCRATCH); zerob(bc);
+    a_carve(u8, cc, SCRATCH); zerob(cc);
+    a_carve(u8, dc, SCRATCH);
+    u8bp la = (u8bp)ac, lb = (u8bp)bc, lc = (u8bp)cc, ds = (u8bp)dc;
+    u8bReset(la); u8bReset(lb); u8bReset(lc);
+
+    u8s ha = {u8bIdleHead(la), u8bTerm(la)};
+    call(PACKu8sFeedHdr, ha, 1); u8bFed(la, 12);
+    u8s hb = {u8bIdleHead(lb), u8bTerm(lb)};
+    call(PACKu8sFeedHdr, hb, 1); u8bFed(lb, 12);
+    u8s hc = {u8bIdleHead(lc), u8bTerm(lc)};
+    call(PACKu8sFeedHdr, hc, 1); u8bFed(lc, 12);
+
+    //  Base shas are opaque bytes to the resolver — the finder owns their
+    //  meaning, so the test marks them 0xA1 / 0xB2 and answers for them.
+    a_pad(u8, sha_a, GIT_SHA1_LEN);
+    a_pad(u8, sha_b, GIT_SHA1_LEN);
+    for (int i = 0; i < GIT_SHA1_LEN; i++) {
+        call(u8bFeed1, sha_a, 0xA1);
+        call(u8bFeed1, sha_b, 0xB2);
+    }
+    a_dup(u8c, sa, u8bDataC(sha_a));
+    a_dup(u8c, sb, u8bDataC(sha_b));
+
+    u64 oa = 0, ob = 0, oc = 0;
+    call(feed_raw, la, PACK_OBJ_BLOB, v0, &oa);
+    call(feed_ref, lb, v0, v1, sa, ds, &ob);
+    call(feed_ref, lc, v1, v2, sb, ds, &oc);
+
+    u8cs pa = {u8bDataHead(la), u8bIdleHead(la)};
+    u8cs pb = {u8bDataHead(lb), u8bIdleHead(lb)};
+    u8cs pc = {u8bDataHead(lc), u8bIdleHead(lc)};
+
+    ref_tab tab = {};
+    tab_add(&tab, 0xA1, pa, oa);
+    tab_add(&tab, 0xB2, pb, ob);
+
+    call(expect_resolve_ref, pb, ob, v1, &tab);   //  one hop back
+    call(expect_resolve_ref, pc, oc, v2, &tab);   //  two hops, three logs
+
+    //  Same bytes, no finder: still the loud OFS-only backstop (GIT-004).
+    call(expect_fail, pc, oc, PACKREF);
+
+    //  A finder that does not know the base: PACKREF, never silent bytes.
+    ref_tab partial = {};
+    tab_add(&partial, 0xA1, pa, oa);
+    call(expect_fail_ref, pc, oc, &partial, PACKREF);
+    done;
+}
+
 ok64 maintest() {
     sane(1);
     fprintf(stderr, "round_trip...\n");
     call(round_trip);
     fprintf(stderr, "bounds...\n");
     call(bounds);
+    fprintf(stderr, "cross_log...\n");
+    call(cross_log);
     fprintf(stderr, "all passed\n");
     done;
 }

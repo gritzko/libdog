@@ -10,7 +10,9 @@
 //    2. feed-emit == scan: PIDXFeedEmit (hash the content you hold, no
 //       resolve) produces the SAME entry as a full reindex for each object;
 //    3. REF backstop: a REF_DELTA record makes the scan return PIDXFAIL
-//       (loud — an OFS-only log carries no sha-addressed bases).
+//       (loud — an OFS-only log carries no sha-addressed bases);
+//    4. KEEP-006 REF scan: PIDXScanRef resolves a base living in an
+//       EARLIER log through a caller's finder and emits the same entry.
 
 #include "git/PIDX.h"
 
@@ -307,6 +309,98 @@ static ok64 ref_backstop() {
     done;
 }
 
+//  A caller's REF base finder over ONE earlier log — the shape a rescan
+//  in file-id order has (it already covered the logs a REF can cite).
+typedef struct {
+    sha1 sha;
+    u8cp p0;
+    u64 len, off;
+} scan_base;
+
+static ok64 base_find(void *user, u8csc sha, u8csp base_out, u64 *off_out) {
+    sane(user != NULL && base_out != NULL && off_out != NULL);
+    scan_base *b = (scan_base *)user;
+    if (memcmp(b->sha.data, sha[0], sizeof b->sha.data) != 0) return PACKREF;
+    base_out[0] = b->p0;
+    base_out[1] = b->p0 + b->len;
+    *off_out = b->off;
+    done;
+}
+
+//  (4) KEEP-006: scanning a log whose delta bases live in an EARLIER log.
+//  A rotated repack log cites those bases by sha; with a finder the scan
+//  resolves them and emits the same entry a same-log OFS record would.
+static ok64 scan_ref() {
+    sane(1);
+    a_cstr(v0, "the quick brown fox jumps over the lazy dog, take 0");
+    a_cstr(v1, "the quick brown fox jumps over the lazy dog, take 1!!");
+
+    a_carve(u8, ac, SCRATCH); zerob(ac);
+    a_carve(u8, bc, SCRATCH); zerob(bc);
+    a_carve(u8, dc, SCRATCH);
+    u8bp la = (u8bp)ac, lb = (u8bp)bc, ds = (u8bp)dc;
+    u8bReset(la); u8bReset(lb);
+    u8s ha = {u8bIdleHead(la), u8bTerm(la)};
+    call(PACKu8sFeedHdr, ha, 1); u8bFed(la, 12);
+    u8s hb = {u8bIdleHead(lb), u8bTerm(lb)};
+    call(PACKu8sFeedHdr, hb, 1); u8bFed(lb, 12);
+
+    //  Log A: the raw base.  Log B: a REF_DELTA citing its GIT sha.
+    u64 oa = 0, ob = 0;
+    call(feed_raw, la, PACK_OBJ_BLOB, v0, &oa);
+    sha1 base_sha = {};
+    PIDXObjSha(&base_sha, PACK_OBJ_BLOB, v0);
+    u8bReset(ds);
+    call(DELTEncode, v0, v1, ds);
+    ob = (u64)u8bDataLen(lb);
+    a_pad(u8, hdr, 16);
+    call(PACKu8sFeedObjHdr, hdr, PACK_OBJ_REF_DELTA, u8bDataLen(ds));
+    a_dup(u8c, hbb, u8bData(hdr));
+    call(u8bFeed, lb, hbb);
+    u8cs shas = {base_sha.data, base_sha.data + sizeof base_sha.data};
+    call(u8bFeed, lb, shas);
+    a_dup(u8c, dz, u8bDataC(ds));
+    call(ZINFDeflate, u8bIdle(lb), dz);
+
+    u8cs pa = {u8bDataHead(la), u8bIdleHead(la)};
+    u8cs pb = {u8bDataHead(lb), u8bIdleHead(lb)};
+    scan_base sb = {base_sha, pa[0], (u64)u8csLen(pa), oa};
+
+    Bwh128 out = {};
+    call(wh128bAllocate, out, 4);
+    a_carve(u8, bb, SCRATCH); a_carve(u8, db, SCRATCH);
+    u8s bsc = {u8bHead(bb), u8bTerm(bb)};
+    u8s dsc = {u8bHead(db), u8bTerm(db)};
+    ok64 got = PIDXScanRef(pb, 0, out, bsc, dsc, base_find, &sb);
+    if (got != OK) { wh128bFree(out); fprintf(stderr, "scan_ref: %llx\n",
+                     (unsigned long long)got); fail(TESTFAIL); }
+
+    //  The entry must be the one the RESOLVED object earns: sha(v1), blob.
+    a_dup(wh128, entries, wh128bData(out));
+    size_t n = (size_t)wh128sLen(entries);
+    sha1 want = {};
+    PIDXObjSha(&want, PACK_OBJ_BLOB, v1);
+    wh128 wante = PIDXEntry(PACK_OBJ_BLOB, &want, ob);
+    b8 bad = n != 1 || entries[0][0].key != wante.key ||
+             entries[0][0].val != wante.val;
+    wh128bFree(out);
+    if (bad) {
+        fprintf(stderr, "scan_ref: %zu entries, key/val mismatch\n", n);
+        fail(TESTFAIL);
+    }
+
+    //  Same log, no finder: the OFS-only scan still fails loudly.
+    Bwh128 out2 = {};
+    call(wh128bAllocate, out2, 4);
+    ok64 nofind = PIDXScan(pb, 0, out2, bsc, dsc);
+    wh128bFree(out2);
+    if (nofind == OK) {
+        fprintf(stderr, "scan_ref: finderless scan returned OK\n");
+        fail(TESTFAIL);
+    }
+    done;
+}
+
 ok64 maintest() {
     sane(1);
     fprintf(stderr, "scan_emit...\n");
@@ -317,6 +411,8 @@ ok64 maintest() {
     call(tail_scan);
     fprintf(stderr, "ref_backstop...\n");
     call(ref_backstop);
+    fprintf(stderr, "scan_ref...\n");
+    call(scan_ref);
     fprintf(stderr, "all passed\n");
     done;
 }

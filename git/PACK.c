@@ -202,8 +202,16 @@ ok64 PACKRecordEnd(u8cs pack, u64 offset, u64 *end_out) {
     done;
 }
 
-ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
-                    u8csp out, u8p out_type) {
+//  One chased record: KEEP-006 lets a chain cross logs, so a hop is
+//  (which pack, where in it), not a bare offset.
+typedef struct {
+    u8cp p0;
+    u64 len;
+    u64 off;
+} pack_hop;
+
+ok64 PACKResolve(u8cs pack, u64 offset, u8s base, u8s delta,
+                 pack_ref_find find, void *user, u8csp out, u8p out_type) {
     sane(u8csOK(pack) && u8sOK(base) && u8sOK(delta) && out);
     u8cp p0 = pack[0];
     u64 packlen = (u64)u8csLen(pack);
@@ -214,17 +222,18 @@ ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
     u64 half = deltalen / 2;
     if (offset >= packlen) return PACKFAIL;
 
-    //  Chase the OFS chain down to a base object, recording each hop.
-    u64 chain[PACK_DELTA_CHAIN_MAX];
+    //  Chase the delta chain down to a base object, recording each hop.
+    pack_hop chain[PACK_DELTA_CHAIN_MAX];
     int depth = 0;
     u64 cur = offset;
     u8 obj_type = 0;
     u64 outsz = 0;
 
     for (;;) {
-        //  Re-validate every chased offset: `cur` is re-derived from
-        //  on-disk delta bases (OFS subtraction below), so the entry
-        //  guard does NOT carry over (GIT-004 corruption bound).
+        //  Re-validate every chased offset against the pack it now
+        //  points into: `cur` is re-derived from on-disk delta bases (OFS
+        //  subtraction, or a finder's answer), so the entry guard does
+        //  NOT carry over (GIT-004 corruption bound).
         if (cur >= packlen) return PACKFAIL;
 
         pack_obj obj = {};
@@ -241,7 +250,7 @@ ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
         }
 
         if (depth >= PACK_DELTA_CHAIN_MAX) return PACKFAIL;
-        chain[depth++] = cur;
+        chain[depth++] = (pack_hop){p0, packlen, cur};
 
         if (obj.type == PACK_OBJ_OFS_DELTA) {
             //  OFS base sits `ofs_delta` bytes BEFORE `cur`.  Reject
@@ -251,11 +260,19 @@ ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
             if (obj.ofs_delta == 0 || obj.ofs_delta > cur) return PACKFAIL;
             cur = cur - obj.ofs_delta;
         } else if (obj.type == PACK_OBJ_REF_DELTA) {
-            //  GIT-004 assert-guarded backstop: the OFS-only native
-            //  resolver never chases sha-addressed bases.  A stray REF
-            //  in a native log is corruption — fail loudly, never a
-            //  silent absence.  Foreign REF packs go through UNPK.
-            return PACKREF;
+            //  KEEP-006: a rotated log names its cross-log base by sha;
+            //  the finder says which pack holds it and where, and the
+            //  chase resumes there.  With no finder this is the GIT-004
+            //  backstop: a stray REF in an OFS-only log is corruption —
+            //  loud, never a silent absence.
+            if (find == NULL) return PACKREF;
+            u8cs rpack = {};
+            u64 roff = 0;
+            call(find, user, obj.ref_delta, rpack, &roff);
+            if (!u8csOK(rpack) || $empty(rpack)) return PACKREF;
+            p0 = rpack[0];
+            packlen = (u64)u8csLen(rpack);
+            cur = roff;
         } else {
             return PACKFAIL;
         }
@@ -267,7 +284,9 @@ ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
     u8p dst = delta[0] + half;
     for (int i = depth - 1; i >= 0; i--) {
         pack_obj dobj = {};
-        u8cs from = {p0 + chain[i], p0 + packlen};
+        //  Each hop re-inflates out of the pack IT lives in (the chain
+        //  may span logs), never out of the one the chase ended in.
+        u8cs from = {chain[i].p0 + chain[i].off, chain[i].p0 + chain[i].len};
         call(PACKDrainObjHdr, from, &dobj);
 
         if (dobj.size > half) return NOROOM;
@@ -290,4 +309,10 @@ ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
     out[1] = src + outsz;
     if (out_type) *out_type = obj_type;
     done;
+}
+
+ok64 PACKResolveOfs(u8cs pack, u64 offset, u8s base, u8s delta,
+                    u8csp out, u8p out_type) {
+    //  No finder: the OFS-only chase, REF_DELTA → PACKREF (GIT-004).
+    return PACKResolve(pack, offset, base, delta, NULL, NULL, out, out_type);
 }

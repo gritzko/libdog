@@ -82,7 +82,7 @@ static ok64 rp_fill(int fd, u8b buf, b8 *eof) {
 }
 
 //  `<shard>/NNNNNNNNNN.keeper` — the store's zero-padded pack-log name.
-static ok64 rp_logpath(path8b path, path8sc shard, u32 id) {
+ok64 REPACKLogPath(path8b path, path8sc shard, u32 id) {
     sane(u8csOK(shard));
     a_pad(u8, name, 32);
     u32 digits = 1;
@@ -117,7 +117,7 @@ static ok64 rp_open(repack *rp, path8sc shard, repack_conf const *conf) {
     sane(rp != NULL && conf != NULL);
     test(rp->slot < REPACK_MAX_LOGS, REPACKLOGS);
     a_path(path);
-    call(rp_logpath, path, shard, conf->log0 + rp->slot);
+    call(REPACKLogPath, path, shard, conf->log0 + rp->slot);
     size_t init = rp->cap_bytes < RP_LOG_INIT ? (size_t)rp->cap_bytes
                                               : (size_t)RP_LOG_INIT;
     call(FILEBookCreate, &rp->log[rp->slot], $path(path),

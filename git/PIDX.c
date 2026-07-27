@@ -59,13 +59,15 @@ ok64 PIDXFeedEmit(Bwh128 out, u8 type, u8csc content, u64 offset) {
 }
 
 //  PACK-001: resolve the record at *off, git-sha it, emit its entry, advance.
-static ok64 pidx_emit_at(u8cs pack, u64 *off, Bwh128 out, u8s base, u8s delta) {
+static ok64 pidx_emit_at(u8cs pack, u64 *off, Bwh128 out, u8s base, u8s delta,
+                         pack_ref_find find, void *user) {
     sane(off && out && u8csOK(pack) && u8sOK(base) && u8sOK(delta));
-    //  Resolve to full bytes (chases the OFS chain bottom-up).  A REF_DELTA
-    //  surfaces as PACKREF — the loud OFS-only backstop (no sha-addressed base).
+    //  Resolve to full bytes (chases the delta chain bottom-up).  KEEP-006:
+    //  a REF_DELTA hop goes through `find`; with none, it surfaces as PACKREF
+    //  — the loud OFS-only backstop (no sha-addressed base).
     u8cs body = {};
     u8 type = 0;
-    call(PACKResolveOfs, pack, *off, base, delta, body, &type);
+    call(PACKResolve, pack, *off, base, delta, find, user, body, &type);
     sha1 sha = {};
     a_dup(u8c, content, body);
     PIDXObjSha(&sha, type, content);
@@ -79,7 +81,8 @@ static ok64 pidx_emit_at(u8cs pack, u64 *off, Bwh128 out, u8s base, u8s delta) {
     done;
 }
 
-ok64 PIDXScan(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta) {
+ok64 PIDXScanRef(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta,
+                 pack_ref_find find, void *user) {
     sane(u8csOK(pack) && out && u8sOK(base) && u8sOK(delta));
 
     pack_hdr hdr = {};
@@ -90,13 +93,19 @@ ok64 PIDXScan(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta) {
     if (from_off) {
         //  PACK-001: tail scan from a known boundary to EOF (hdr.count is total).
         u64 off = from_off;
-        while (off < packlen) call(pidx_emit_at, pack, &off, out, base, delta);
+        while (off < packlen)
+            call(pidx_emit_at, pack, &off, out, base, delta, find, user);
     } else {
         u64 off = 12;   //  whole-pack: bounded by the header's object count
         for (u32 i = 0; i < hdr.count; i++) {
             if (off >= packlen) return PIDXFAIL;
-            call(pidx_emit_at, pack, &off, out, base, delta);
+            call(pidx_emit_at, pack, &off, out, base, delta, find, user);
         }
     }
     done;
+}
+
+ok64 PIDXScan(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta) {
+    //  No finder: OFS-only, a REF_DELTA record fails the scan (GIT-004).
+    return PIDXScanRef(pack, from_off, out, base, delta, NULL, NULL);
 }

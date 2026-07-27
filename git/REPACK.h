@@ -72,4 +72,9 @@ typedef struct {
 ok64 REPACKRun(int fd, u8b buf, path8sc shard, repack_conf const *conf,
                Bwh128 idx, repack_stat *st);
 
+//  `<shard>/NNNNNNNNNN.keeper` — the store's zero-padded pack-log name.
+//  Exported so a READER names the logs exactly as the writer did (the
+//  scan-back path, KEEP-006), never by re-deriving the padding.
+ok64 REPACKLogPath(path8b path, path8sc shard, u32 id);
+
 #endif

@@ -22,9 +22,11 @@ con ok64 PACKFAIL   = 0x64a3143ca495;
 con ok64 PACKBADFMT = 0x64a3142ca34f59d;
 con ok64 PACKBADOBJ = 0x64a3142ca3582d3;
 con ok64 PACKBADCHK = 0x64a3142ca34c454;
-//  PACKResolveOfs hit a REF_DELTA record (GIT-004): the OFS-only native
-//  resolver never chases sha-addressed bases; a stray REF in a native
-//  log is corruption, surfaced as a bounded fail, never silent absence.
+//  A REF_DELTA record was hit with no base finder to answer for it
+//  (GIT-004): the OFS-only resolver never chases sha-addressed bases, so
+//  a stray REF there is corruption — a bounded fail, never silent
+//  absence.  KEEP-006: with a finder, REF is a normal cross-log hop and
+//  PACKREF means only "that finder has no such base".
 con ok64 PACKREF    = 0x64a3142ca35a4;
 
 //  In-pack OFS delta-chain cap shared by every OFS resolver (GIT-004).
@@ -134,6 +136,30 @@ ok64 PACKInflate(u8cs from, u8s into, u64 size);
 //  the same scan keeper/js need to walk records sequentially, owned here
 //  (not open-coded in the binding).  *end_out is the next record's start.
 ok64 PACKRecordEnd(u8cs pack, u64 offset, u64 *end_out);
+
+//  KEEP-006 REF_DELTA base finder: answer "where does the object with
+//  this sha live?" — set `base_out` to the WHOLE pack slice holding it
+//  and `*off_out` to the record's start within that slice.  The base may
+//  itself be a delta there, so the chase simply continues in the slice
+//  handed back.  `sha` is the record's raw 20-byte base sha, aliasing
+//  the pack.  Return non-OK (PACKREF for "not mine") to abort the chase.
+//  A rotated pack log cites its cross-log bases by sha, so the log set
+//  and its index stay the CALLER's: dog/git knows neither.
+typedef ok64 (*pack_ref_find)(void *user, u8csc sha, u8csp base_out,
+                              u64 *off_out);
+
+//  KEEP-006: the general delta-chase resolver — PACKResolveOfs plus a
+//  REF_DELTA arm.  Same contract as PACKResolveOfs below, except that a
+//  REF_DELTA record asks `find` for its base and the chase RESUMES in
+//  whatever pack slice comes back (a rotated log's base sits in an
+//  earlier log of the same shard).  Every hop remembers its own pack, so
+//  the bottom-up apply re-inflates each delta from the log it lives in.
+//  `find == NULL` is exactly PACKResolveOfs: REF → PACKREF.  Corruption
+//  bounds are per-hop — each offset is re-checked against ITS pack's
+//  length, and PACK_DELTA_CHAIN_MAX bounds the whole chain, so a cycle
+//  of cross-log REFs terminates like any other over-long chain.
+ok64 PACKResolve(u8cs pack, u64 offset, u8s base, u8s delta,
+                 pack_ref_find find, void *user, u8csp out, u8p out_type);
 
 //  GIT-004: OFS-only delta-chase resolver, shared by keeper's native
 //  store resolver AND the js/JABC binding.  Resolve the object at byte

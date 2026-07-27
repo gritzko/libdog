@@ -311,6 +311,9 @@ target_link_libraries(dogtok dog abc-core)
 add_executable(dogrepack git/REPACK.cli.c)
 target_link_libraries(dogrepack dog abc-core)
 
+add_executable(dogscan git/PSCAN.cli.c)
+target_link_libraries(dogscan dog abc-core)
+
 add_subdirectory(test)
 
 if (WITH_FUZZ)

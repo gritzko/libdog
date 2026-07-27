@@ -150,6 +150,7 @@ The packfile codec, the git delta instruction parser/applier, and the zlib infla
  -  `PACKu8sFeedObj` — GIT-002 raw|OFS_DELTA object writer (caller log + base bytes/offset); shared by keeper + JABC; never REF_DELTA.
  -  `PACKRecordEnd` — GIT-007 record extent (offset → next record start, via inflate into BASS scratch); shared by keeper/JABC walk.
  -  `PACKResolveOfs` — GIT-004 OFS-only delta-chase (offset → inflated object); shared by keeper get + JABC; `PACKREF` on a stray REF.
+ -  `PACKResolve(pack, off, base, delta, find, user, out, type)` — KEEP-006: the same chase plus a REF_DELTA arm; `find` (`pack_ref_find`: sha → base pack slice + offset) resumes the chase in whatever log holds the base, so a rotated log's cross-log bases resolve. Every hop remembers its own pack; `find == NULL` IS `PACKResolveOfs`.
  -  `DELTApply`/`DELTEncode` — apply a delta stream to a base.
  -  `ZINFInflate`/`ZINFDeflate` — the slice-consuming zlib wrappers (`into` advances by produced, source by consumed).
 
@@ -158,8 +159,18 @@ The packfile codec, the git delta instruction parser/applier, and the zlib infla
 The pack-log owns NO index; these ENTRY PRODUCERS emit `(sha→offset)` wh128 rows into a caller `Bwh128` (the `tok.parse(…, out?)` shape — hold nothing, JABC rule #4). Sort/merge/persist/query stay the caller's (an abc.index wh128 lane, the keeper puppy registry). Entry layout: `key = WHIFFKeyPack(type, hashlet60)`, `val = offset` (bare; caller re-packs file_id when merging). Shared by keeper + the `git.pack` JABC binding.
 
  -  `PIDXScan(pack, from_off, out, base, delta)` — walk one OFS-only pack (`PACKRecordEnd`), resolve each object (`PACKResolveOfs`), git-sha it (`PIDXObjSha`), emit one entry per object; the small single-pack, single-threaded core modelled on `keeper/UNPK.c::UNPKIndex` minus the keeper coupling/fork/REF-waiters/ingest. `PACKREF` on a stray REF. PACK-001: `from_off>0` tail-scans from a byte boundary to slice end (an OFS base earlier in the pack still resolves); `0` = whole pack from the 12-byte header (bounded by `hdr.count`).
+ -  `PIDXScanRef(pack, from_off, out, base, delta, find, user)` — KEEP-006: the same scan over a log that MAY carry REF_DELTA records (a rotated repack log re-anchors every base left behind in an earlier log by sha); `find` is `PACKResolve`'s base finder. `PIDXScan` is this with `find == NULL`. A rescan in file-id order can answer from what it already emitted — a REF base always sits in a log BEFORE the one citing it.
  -  `PIDXFeedEmit` — index-on-append: git-sha the content the caller JUST fed (no resolve) and append its `(sha, offset)` entry.
  -  `PIDXObjSha`/`PIDXEntry` — the loose-object framing sha (dog/git twin of keeper's KEEPObjSha) + the canonical wh128 entry builder.
+
+###  REPACK.h — stream-ingest a git pack into capped logs (KEEP-006, JAB-020)
+
+ONE call repacks a whole fetch: the source is CONSUMED from an fd (a file and a socket are the same thing here), never stored and never seeked. Per record — parse, inflate once, resolve the delta against OUR ALREADY-WRITTEN log, re-emit with the base reference rewritten (OFS when the base landed in this log, REF when in an earlier one) copying the zlib payload verbatim, emit one index entry, rotate at the cap. Input buffer, index region and log dir are the caller's. Read the logs back with `PIDXScanRef` (`dogscan`), never with the OFS-only scan.
+
+ -  `REPACKRun(fd, buf, shard, conf, idx, st)` (`repack_conf`/`repack_stat`/`repack_watch`) — the whole loop; `REPACK_LOG_MAX` = the 2 GiB log cap, `REPACK_MAX_LOGS` bounds the logs one run may open.
+ -  `REPACKLogPath(path, shard, id)` — `<shard>/NNNNNNNNNN.keeper`, the store's zero-padded log name; readers name logs with the writer's namer, never by re-deriving the padding.
+ -  `REPACKFAIL`/`TORN`/`BIG`/`BASE`/`ROOM`/`LOGS`/`HDR` — io, source ended mid-record, record outgrows buf/cap, base never seen, caller's index full, too many logs, no pack header.
+ -  CLIs: `dogrepack <pack|-> <shard> [cap]` writes a shard, `dogscan <shard> [--print]` reads one back (its finder is just the entries the scan has already emitted, sorted by hashlet).
 
 ###  PKT.h, CFG.h, SUBS.h, IGNO.h — protocol & config
 

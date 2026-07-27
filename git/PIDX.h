@@ -24,6 +24,7 @@
 #include "abc/INT.h"
 #include "abc/S.h"
 #include "dog/WHIFF.h"   //  Bwh128 + WHIFFKeyPack + WHIFFHashlet60
+#include "dog/git/PACK.h"   //  pack_ref_find (the KEEP-006 REF base finder)
 #include "dog/git/SHA1.h"
 
 con ok64 PIDXFAIL = 0x6e2349e3ca495;   //  scan / emit failure (bad pack, no room)
@@ -54,6 +55,18 @@ wh128 PIDXEntry(u8 type, sha1cp sha, u64 offset);
 //  12-byte header. A tail scan (from_off>0) runs to slice end; an OFS base
 //  earlier in the pack still resolves (the whole `pack` slice is passed).
 ok64 PIDXScan(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta);
+
+//  KEEP-006: the same scan over a log that may carry REF_DELTA records —
+//  a rotated repack log re-anchors every base that landed in an EARLIER
+//  log by sha, so scanning one back needs the shard's other logs.  `find`
+//  answers "which pack holds this sha, and at what offset" (see
+//  pack_ref_find); the scan is otherwise identical, and PIDXScan is this
+//  with `find == NULL` (REF → PACKREF, the OFS-only backstop).  Which
+//  logs exist, and the index over them, stay the caller's: a rescan in
+//  file-id order can answer from what it has already emitted, since a
+//  REF base always sits in a log BEFORE the one citing it.
+ok64 PIDXScanRef(u8cs pack, u64 from_off, Bwh128 out, u8s base, u8s delta,
+                 pack_ref_find find, void *user);
 
 //  INDEX-ON-APPEND: emit the entry for the object the caller JUST fed,
 //  hashing the full content it already holds (no resolve — cheap).
