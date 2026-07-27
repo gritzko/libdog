@@ -235,6 +235,7 @@ list(APPEND TOK_HEADERS
     git/CFG.h
     git/SUBS.h
     git/PIDX.h
+    git/REPACK.h
 )
 list(APPEND TOK_SOURCES
     git/IGNO.c
@@ -247,6 +248,7 @@ list(APPEND TOK_SOURCES
     git/CFG.rl.c
     git/SUBS.c
     git/PIDX.c
+    git/REPACK.c
 )
 
 list(APPEND TOK_HEADERS HUNK.h)
@@ -305,6 +307,9 @@ target_include_directories(dog PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(dogtok tok/TOK.cli.c)
 target_link_libraries(dogtok dog abc-core)
+
+add_executable(dogrepack git/REPACK.cli.c)
+target_link_libraries(dogrepack dog abc-core)
 
 add_subdirectory(test)
 

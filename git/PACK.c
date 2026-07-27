@@ -175,6 +175,7 @@ ok64 PACKInflate(u8cs from, u8s into, u64 size) {
     a_dup(u8, trimmed, into);
     u8sShed(trimmed, u8sLen(trimmed) - size);
     ok64 o = ZINFInflate(trimmed, from);
+    if (o == ZINFMORE) return ZINFMORE;   //  truncated: caller may refill
     if (o != OK) return PACKBADOBJ;
     u8sJoin(into, trimmed);
 

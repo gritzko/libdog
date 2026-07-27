@@ -27,7 +27,13 @@ ok64 ZINFInflate(u8s into, u8cs zipped) {
     for (;;) {
         r = inflate(&zs, Z_NO_FLUSH);
         if (r == Z_STREAM_END) break;
-        if (r != Z_OK) { inflateEnd(&zs); return ZINFFAIL; }
+        if (r != Z_OK) {
+            //  Input exhausted without an end-of-stream marker: truncated,
+            //  not corrupt.  Report it apart so a streaming caller can refill.
+            b8 starved = (zs.avail_in == 0);
+            inflateEnd(&zs);
+            return starved ? ZINFMORE : ZINFFAIL;
+        }
         if (zs.avail_out == 0) {
             zs.next_out = (Bytef *)into[0];
             zs.avail_out = cap;
