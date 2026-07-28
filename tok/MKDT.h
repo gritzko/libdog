@@ -6,10 +6,16 @@
 con ok64 MKDTBAD = 0x1650d74b28d;
 con ok64 MKDTFAIL = 0x59435d3ca495;
 
+//  DOG-024: `depth` is the inline recursion level — a span's delimiters emit
+//  as their own tokens and its body is re-lexed one level down, so nesting
+//  needs no parser state; past MKDT_MAX_DEPTH a body stays plain text.
+#define MKDT_MAX_DEPTH 16
+
 typedef struct {
     u8cs data;
     TOKcb cb;
     void *ctx;
+    int   depth;
 } MKDTstate;
 
 ok64 MKDTLexer(MKDTstate *state);
@@ -40,11 +46,17 @@ typedef enum {
 } mkdtmark;
 
 // One line's full structural classification, per the StrictMark block grammar:
-// a run of 4-space indent (div) blocks, then at most one marker, OR a whole-
-// line leaf shape (heading / code fence / ruler / reference definition).
+// the block stack `(INDENT|QUOTE)* LIST? LEAF?` — a run of indent/quote quads,
+// then at most one list marker, OR a whole-line leaf shape (heading / code
+// fence / ruler / reference definition).  `marker` never carries QUOTE: a
+// quote is a container, counted in `quotes` (MKDTLineMarker keeps reporting
+// QUOTE for the renderers that read one marker per line).
 typedef struct {
-    int        depth;        // count of leading 4-space indent blocks
-    mkdtmark   marker;       // the marker block after the indents, else NONE
+    int        depth;        // count of LEADING indent quads (before a quote)
+    int        quads;        // total prefix quads, indent or quote (DOG-024)
+    int        quotes;       // count of quote quads in the prefix (DOG-024)
+    const u8c *qend;         // end of the first quote quad, NULL without one
+    mkdtmark   marker;       // the list marker after the prefix, else NONE
     int        heading;      // ATX header level 1..4, else 0
     int        fence;        // backtick-run width (wrapper accepts only 3/4)
     b8         fence_blank;  // the backtick run has a blank rest (a close fence)

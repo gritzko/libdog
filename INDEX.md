@@ -225,6 +225,8 @@ Each `*T.h` is one ragel-generated `<LANG>Lexer` registered in `dog/tok/TOK.c`'s
 
 To regenerate a lexer: `ragel -C XXT.c.rl -o XXT.rl.c -L`.
 
+To eyeball one: `doghili FILE` (`tok/HILI.cli.c`) reprints the source with every token painted by `dog/THEME.h` and every other token underlined, plus a ruler under each row naming the tag of each char (`.` = more of the same token, lowercase = continued from the previous line). `dogtok FILE` (`tok/TOK.cli.c`) dumps the same stream as `tag<TAB>token` lines instead.
+
 ##  Test harness
 
 ###  test/TESTBE.h — hermetic-store test setup

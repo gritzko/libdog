@@ -160,10 +160,10 @@ static ok64 MDTEmitHeading(MDTstate *state, u8csc line) {
         if (o != OK) return o;
     }
 
-    // Emit trailing newline
+    // Emit trailing newline — whitespace, like every other line end
     if (has_nl && state->cb) {
         u8cs nl = {ce, e};
-        ok64 o = state->cb('S', nl, state->ctx);
+        ok64 o = state->cb('W', nl, state->ctx);
         if (o != OK) return o;
     }
 

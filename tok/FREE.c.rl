@@ -1,6 +1,53 @@
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "FREE.h"
+#include "MKDT.h"
+
+//  DOG-024: a span is markup + text here too — the delimiters emit as their
+//  own 'G' tokens and the body is re-lexed one level down.  The split runs
+//  through `mkdtg` (MKDTDecomposeSpan), the same machine StrictMark uses, so
+//  a comment and a .mkd page tokenize their markup identically.
+static ok64 FREEEmitSpan(u8cs tok, FREEstate *state) {
+    sane($ok(tok) && state != NULL);
+    if (state->cb == NULL) done;
+    mkdtspan g = {};
+    if (state->depth >= FREE_MAX_DEPTH || MKDTDecomposeSpan(&g, tok) != OK
+        || g.kind == 0 || g.text[0] == NULL) {
+        call(state->cb, 'G', tok, state->ctx);
+        done;
+    }
+    u8cs open = {tok[0], g.text[0]};
+    u8cs close = {g.text[1], tok[1]};
+    if (!u8csEmpty(open)) call(state->cb, 'G', open, state->ctx);
+    if (!u8csEmpty(g.text)) {
+        FREEstate ist = {
+            .data = {g.text[0], g.text[1]},
+            .cb = state->cb,
+            .ctx = state->ctx,
+            .depth = state->depth + 1,
+        };
+        call(FREELexer, &ist);
+    }
+    if (!u8csEmpty(close)) call(state->cb, 'G', close, state->ctx);
+    done;
+}
+
+//  A code span splits its backticks off; the body is verbatim 'H'.
+static ok64 FREEEmitCode(u8cs tok, FREEstate *state) {
+    sane($ok(tok) && state != NULL);
+    if (state->cb == NULL) done;
+    if (u8csLen(tok) < 3) {
+        call(state->cb, 'H', tok, state->ctx);
+        done;
+    }
+    u8cs open = {tok[0], tok[0] + 1};
+    u8cs body = {tok[0] + 1, tok[1] - 1};
+    u8cs close = {tok[1] - 1, tok[1]};
+    call(state->cb, 'G', open, state->ctx);
+    call(state->cb, 'H', body, state->ctx);
+    call(state->cb, 'G', close, state->ctx);
+    done;
+}
 
 %%{
 
@@ -53,17 +100,20 @@ action on_space {
 action on_code {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('H', tok, state->ctx); if (o!=OK) fbreak; }
+    o = FREEEmitCode(tok, state);
+    if (o!=OK) fbreak;
 }
 action on_emph {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) fbreak; }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) fbreak;
 }
 action on_link {
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) fbreak; }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) fbreak;
 }
 
 main := |*
@@ -76,7 +126,7 @@ main := |*
     "`" ( any8 - [`\n] )+ "`"                            => on_code;
     "*" (nws - [*]) (any8 - [*\n])* "*"                  => on_emph;
     "_" (nws - [_]) (any8 - [_\n])* "_"                  => on_emph;
-    "~~" (nws - [~]) ( any8 - [~\n] | [~] (any8 - [~\n]) )* "~~" => on_emph;
+    "~" (nws - [~]) ( any8 - [~] | [~] (any8 - [~]) )* "~" => on_emph;
     "[" (any8 - [\]\n])+ "][" [0-9A-Za-z] "]"           => on_link;
     "![" (any8 - [\]\n])+ "][" [0-9A-Za-z] "]"          => on_link;
     "[" (any8 - [\]\n])+ "]"                             => on_link;

@@ -1,32 +1,80 @@
 
-/* #line 1 "dog/tok/FREE.c.rl" */
+/* #line 1 "FREE.c.rl" */
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "FREE.h"
+#include "MKDT.h"
+
+//  DOG-024: a span is markup + text here too — the delimiters emit as their
+//  own 'G' tokens and the body is re-lexed one level down.  The split runs
+//  through `mkdtg` (MKDTDecomposeSpan), the same machine StrictMark uses, so
+//  a comment and a .mkd page tokenize their markup identically.
+static ok64 FREEEmitSpan(u8cs tok, FREEstate *state) {
+    sane($ok(tok) && state != NULL);
+    if (state->cb == NULL) done;
+    mkdtspan g = {};
+    if (state->depth >= FREE_MAX_DEPTH || MKDTDecomposeSpan(&g, tok) != OK
+        || g.kind == 0 || g.text[0] == NULL) {
+        call(state->cb, 'G', tok, state->ctx);
+        done;
+    }
+    u8cs open = {tok[0], g.text[0]};
+    u8cs close = {g.text[1], tok[1]};
+    if (!u8csEmpty(open)) call(state->cb, 'G', open, state->ctx);
+    if (!u8csEmpty(g.text)) {
+        FREEstate ist = {
+            .data = {g.text[0], g.text[1]},
+            .cb = state->cb,
+            .ctx = state->ctx,
+            .depth = state->depth + 1,
+        };
+        call(FREELexer, &ist);
+    }
+    if (!u8csEmpty(close)) call(state->cb, 'G', close, state->ctx);
+    done;
+}
+
+//  A code span splits its backticks off; the body is verbatim 'H'.
+static ok64 FREEEmitCode(u8cs tok, FREEstate *state) {
+    sane($ok(tok) && state != NULL);
+    if (state->cb == NULL) done;
+    if (u8csLen(tok) < 3) {
+        call(state->cb, 'H', tok, state->ctx);
+        done;
+    }
+    u8cs open = {tok[0], tok[0] + 1};
+    u8cs body = {tok[0] + 1, tok[1] - 1};
+    u8cs close = {tok[1] - 1, tok[1]};
+    call(state->cb, 'G', open, state->ctx);
+    call(state->cb, 'H', body, state->ctx);
+    call(state->cb, 'G', close, state->ctx);
+    done;
+}
 
 
-/* #line 104 "dog/tok/FREE.c.rl" */
+/* #line 154 "FREE.c.rl" */
 
 
 
-/* #line 8 "dog/tok/FREE.rl.c" */
+/* #line 55 "FREE.rl.c" */
 static const char _FREE_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
-	7, 1, 8, 1, 9, 1, 10, 1, 
-	11, 1, 12, 1, 13, 1, 14, 1, 
-	15, 1, 16, 1, 17, 1, 18, 1, 
-	19, 1, 20, 1, 21, 1, 22, 1, 
-	23, 1, 24, 1, 25, 1, 26, 1, 
-	27, 2, 2, 3, 2, 2, 4, 2, 
-	2, 5, 2, 2, 6
+	8, 1, 9, 1, 10, 1, 11, 1, 
+	12, 1, 13, 1, 14, 1, 15, 1, 
+	16, 1, 17, 1, 18, 1, 19, 1, 
+	20, 1, 21, 1, 22, 1, 23, 1, 
+	24, 1, 25, 1, 26, 1, 27, 1, 
+	28, 2, 2, 3, 2, 2, 4, 2, 
+	2, 5, 2, 2, 6, 2, 2, 7
+	
 };
 
 static const unsigned char _FREE_key_offsets[] = {
 	0, 2, 4, 5, 11, 12, 14, 20, 
-	22, 24, 30, 31, 33, 35, 39, 41, 
-	43, 69, 73, 74, 78, 80, 85, 87, 
-	90, 96, 110, 112, 121, 123, 124, 138, 
-	148, 150
+	22, 24, 30, 31, 33, 35, 36, 62, 
+	66, 67, 71, 73, 78, 80, 83, 89, 
+	103, 105, 114, 116, 117, 131, 141, 143, 
+	147
 };
 
 static const unsigned char _FREE_trans_keys[] = {
@@ -34,45 +82,45 @@ static const unsigned char _FREE_trans_keys[] = {
 	90u, 97u, 122u, 93u, 10u, 42u, 48u, 57u, 
 	65u, 70u, 97u, 102u, 48u, 57u, 10u, 93u, 
 	48u, 57u, 65u, 90u, 97u, 122u, 93u, 10u, 
-	95u, 10u, 96u, 32u, 126u, 9u, 13u, 10u, 
-	126u, 10u, 126u, 10u, 32u, 33u, 42u, 46u, 
-	48u, 91u, 95u, 96u, 126u, 0u, 8u, 9u, 
-	13u, 14u, 47u, 49u, 57u, 58u, 64u, 65u, 
-	90u, 92u, 94u, 123u, 127u, 9u, 32u, 11u, 
-	13u, 91u, 32u, 42u, 9u, 13u, 48u, 57u, 
-	46u, 88u, 120u, 48u, 57u, 48u, 57u, 46u, 
-	48u, 57u, 48u, 57u, 65u, 70u, 97u, 102u, 
-	45u, 95u, 0u, 47u, 48u, 57u, 58u, 64u, 
-	65u, 90u, 91u, 96u, 123u, 127u, 48u, 57u, 
-	96u, 0u, 47u, 58u, 64u, 91u, 94u, 123u, 
-	127u, 10u, 93u, 91u, 32u, 95u, 0u, 8u, 
-	9u, 13u, 14u, 47u, 58u, 64u, 91u, 96u, 
-	123u, 127u, 10u, 95u, 0u, 47u, 58u, 64u, 
-	91u, 96u, 123u, 127u, 10u, 96u, 126u, 0
+	95u, 10u, 96u, 126u, 10u, 32u, 33u, 42u, 
+	46u, 48u, 91u, 95u, 96u, 126u, 0u, 8u, 
+	9u, 13u, 14u, 47u, 49u, 57u, 58u, 64u, 
+	65u, 90u, 92u, 94u, 123u, 127u, 9u, 32u, 
+	11u, 13u, 91u, 32u, 42u, 9u, 13u, 48u, 
+	57u, 46u, 88u, 120u, 48u, 57u, 48u, 57u, 
+	46u, 48u, 57u, 48u, 57u, 65u, 70u, 97u, 
+	102u, 45u, 95u, 0u, 47u, 48u, 57u, 58u, 
+	64u, 65u, 90u, 91u, 96u, 123u, 127u, 48u, 
+	57u, 96u, 0u, 47u, 58u, 64u, 91u, 94u, 
+	123u, 127u, 10u, 93u, 91u, 32u, 95u, 0u, 
+	8u, 9u, 13u, 14u, 47u, 58u, 64u, 91u, 
+	96u, 123u, 127u, 10u, 95u, 0u, 47u, 58u, 
+	64u, 91u, 96u, 123u, 127u, 10u, 96u, 32u, 
+	126u, 9u, 13u, 126u, 0
 };
 
 static const char _FREE_single_lengths[] = {
 	2, 2, 1, 0, 1, 2, 0, 0, 
-	2, 0, 1, 2, 2, 2, 2, 2, 
-	10, 2, 1, 2, 0, 3, 0, 1, 
-	0, 2, 0, 1, 2, 1, 2, 2, 
-	2, 1
+	2, 0, 1, 2, 2, 1, 10, 2, 
+	1, 2, 0, 3, 0, 1, 0, 2, 
+	0, 1, 2, 1, 2, 2, 2, 2, 
+	1
 };
 
 static const char _FREE_range_lengths[] = {
 	0, 0, 0, 3, 0, 0, 3, 1, 
-	0, 3, 0, 0, 0, 1, 0, 0, 
-	8, 1, 0, 1, 1, 1, 1, 1, 
-	3, 6, 1, 4, 0, 0, 6, 4, 
-	0, 0
+	0, 3, 0, 0, 0, 0, 8, 1, 
+	0, 1, 1, 1, 1, 1, 3, 6, 
+	1, 4, 0, 0, 6, 4, 0, 1, 
+	0
 };
 
 static const unsigned char _FREE_index_offsets[] = {
 	0, 3, 6, 8, 12, 14, 17, 21, 
-	23, 26, 30, 32, 35, 38, 42, 45, 
-	48, 67, 71, 73, 77, 79, 84, 86, 
-	89, 93, 102, 104, 110, 113, 115, 124, 
-	131, 134
+	23, 26, 30, 32, 35, 38, 40, 59, 
+	63, 65, 69, 71, 76, 78, 81, 85, 
+	94, 96, 102, 105, 107, 116, 123, 126, 
+	130
 };
 
 static const char _FREE_indicies[] = {
@@ -80,74 +128,73 @@ static const char _FREE_indicies[] = {
 	4, 4, 4, 0, 5, 0, 0, 7, 
 	6, 9, 9, 9, 8, 11, 10, 0, 
 	13, 12, 15, 15, 15, 14, 16, 14, 
-	10, 18, 17, 0, 20, 19, 0, 0, 
-	0, 21, 0, 22, 21, 0, 23, 21, 
+	10, 18, 17, 0, 20, 19, 23, 22, 
 	26, 25, 27, 28, 29, 30, 33, 34, 
 	35, 37, 24, 25, 24, 31, 24, 32, 
 	24, 24, 36, 25, 25, 25, 38, 40, 
-	39, 39, 39, 39, 6, 42, 41, 44, 
-	45, 45, 31, 43, 44, 46, 44, 31, 
-	43, 9, 9, 9, 47, 49, 32, 48, 
-	32, 48, 32, 48, 48, 36, 11, 50, 
-	41, 41, 41, 41, 41, 36, 39, 39, 
-	12, 52, 51, 48, 36, 17, 48, 17, 
-	17, 17, 17, 53, 48, 54, 17, 17, 
-	17, 17, 53, 39, 39, 19, 55, 39, 
-	0
+	39, 39, 39, 39, 6, 41, 21, 43, 
+	44, 44, 31, 42, 43, 45, 43, 31, 
+	42, 9, 9, 9, 46, 48, 32, 47, 
+	32, 47, 32, 47, 47, 36, 11, 49, 
+	21, 21, 21, 21, 21, 36, 39, 39, 
+	12, 51, 50, 47, 36, 17, 47, 17, 
+	17, 17, 17, 52, 47, 53, 17, 17, 
+	17, 17, 52, 39, 39, 19, 39, 39, 
+	39, 22, 54, 22, 0
 };
 
 static const char _FREE_trans_targs[] = {
-	16, 1, 2, 3, 4, 16, 5, 16, 
-	16, 24, 16, 26, 8, 29, 16, 10, 
-	16, 11, 16, 12, 16, 14, 15, 16, 
-	16, 17, 16, 18, 19, 20, 21, 23, 
-	25, 28, 30, 32, 27, 33, 16, 16, 
-	0, 16, 20, 16, 22, 6, 16, 16, 
-	16, 7, 16, 16, 9, 31, 27, 13
+	14, 1, 2, 3, 4, 14, 5, 14, 
+	14, 22, 14, 24, 8, 27, 14, 10, 
+	14, 11, 14, 12, 14, 14, 13, 32, 
+	14, 15, 14, 16, 17, 18, 19, 21, 
+	23, 26, 28, 30, 25, 31, 14, 14, 
+	0, 18, 14, 20, 6, 14, 14, 14, 
+	7, 14, 14, 9, 29, 25, 14
 };
 
 static const char _FREE_trans_actions[] = {
-	45, 0, 0, 0, 0, 17, 0, 9, 
+	45, 0, 0, 0, 0, 15, 0, 9, 
 	41, 0, 43, 0, 0, 5, 39, 0, 
-	15, 0, 11, 0, 7, 0, 0, 13, 
-	21, 0, 19, 5, 5, 58, 5, 0, 
-	5, 5, 5, 5, 55, 5, 35, 37, 
-	0, 47, 52, 31, 0, 0, 29, 27, 
-	33, 0, 23, 25, 0, 5, 49, 0
+	13, 0, 11, 0, 7, 47, 0, 52, 
+	19, 0, 17, 5, 5, 61, 5, 0, 
+	5, 5, 5, 5, 58, 61, 35, 37, 
+	0, 55, 31, 0, 0, 29, 27, 33, 
+	0, 21, 25, 0, 5, 49, 23
 };
 
 static const char _FREE_to_state_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 1, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	1, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0
+	0
 };
 
 static const char _FREE_from_state_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 3, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	3, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0
+	0
 };
 
 static const unsigned char _FREE_eof_trans[] = {
 	1, 1, 1, 1, 1, 1, 9, 11, 
-	1, 15, 15, 11, 1, 1, 1, 1, 
-	0, 39, 40, 40, 42, 44, 47, 44, 
-	48, 49, 51, 42, 40, 52, 49, 49, 
-	40, 40
+	1, 15, 15, 11, 1, 22, 0, 39, 
+	40, 40, 22, 43, 46, 43, 47, 48, 
+	50, 22, 40, 51, 48, 48, 40, 40, 
+	55
 };
 
-static const int FREE_start = 16;
-static const int FREE_first_final = 16;
+static const int FREE_start = 14;
+static const int FREE_first_final = 14;
 static const int FREE_error = -1;
 
-static const int FREE_en_main = 16;
+static const int FREE_en_main = 14;
 
 
-/* #line 107 "dog/tok/FREE.c.rl" */
+/* #line 157 "FREE.c.rl" */
 
 ok64 FREELexer(FREEstate* state) {
 
@@ -166,7 +213,7 @@ ok64 FREELexer(FREEstate* state) {
     u8cs tok = {p, p};
 
     
-/* #line 161 "dog/tok/FREE.rl.c" */
+/* #line 208 "FREE.rl.c" */
 	{
 	cs = FREE_start;
 	ts = 0;
@@ -174,9 +221,9 @@ ok64 FREELexer(FREEstate* state) {
 	act = 0;
 	}
 
-/* #line 125 "dog/tok/FREE.c.rl" */
+/* #line 175 "FREE.c.rl" */
     
-/* #line 167 "dog/tok/FREE.rl.c" */
+/* #line 214 "FREE.rl.c" */
 	{
 	int _klen;
 	unsigned int _trans;
@@ -195,7 +242,7 @@ _resume:
 /* #line 1 "NONE" */
 	{ts = p;}
 	break;
-/* #line 184 "dog/tok/FREE.rl.c" */
+/* #line 231 "FREE.rl.c" */
 		}
 	}
 
@@ -266,71 +313,72 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-/* #line 58 "dog/tok/FREE.c.rl" */
+/* #line 106 "FREE.c.rl" */
 	{act = 4;}
 	break;
 	case 4:
-/* #line 36 "dog/tok/FREE.c.rl" */
-	{act = 11;}
+/* #line 106 "FREE.c.rl" */
+	{act = 5;}
 	break;
 	case 5:
-/* #line 26 "dog/tok/FREE.c.rl" */
-	{act = 13;}
+/* #line 83 "FREE.c.rl" */
+	{act = 11;}
 	break;
 	case 6:
-/* #line 41 "dog/tok/FREE.c.rl" */
-	{act = 16;}
+/* #line 73 "FREE.c.rl" */
+	{act = 13;}
 	break;
 	case 7:
-/* #line 53 "dog/tok/FREE.c.rl" */
-	{te = p+1;{
-    tok[0] = (u8c*)ts;
-    tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('H', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
-}}
+/* #line 88 "FREE.c.rl" */
+	{act = 16;}
 	break;
 	case 8:
-/* #line 58 "dog/tok/FREE.c.rl" */
+/* #line 100 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitCode(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 9:
-/* #line 58 "dog/tok/FREE.c.rl" */
+/* #line 106 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 10:
-/* #line 58 "dog/tok/FREE.c.rl" */
+/* #line 106 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 11:
-/* #line 63 "dog/tok/FREE.c.rl" */
+/* #line 112 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 12:
-/* #line 63 "dog/tok/FREE.c.rl" */
+/* #line 112 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 13:
-/* #line 46 "dog/tok/FREE.c.rl" */
+/* #line 93 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -338,7 +386,7 @@ _eof_trans:
 }}
 	break;
 	case 14:
-/* #line 41 "dog/tok/FREE.c.rl" */
+/* #line 88 "FREE.c.rl" */
 	{te = p+1;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -346,7 +394,7 @@ _eof_trans:
 }}
 	break;
 	case 15:
-/* #line 31 "dog/tok/FREE.c.rl" */
+/* #line 78 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -354,23 +402,25 @@ _eof_trans:
 }}
 	break;
 	case 16:
-/* #line 63 "dog/tok/FREE.c.rl" */
+/* #line 106 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 17:
-/* #line 36 "dog/tok/FREE.c.rl" */
+/* #line 112 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('L', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
 	case 18:
-/* #line 36 "dog/tok/FREE.c.rl" */
+/* #line 83 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -378,7 +428,7 @@ _eof_trans:
 }}
 	break;
 	case 19:
-/* #line 36 "dog/tok/FREE.c.rl" */
+/* #line 83 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
@@ -386,69 +436,87 @@ _eof_trans:
 }}
 	break;
 	case 20:
-/* #line 26 "dog/tok/FREE.c.rl" */
+/* #line 83 "FREE.c.rl" */
+	{te = p;p--;{
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    if (state->cb) { o = state->cb('L', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+}}
+	break;
+	case 21:
+/* #line 73 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('S', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
 }}
 	break;
-	case 21:
-/* #line 46 "dog/tok/FREE.c.rl" */
+	case 22:
+/* #line 93 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('W', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
 }}
 	break;
-	case 22:
-/* #line 41 "dog/tok/FREE.c.rl" */
+	case 23:
+/* #line 88 "FREE.c.rl" */
 	{te = p;p--;{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('P', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
 }}
 	break;
-	case 23:
-/* #line 63 "dog/tok/FREE.c.rl" */
+	case 24:
+/* #line 112 "FREE.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }}
 	break;
-	case 24:
-/* #line 36 "dog/tok/FREE.c.rl" */
+	case 25:
+/* #line 83 "FREE.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('L', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
 }}
 	break;
-	case 25:
-/* #line 26 "dog/tok/FREE.c.rl" */
+	case 26:
+/* #line 73 "FREE.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('S', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
 }}
 	break;
-	case 26:
-/* #line 41 "dog/tok/FREE.c.rl" */
+	case 27:
+/* #line 88 "FREE.c.rl" */
 	{{p = ((te))-1;}{
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
     if (state->cb) { o = state->cb('P', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
 }}
 	break;
-	case 27:
+	case 28:
 /* #line 1 "NONE" */
 	{	switch( act ) {
 	case 4:
 	{{p = ((te))-1;}
     tok[0] = (u8c*)ts;
     tok[1] = (u8c*)te;
-    if (state->cb) { o = state->cb('G', tok, state->ctx); if (o!=OK) {p++; goto _out; } }
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
+}
+	break;
+	case 5:
+	{{p = ((te))-1;}
+    tok[0] = (u8c*)ts;
+    tok[1] = (u8c*)te;
+    o = FREEEmitSpan(tok, state);
+    if (o!=OK) {p++; goto _out; }
 }
 	break;
 	case 11:
@@ -475,7 +543,7 @@ _eof_trans:
 	}
 	}
 	break;
-/* #line 437 "dog/tok/FREE.rl.c" */
+/* #line 504 "FREE.rl.c" */
 		}
 	}
 
@@ -488,7 +556,7 @@ _again:
 /* #line 1 "NONE" */
 	{ts = 0;}
 	break;
-/* #line 448 "dog/tok/FREE.rl.c" */
+/* #line 515 "FREE.rl.c" */
 		}
 	}
 
@@ -506,7 +574,7 @@ _again:
 	_out: {}
 	}
 
-/* #line 126 "dog/tok/FREE.c.rl" */
+/* #line 176 "FREE.c.rl" */
 
     state->data[0] = p;
     if (o==OK && cs < FREE_first_final)

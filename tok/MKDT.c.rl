@@ -1,3 +1,11 @@
+//  The StrictMark INLINE machine.  A span may cross a newline, because a
+//  paragraph is broken by a blank line, not by a line end (DOG-024): the
+//  block layer hands this machine a whole paragraph run, exactly as the
+//  renderers hand their joined paragraph buffer to it (`mark_para_flush`
+//  in beagle/mark/MARK.c, `paraFlush` in be/verbs/mark/render.js).  The
+//  span bodies therefore admit `\n`; each still ends at its first closer,
+//  so nothing runs away past the paragraph.
+
 #include "abc/INT.h"
 #include "abc/PRO.h"
 #include "MKDT.h"
@@ -85,33 +93,32 @@ action on_escape {
 main := |*
 
     # ---- inline code `content` (highest precedence) ----
-    "`" ( any8 - [`\n] )+ "`"                            => on_code;
+    "`" ( any8 - [`] )+ "`"                                => on_code;
 
-    # ---- backslash escape \<punct> (StrictMark: 2nd-highest precedence) ----
-    # An escaped opener cancels its bracketing role: \* swallows up to the
-    # next matching close so the span never forms; the callback strips the
-    # backslash and emits the literal run.
-    "\\*" (any8 - [*\n])* "*"                            => on_escape;
-    "\\_" (any8 - [_\n])* "_"                            => on_escape;
-    "\\" (nws - [*_])                                    => on_escape;
+    # ---- backslash escape \<char> (StrictMark: 2nd-highest precedence) ----
+    # One escape, one meaning: the next char is literal and the callback
+    # strips the backslash.  DOG-024 retired the swallow-to-the-closer form
+    # (`\*…*`): span bodies now carry escapes, so `\*` inside a span is a
+    # literal star, and at top level it simply never opens one.
+    "\\" nws                                               => on_escape;
 
     # ---- strong *content* (single star, no doubles) ----
-    "*" (nws - [*]) (any8 - [*\n])* "*"                  => on_emph;
+    "*" (nws - [*]) ( any8 - [*\\] | "\\" any8 )* "*"           => on_emph;
 
     # ---- emph _content_ (single underscore) ----
-    "_" (nws - [_]) (any8 - [_\n])* "_"                  => on_emph;
+    "_" (nws - [_]) ( any8 - [_\\] | "\\" any8 )* "_"           => on_emph;
 
-    # ---- strikethrough ~~content~~ ----
-    "~~" (nws - [~]) ( any8 - [~\n] | [~] (any8 - [~\n]) )* "~~" => on_emph;
+    # ---- strikethrough ~content~ (one tilde) ----
+    "~" (nws - [~]) ( any8 - [~\\] | "\\" any8 )* "~"           => on_emph;
 
     # ---- reference link [text][x] ----
-    "[" (any8 - [\]\n])+ "][" [0-9A-Za-z] "]"            => on_link;
+    "[" ( any8 - [\]\\] | "\\" any8 )+ "][" [0-9A-Za-z] "]"     => on_link;
 
     # ---- image/transclusion ![text][x] ----
-    "![" (any8 - [\]\n])+ "][" [0-9A-Za-z] "]"           => on_link;
+    "![" ( any8 - [\]\\] | "\\" any8 )+ "][" [0-9A-Za-z] "]"    => on_link;
 
     # ---- shortcut link [page] (key = bracket text) ----
-    "[" (any8 - [\]\n])+ "]"                             => on_link;
+    "[" ( any8 - [\]\\] | "\\" any8 )+ "]"                      => on_link;
 
     # ---- numbers ----
     "0" [xX] xdgt+                                       => on_number;
@@ -198,12 +205,14 @@ ok64 MKDTInlineLexer(MKDTstate* state) {
     action k_link   { kind = 'A'; }
     action k_image  { kind = 'M'; }
 
-    strong  = '*'  ( (any - [*\n])* )  >ts0 %ts1 '*'  @k_strong ;
-    emph    = '_'  ( (any - [_\n])* )  >ts0 %ts1 '_'  @k_emph ;
-    strike  = '~~' ( (any - [~\n] | '~' (any - [~\n]))* ) >ts0 %ts1 '~~' @k_strike ;
-    reflink = '['  ( (any - [\]\n])* ) >ts0 %ts1 '][' ( [0-9A-Za-z] >lb0 %lb1 ) ']' @k_link ;
-    shrlink = '['  ( (any - [\]\n])* ) >ts0 %ts1 ']' @k_link ;
-    image   = '![' ( (any - [\]\n])* ) >ts0 %ts1 '][' ( [0-9A-Za-z] >lb0 %lb1 ) ']' @k_image ;
+    #  DOG-024: the bodies admit '\n' — a span may cross a line end, and a
+    #  decomposer that stopped there would hand back kind 0 (no link target).
+    strong  = '*'  ( (any - [*\\] | '\\' any)* )  >ts0 %ts1 '*'  @k_strong ;
+    emph    = '_'  ( (any - [_\\] | '\\' any)* )  >ts0 %ts1 '_'  @k_emph ;
+    strike  = '~'  ( (any - [~\\] | '\\' any)* )  >ts0 %ts1 '~'  @k_strike ;
+    reflink = '['  ( (any - [\]\\] | '\\' any)* ) >ts0 %ts1 '][' ( [0-9A-Za-z] >lb0 %lb1 ) ']' @k_link ;
+    shrlink = '['  ( (any - [\]\\] | '\\' any)* ) >ts0 %ts1 ']' @k_link ;
+    image   = '![' ( (any - [\]\\] | '\\' any)* ) >ts0 %ts1 '][' ( [0-9A-Za-z] >lb0 %lb1 ) ']' @k_image ;
 
     main := strong | emph | strike | reflink | shrlink | image ;
 }%%

@@ -419,8 +419,8 @@ ok64 CPPTRawStringTest() {
         {"'c'", "G"},
         //  DOG-006: comment delimiter is one 'D'; body is StrictMark-parsed.
         {"// plain\n", "DDDW"},       // "//" | " " plain | newline
-        {"// *hi*\n", "DDGW"},        // strong span inside a line comment
-        {"/* `c` */", "DDHDD"},       // block: "/*" | " " `c` " " | "*/"
+        {"// *hi*\n", "DDGDGW"},      // DOG-024: the `*`s are their own G
+        {"/* `c` */", "DDGHGDD"},     // block: "/*" | " " `c` " " | "*/"
     };
     int ncases = sizeof(cases) / sizeof(cases[0]);
     RUN_CASES(CPPTLexer, CPPT, cases, ncases);
@@ -1058,9 +1058,9 @@ ok64 LLTBasicTest() {
 ok64 MDTBasicTest() {
     sane(1);
     TOK01Case cases[] = {
-        // headings: prefix R, content S→N, trailing \n stays S
-        {"# Hello\n", "RRNS"},       // # + space (R,R), Hello (N), \n (S)
-        {"## Sub heading\n", "RRRNWNS"}, // ## + space (R,R,R), Sub (N), sp (N), heading (N), \n (S)
+        // headings: prefix R, content S→N, trailing \n is whitespace
+        {"# Hello\n", "RRNW"},       // # + space (R,R), Hello (N), \n (W)
+        {"## Sub heading\n", "RRRNWNW"}, // ## + space (R,R,R), Sub (N), sp (N), heading (N), \n (W)
         // inline code
         {"`code`", "H"},
         // bold with stars
@@ -1173,13 +1173,13 @@ ok64 FREEOverlayTest() {
 ok64 FREEInlineMarkupTest() {
     sane(1);
     TOK01Case cases[] = {
-        {"a `b` c",      "DDHDD"},   // code span pops as H
-        {"see *bold* x", "DDGDD"},   // strong -> G
-        {"_em_",         "G"},
-        {"~~s~~",        "G"},
-        {"[Page]",       "G"},       // shortcut link
-        {"[t][1]",       "G"},       // reference link
-        {"ABC-123 `c`",  "FDH"},     // issue key + code both sticky
+        {"a `b` c",      "DDGHGDD"}, // code span: backticks G, body H
+        {"see *bold* x", "DDGDGDD"}, // strong: delimiters G, word inside
+        {"_em_",         "GDG"},
+        {"~s~",          "GDG"}, // strike is one tilde
+        {"[Page]",       "GDG"},     // shortcut link
+        {"[t][1]",       "GDG"},     // reference link: "[" | t | "][1]"
+        {"ABC-123 `c`",  "FDGHG"},   // issue key + code both sticky
         {"plain words",  "DDD"},     // no markup at all
     };
     int ncases = (int)(sizeof(cases) / sizeof(cases[0]));
@@ -1202,8 +1202,8 @@ ok64 FREEInlineMarkupTest() {
 ok64 FREECommentSplitTest() {
     sane(1);
     struct { const char *input; u32 olen, clen; const char *tags; } cases[] = {
-        {"// *b*",     2, 0, "DDG"},     // line "//" | " " | *b*
-        {"/* *b* */",  2, 2, "DDGDD"},   // block "/*" | " " *b* " " | "*/"
+        {"// *b*",     2, 0, "DDGDG"},   // line "//" | " " | *b*
+        {"/* *b* */",  2, 2, "DDGDGDD"}, // block "/*" | " " *b* " " | "*/"
         {"# hello",    1, 0, "DDD"},     // "#" | " " | hello
         {"<!-- x -->", 4, 3, "DDDDD"},   // "<!--" | " " x " " | "-->"
         {"//",         2, 0, "D"},       // empty body
@@ -1275,10 +1275,81 @@ ok64 MKDTIssueKeyTest() {
         {"ABC-DEF", "SPS"},
         {"ABC-", "SP"},
         {"multi-word", "SPS"},
-        // decorated ref stays in its span (higher precedence): no F token
-        {"`ABC-123`", "H"},
-        {"[ABC-123]", "G"},
-        {"*ABC-123*", "G"},
+        // DOG-024: the delimiters are their own 'G' tokens and the body is
+        // ordinary text, so a decorated ref now yields its own F inside the
+        // span (code stays verbatim 'H', never re-lexed)
+        {"`ABC-123`", "GHG"},
+        {"[ABC-123]", "GFG"},
+        {"*ABC-123*", "GFG"},
+    };
+    int ncases = sizeof(cases) / sizeof(cases[0]);
+    RUN_CASES(MKDTLexer, MKDT, cases, ncases);
+    done;
+}
+
+//  DOG-024: every block marker is a self-delimiting 4-char quad and emits as
+//  ONE 'R' token; only a 3-dash ruler / 3-backtick fence may run short.
+ok64 MKDTBlockQuadTest() {
+    sane(1);
+    TOK01Case cases[] = {
+        // headers: the '#' run pads to a quad in ANY column, no gap space
+        {"#   Top\n", "RSW"},
+        {"##  Sub\n", "RSW"},
+        {"### Small\n", "RSW"},
+        {"####Smallest\n", "RSW"},
+        {" #  Top\n", "RSW"},
+        {"  # Top\n", "RSW"},
+        {"   #Top\n", "RSW"},
+        {" ## Sub\n", "RSW"},
+        {"  ##Sub\n", "RSW"},
+        {" ###Small\n", "RSW"},
+        // a full quad self-delimits, so the gap space is content
+        {"#### Smallest\n", "RWSW"},
+        // a 5th '#' is content: the quad caps the header at level 4
+        {"#####Nope\n", "RPSW"},
+        // a 3-char prefix is off-grammar — the line stays a paragraph
+        {"#  Nope\n", "PWSW"},
+        // todo markers are 4 chars, gapless or not
+        {"-[v]New\n", "RSW"},
+        {"-[ ] New\n", "RWSW"},
+        {"-[-]Blocked\n", "RSW"},
+        {"-[x]Moot\n", "RSW"},
+        // indents emit one quad token each, then the marker quad
+        {"    -   item\n", "RRSW"},
+        {"        1.  item\n", "RRRSW"},
+        {"    >   quoted\n", "RRSW"},
+        // DOG-024: one tab IS one indent quad (four spaces)
+        {"\t-   item\n", "RRSW"},
+        {"\t\t1.  item\n", "RRRSW"},
+        {"\t    >   quoted\n", "RRRSW"},
+        {"\t#   Top\n", "RRSW"},
+        {"\tplain text\n", "RSWSW"},
+        // a tab pads no marker: it fills a whole quad or nothing
+        {"-\tvoid\n", "PWSW"},
+        // ruler: one token, short 3-dash form implies its 4th space
+        {"---\n", "RW"},
+        {"----\n", "RW"},
+        // reference definition: `[x]:` is the quad, the url is content
+        {"[1]: url\n", "RWSW"},
+        //  DOG-024: a paragraph is broken by a blank line, not a line end,
+        //  so an inline span crosses the wrap — as the renderers render it
+        //  (they lex the joined paragraph; MARK.c / render.js paraFlush).
+        {"a *b\nc* d\n", "SWGSWSGWSW"},
+        {"a `b\nc` d\n", "SWGHGWSW"},
+        {"see [a\nlink][x] here\n", "SWGSWSGWSW"},
+        //  the blank line still ends the run: two paragraphs, not one span
+        {"one\ntwo\n\nthree\n", "SWSWWSW"},
+        {"a *b\n\nc* d\n", "SWPSWWSPWSW"},
+        //  a continuation line joins the run through its markup prefix: the
+        //  prefix quads stay 'R' and a span crossing the wrap emits as two
+        //  'G' pieces, one on each side of the markup
+        {" -  a *b\n    c* d\n", "RSWGSWRSGWSW"},
+        {" -  a b\n    c d\n", "RSWSWRSWSW"},
+        //  the block stack is `(INDENT|QUOTE)* LIST? LEAF?`: a quote quad is
+        //  a container, so a numbered item nests inside it and its wrapped
+        //  span crosses the quoted line end
+        {">    1. x *a\n>       b* c\n", "RRSWGSWRRSGWSW"},
+        {">   quoted\nplain\n", "RSWSW"},
     };
     int ncases = sizeof(cases) / sizeof(cases[0]);
     RUN_CASES(MKDTLexer, MKDT, cases, ncases);
@@ -1453,6 +1524,7 @@ ok64 TOK01test() {
     call(MDTBasicTest);
     call(MDTIssueKeyTest);
     call(MKDTIssueKeyTest);
+    call(MKDTBlockQuadTest);
     call(MDTEmphTest);
     call(MDTCodeFenceTest);
     call(MDTFenceIsolationTest);

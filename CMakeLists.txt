@@ -308,6 +308,9 @@ target_include_directories(dog PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 add_executable(dogtok tok/TOK.cli.c)
 target_link_libraries(dogtok dog abc-core)
 
+add_executable(doghili tok/HILI.cli.c)
+target_link_libraries(doghili dog abc-core)
+
 add_executable(dogrepack git/REPACK.cli.c)
 target_link_libraries(dogrepack dog abc-core)
 

@@ -21,8 +21,11 @@
 // native tags.
 //
 // DOG-006: FREELexer also matches StrictMark inline spans — code `x`
-// (tag 'H'), emphasis/strike/link *x* _x_ ~~x~~ [x] (tag 'G').  These
-// tags and 'F' (issue key) stay STICKY through the overlay so markup
+// (tag 'H'), emphasis/strike/link *x* _x_ ~x~ [x].  DOG-024: a span's
+// DELIMITERS are the 'G' tokens and its body is re-lexed one level
+// down, so a nested span is just more tokens and the words between
+// them keep their own tags; a code body stays verbatim 'H'.  'G'/'H'
+// and 'F' (issue key) stay STICKY through the overlay so markup
 // pops instead of graying out.  Comment DELIMITERS ("//", "/* */", …)
 // must NOT reach the scanner: FREECommentFeed[N] emits them as plain
 // 'D' and StrictMark-parses only the body (so "/*x*/" cannot false-span).
@@ -34,7 +37,10 @@ typedef struct {
     u8cs data;
     TOKcb cb;
     void *ctx;
+    int   depth;   // inline recursion level (DOG-024), capped at FREE_MAX_DEPTH
 } FREEstate;
+
+#define FREE_MAX_DEPTH 16
 
 ok64 FREELexer(FREEstate *state);
 
