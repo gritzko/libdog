@@ -1137,17 +1137,9 @@ static b8 hk_small_edit(u8cs a, u8cs b) {
 }
 
 #define HK_REGION_MAX 4096
-
-// Release the five scratch buffers owned by HUNKu8sFeedLineBased.  Used
-// both at the normal exit and as the `callsafe` cleanup so an early
-// error return on a flush failure does not leak them.
-static void hk_free5(Bu8 body, Bu8 dels, Bu8 adds, Bu8 oldb, Bu8 newb) {
-    u8bFree(body);
-    u8bFree(dels);
-    u8bFree(adds);
-    u8bFree(oldb);
-    u8bFree(newb);
-}
+//  DIFF-019: pairing is O(nd*na) per round — past this product the
+//  region is emitted as raw `-`/`+` runs instead (no lines dropped).
+#define HK_PAIR_LIMIT (1UL << 14)
 
 // Append `<prefix><content>\n` for a line slice.
 static ok64 hk_emit_line(Bu8 body, u8 prefix, u8cs ln) {
@@ -1218,53 +1210,65 @@ static ok64 hunk_flush_region(Bu8 body, Bu8 dels, Bu8 adds) {
     // 3. Similarity-based pairing on the middle.
     static u8cs dl[HK_REGION_MAX], al[HK_REGION_MAX];
     u32 nd = 0, na = 0;
+    b8 spill = NO;
     {
         u8cs cur = {dp, de_end};
         while (nd < HK_REGION_MAX && hk_take_line(cur, dl[nd])) nd++;
+        if (!u8csEmpty(cur)) spill = YES;
     }
     {
         u8cs cur = {ap, ae_end};
         while (na < HK_REGION_MAX && hk_take_line(cur, al[na])) na++;
+        if (!u8csEmpty(cur)) spill = YES;
     }
 
-    static i32 pair_a[HK_REGION_MAX];   // pair_a[j] = i if A[j]↔D[i], else -1
-    static i32 pair_d[HK_REGION_MAX];
-    for (u32 j = 0; j < na; j++) pair_a[j] = -1;
-    for (u32 i = 0; i < nd; i++) pair_d[i] = -1;
+    //  DIFF-019: an oversized region skips the cosmetic pairing and goes
+    //  out whole — the old code silently dropped lines past the array cap.
+    if (spill || (u64)nd * (u64)na > HK_PAIR_LIMIT) {
+        u8csc draw = {dp, de_end};
+        u8csc araw = {ap, ae_end};
+        call(u8bFeed, body, draw);
+        call(u8bFeed, body, araw);
+    } else {
+        static i32 pair_a[HK_REGION_MAX];  // pair_a[j] = i if A[j]↔D[i], else -1
+        static i32 pair_d[HK_REGION_MAX];
+        for (u32 j = 0; j < na; j++) pair_a[j] = -1;
+        for (u32 i = 0; i < nd; i++) pair_d[i] = -1;
 
-    // Greedy 2D max-shared pairing: at each step pick the (i, j) with
-    // the highest shared-byte count among unpaired pairs that pass the
-    // small-edit threshold; pair them; repeat until no qualifying pair.
-    for (;;) {
-        u32 best_sh = 0;
-        i32 best_i = -1, best_j = -1;
-        for (u32 i = 0; i < nd; i++) {
-            if (pair_d[i] >= 0) continue;
-            for (u32 j = 0; j < na; j++) {
-                if (pair_a[j] >= 0) continue;
-                if (!hk_small_edit(dl[i], al[j])) continue;
-                u32 sh = hk_shared(dl[i], al[j]);
-                if (sh > best_sh) {
-                    best_sh = sh;
-                    best_i = (i32)i;
-                    best_j = (i32)j;
+        // Greedy 2D max-shared pairing: at each step pick the (i, j) with
+        // the highest shared-byte count among unpaired pairs that pass the
+        // small-edit threshold; pair them; repeat until no qualifying pair.
+        for (;;) {
+            u32 best_sh = 0;
+            i32 best_i = -1, best_j = -1;
+            for (u32 i = 0; i < nd; i++) {
+                if (pair_d[i] >= 0) continue;
+                for (u32 j = 0; j < na; j++) {
+                    if (pair_a[j] >= 0) continue;
+                    if (!hk_small_edit(dl[i], al[j])) continue;
+                    u32 sh = hk_shared(dl[i], al[j]);
+                    if (sh > best_sh) {
+                        best_sh = sh;
+                        best_i = (i32)i;
+                        best_j = (i32)j;
+                    }
                 }
             }
+            if (best_i < 0) break;
+            pair_d[best_i] = best_j;
+            pair_a[best_j] = best_i;
         }
-        if (best_i < 0) break;
-        pair_d[best_i] = best_j;
-        pair_a[best_j] = best_i;
-    }
 
-    // Emit in `adds` order.  A paired `+A[j]` is preceded by its
-    // matched `-D[i]`; an unpaired `+A[j]` stands alone.
-    for (u32 j = 0; j < na; j++) {
-        if (pair_a[j] >= 0) call(hk_emit_line, body, '-', dl[pair_a[j]]);
-        call(hk_emit_line, body, '+', al[j]);
-    }
-    // Trailing unpaired `-D[i]`s, in their original order.
-    for (u32 i = 0; i < nd; i++) {
-        if (pair_d[i] < 0) call(hk_emit_line, body, '-', dl[i]);
+        // Emit in `adds` order.  A paired `+A[j]` is preceded by its
+        // matched `-D[i]`; an unpaired `+A[j]` stands alone.
+        for (u32 j = 0; j < na; j++) {
+            if (pair_a[j] >= 0) call(hk_emit_line, body, '-', dl[pair_a[j]]);
+            call(hk_emit_line, body, '+', al[j]);
+        }
+        // Trailing unpaired `-D[i]`s, in their original order.
+        for (u32 i = 0; i < nd; i++) {
+            if (pair_d[i] < 0) call(hk_emit_line, body, '-', dl[i]);
+        }
     }
 
     // Emit suffix-matched lines (collected in step 2) in forward order.
@@ -1318,7 +1322,7 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
     // are non-color tools, so it tracks plain mode's separator rule.
     if ($empty(hk->text)) {
         call(HUNKu8sFeedBanner, into, hk, HUNKOutPlain, 0);
-        if ($empty(hk->uri)) u8sFeed1(into, '\n');
+        if ($empty(hk->uri)) call(u8sFeed1, into, '\n');
         done;
     }
 
@@ -1327,8 +1331,8 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
         u32 tlen = (u32)$len(hk->text);
         call(hunk_feed_visible, into, hk, 0, tlen);
         if (tlen > 0 && hk->text[0][tlen - 1] != '\n')
-            u8sFeed1(into, '\n');
-        u8sFeed1(into, '\n');
+            call(u8sFeed1, into, '\n');
+        call(u8sFeed1, into, '\n');
         done;
     }
 
@@ -1349,14 +1353,26 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
     u8c *base = hk->text[0];
     int  n_toks = (int)$len(hk->toks);
 
-    Bu8 body = {};
-    Bu8 dels = {}, adds = {};
-    Bu8 oldb = {}, newb = {};
-    call(u8bAllocate, body, 1UL << 16);
-    call(u8bAllocate, dels, 1UL << 12);
-    call(u8bAllocate, adds, 1UL << 12);
-    call(u8bAllocate, oldb, 1UL << 12);
-    call(u8bAllocate, newb, 1UL << 12);
+    //  DIFF-019: content-sized BASS scratch, freed at the call()/binding
+    //  bracket — the fixed 64K/4K heap caps threw or silently truncated.
+    u64 text_len = (u64)$len(hk->text);
+    u64 n_lines = 1, line_max = 0, line_run = 0;
+    for (u64 ti = 0; ti < text_len; ti++) {
+        if (hk->text[0][ti] == '\n') {
+            n_lines++;
+            if (line_run > line_max) line_max = line_run;
+            line_run = 0;
+        } else {
+            line_run++;
+        }
+    }
+    if (line_run > line_max) line_max = line_run;
+    u64 side_cap = text_len + 2 * n_lines + 8;
+    a_carve(u8, body, 2 * text_len + 4 * n_lines + 64);
+    a_carve(u8, dels, side_cap);
+    a_carve(u8, adds, side_cap);
+    a_carve(u8, oldb, line_max + 8);
+    a_carve(u8, newb, line_max + 8);
     b8 old_dirty = NO, new_dirty = NO;
     u32 old_count = 0, new_count = 0;
 
@@ -1373,54 +1389,53 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
             b8 is_nl = (c == '\n');
             if (side == TOK_SIDE_RM) {
                 if (is_nl) {
-                    u8bFeed1(dels, '-');
+                    call(u8bFeed1, dels, '-');
                     a_dup(u8c, ob, u8bData(oldb));
-                    u8bFeed(dels, ob);
-                    u8bFeed1(dels, '\n');
+                    call(u8bFeed, dels, ob);
+                    call(u8bFeed1, dels, '\n');
                     u8bReset(oldb);
                     old_dirty = NO;
                     old_count++;
                 } else {
-                    u8bFeed1(oldb, c);
+                    call(u8bFeed1, oldb, c);
                     old_dirty = YES;
                 }
             } else if (side == TOK_SIDE_IN) {
                 if (is_nl) {
-                    u8bFeed1(adds, '+');
+                    call(u8bFeed1, adds, '+');
                     a_dup(u8c, nb, u8bData(newb));
-                    u8bFeed(adds, nb);
-                    u8bFeed1(adds, '\n');
+                    call(u8bFeed, adds, nb);
+                    call(u8bFeed1, adds, '\n');
                     u8bReset(newb);
                     new_dirty = NO;
                     new_count++;
                 } else {
-                    u8bFeed1(newb, c);
+                    call(u8bFeed1, newb, c);
                     new_dirty = YES;
                 }
             } else { // EQ
                 if (is_nl) {
                     b8 modified = old_dirty || new_dirty;
                     if (modified) {
-                        u8bFeed1(dels, '-');
+                        call(u8bFeed1, dels, '-');
                         a_dup(u8c, ob, u8bData(oldb));
-                        u8bFeed(dels, ob);
-                        u8bFeed1(dels, '\n');
+                        call(u8bFeed, dels, ob);
+                        call(u8bFeed1, dels, '\n');
                         old_count++;
-                        u8bFeed1(adds, '+');
+                        call(u8bFeed1, adds, '+');
                         a_dup(u8c, nb, u8bData(newb));
-                        u8bFeed(adds, nb);
-                        u8bFeed1(adds, '\n');
+                        call(u8bFeed, adds, nb);
+                        call(u8bFeed1, adds, '\n');
                         new_count++;
                     } else {
                         // Region break — flush dels/adds (with prefix
                         // and suffix line-matching to cancel token-
                         // level misalignments), then emit the context.
-                        callsafe(hunk_flush_region(body, dels, adds),
-                                 hk_free5(body, dels, adds, oldb, newb));
-                        u8bFeed1(body, ' ');
+                        call(hunk_flush_region, body, dels, adds);
+                        call(u8bFeed1, body, ' ');
                         a_dup(u8c, ob, u8bData(oldb));
-                        u8bFeed(body, ob);
-                        u8bFeed1(body, '\n');
+                        call(u8bFeed, body, ob);
+                        call(u8bFeed1, body, '\n');
                         old_count++;
                         new_count++;
                     }
@@ -1429,8 +1444,8 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
                     old_dirty = NO;
                     new_dirty = NO;
                 } else {
-                    u8bFeed1(oldb, c);
-                    u8bFeed1(newb, c);
+                    call(u8bFeed1, oldb, c);
+                    call(u8bFeed1, newb, c);
                 }
             }
         }
@@ -1442,44 +1457,42 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
         b8 modified = old_dirty || new_dirty;
         if (u8bDataLen(oldb) > 0 || old_dirty) {
             if (modified) {
-                u8bFeed1(dels, '-');
+                call(u8bFeed1, dels, '-');
                 a_dup(u8c, ob, u8bData(oldb));
-                u8bFeed(dels, ob);
-                u8bFeed1(dels, '\n');
+                call(u8bFeed, dels, ob);
+                call(u8bFeed1, dels, '\n');
                 old_count++;
             } else {
                 // Trailing context line (no terminating '\n').
-                callsafe(hunk_flush_region(body, dels, adds),
-                         hk_free5(body, dels, adds, oldb, newb));
-                u8bFeed1(body, ' ');
+                call(hunk_flush_region, body, dels, adds);
+                call(u8bFeed1, body, ' ');
                 a_dup(u8c, ob, u8bData(oldb));
-                u8bFeed(body, ob);
-                u8bFeed1(body, '\n');
+                call(u8bFeed, body, ob);
+                call(u8bFeed1, body, '\n');
                 old_count++;
                 new_count++;
             }
         }
         if (modified && u8bDataLen(newb) > 0) {
-            u8bFeed1(adds, '+');
+            call(u8bFeed1, adds, '+');
             a_dup(u8c, nb, u8bData(newb));
-            u8bFeed(adds, nb);
-            u8bFeed1(adds, '\n');
+            call(u8bFeed, adds, nb);
+            call(u8bFeed1, adds, '\n');
             new_count++;
         }
-        callsafe(hunk_flush_region(body, dels, adds),
-                 hk_free5(body, dels, adds, oldb, newb));
+        call(hunk_flush_region, body, dels, adds);
     }
 
     //  Emit standard unified-diff headers.
     if (!$empty(path)) {
         a_cstr(amin, "--- a/");
-        u8sFeed(into, amin);
-        u8sFeed(into, path);
-        u8sFeed1(into, '\n');
+        call(u8sFeed, into, amin);
+        call(u8sFeed, into, path);
+        call(u8sFeed1, into, '\n');
         a_cstr(aplu, "+++ b/");
-        u8sFeed(into, aplu);
-        u8sFeed(into, path);
-        u8sFeed1(into, '\n');
+        call(u8sFeed, into, aplu);
+        call(u8sFeed, into, path);
+        call(u8sFeed1, into, '\n');
     }
     {
         u32 ol_start = (line > 0) ? line : 1;
@@ -1501,12 +1514,10 @@ static ok64 HUNKu8sFeedLineBased(u8s into, hunk const *hk) {
         u8sFeed1(hh_idle, '@');
         u8sFeed1(hh_idle, '@');
         u8sFeed1(hh_idle, '\n');
-        u8sFeed(into, u8bDataC(hh));
+        call(u8sFeed, into, u8bDataC(hh));
     }
     a_dup(u8c, bb, u8bData(body));
-    u8sFeed(into, bb);
-
-    hk_free5(body, dels, adds, oldb, newb);
+    call(u8sFeed, into, bb);
     done;
 }
 

@@ -1,0 +1,22 @@
+#   Header
+
+ 1. numbered
+ 2. list
+ 3. here
+      - more
+      - nested
+      - list
+
+Regular *italic* paragraph.
+Then _bold_ or `code` then ~strikethrough~
+Plus *some _nested_ markup*...
+
+>    1. here we test how *inline 2\*2 markup
+>       behaves* in lists
+>    2. which are _nested_ in quotes!
+
+Note that *inline markup
+can span lines* of a text. Even [links
+can do that][a].
+
+[a]: b

@@ -561,24 +561,22 @@ static ok64 HUNKTestDrainBounds() {
 }
 
 // =====================================================================
-// LineBased (unified-diff) render — feed-failure propagation.
+// LineBased (unified-diff) render — big bodies render whole.
 //
 // A `diff:`-scheme hunk renders via the internal HUNKu8sFeedLineBased
-// path, which builds the unified-diff body in a fixed 64KB side buffer.
-// The two static emitters (hk_emit_line / hunk_flush_region) used to
-// swallow that buffer's BNOROOM into void, silently dropping or
-// truncating diff lines so the emitted `@@` body could no longer be
-// `git apply`-ed.  They now return ok64 and the caller propagates.
+// path.  DIFF-019: its side buffers are now content-sized (they were
+// fixed 64KB body / 4KB region caps that made a big whole-file render
+// surface NOROOM and made a >4KB region silently DROP lines), and all
+// region feeds are checked, so no input size may truncate the body.
 //
 // (a) A small diff hunk renders OK and produces a `@@` header.
-// (b) A diff hunk whose body overflows the 64KB buffer must surface
-//     BNOROOM out of the public renderer — never a truncated body.
+// (b) A body far past the old 64KB cap renders OK, every `+` line
+//     present (was: NOROOM out of the renderer).
+// (c) One region far past the old 4KB dels/adds cap renders OK, every
+//     `+` line present (was: lines past the cap silently vanished).
 //
 // The hunk is built by hand (as HUNKTestDrainBounds does) so the toks
-// carry IN/EQ sides directly without a wire round-trip.  Each block is
-// an inserted line followed by a context line, so the body grows across
-// many tiny regions (each region's 4KB dels/adds stays well under its
-// own limit — the only buffer that fills is the shared 64KB body).
+// carry IN/EQ sides directly without a wire round-trip.
 // =====================================================================
 
 //  Bytes per generated block: 60-byte '+' payload + '\n', then a 2-byte
@@ -594,6 +592,29 @@ static ok64 hk_lb_render(u8csc uri, u8csc text, tok32csc toks) {
                .toks = {toks[0], toks[1]}};
     a_pad(u8, ob, 1UL << 18);   // 256KB sink — bigger than the 64KB body
     return HUNKu8sFeedText(ob_idle, &hk);
+}
+
+//  DIFF-019: render the hunk and count the body's `+` lines — the
+//  truncation checks assert every inserted line survives the render.
+static ok64 hk_lb_plus_count(u8csc uri, u8csc text, tok32csc toks,
+                             u32 *out_plus) {
+    sane(out_plus != NULL);
+    hunk hk = {.uri  = {uri[0], uri[1]},
+               .text = {text[0], text[1]},
+               .toks = {toks[0], toks[1]}};
+    a_pad(u8, ob, 1UL << 18);
+    call(HUNKu8sFeedText, ob_idle, &hk);
+    a_dup(u8c, got, u8bData(ob));
+    u32 plus = 0;
+    b8 at_bol = YES;
+    for (u8c *p = got[0]; p < got[1]; p++) {
+        if (at_bol && *p == '+') plus++;
+        at_bol = (*p == '\n');
+    }
+    //  The `+++ b/` header line is not a body `+` line.
+    if (plus > 0) plus--;
+    *out_plus = plus;
+    done;
 }
 
 static ok64 HUNKTestLineBasedNoRoom(void) {
@@ -635,9 +656,8 @@ static ok64 HUNKTestLineBasedNoRoom(void) {
         }
     }
 
-    //  (b) Oversized diff hunk: body exceeds the internal 64KB buffer.
-    //  Pre-fix the emitters dropped lines and returned OK (truncated,
-    //  un-appliable diff); post-fix the BNOROOM propagates.
+    //  (b) DIFF-019: body far past the old 64KB cap — must render OK
+    //  with every `+` line present (was: NOROOM out of the renderer).
     {
         static u8 big[HK_LB_TEXTCAP];
         static tok32 toks_arr[HK_LB_BLOCKS * 2];
@@ -655,14 +675,49 @@ static ok64 HUNKTestLineBasedNoRoom(void) {
         tok32csc toks = {toks_arr, toks_arr + nt};
         a_cstr(uri, "diff:big.c");
         ok64 rc = hk_lb_render(uri, txt, toks);
-        //  The propagated emitter feed reports BNOROOM (u8bFeed on the
-        //  64KB body); accept the NOROOM family in case the overflow
-        //  lands on a 1-byte u8bFeed1 (SNOROOM) instead.  The defect is
-        //  the *silent OK* — any surfaced NOROOM is the correct contract.
-        if (rc != BNOROOM && rc != SNOROOM && rc != NOROOM) {
-            fprintf(stderr,
-                    "FAIL lb(b): oversized diff body did not surface NOROOM:"
-                    " got %s\n", ok64str(rc));
+        if (rc != OK) {
+            fprintf(stderr, "FAIL lb(b): oversized diff render: %s\n",
+                    ok64str(rc));
+            fail(TESTFAIL);
+        }
+        u32 plus = 0;
+        call(hk_lb_plus_count, uri, txt, toks, &plus);
+        if (plus != HK_LB_BLOCKS) {
+            fprintf(stderr, "FAIL lb(b): %u of %u '+' lines rendered\n",
+                    plus, (u32)HK_LB_BLOCKS);
+            fail(TESTFAIL);
+        }
+    }
+
+    //  (c) DIFF-019: ONE region far past the old 4KB dels/adds cap —
+    //  every `+` line present (was: lines past the cap silently dropped).
+    {
+        static u8 big[HK_LB_TEXTCAP];
+        static tok32 toks_arr[HK_LB_BLOCKS + 1];
+        u32 off = 0;
+        u32 nt = 0;
+        for (u32 b = 0; b < HK_LB_BLOCKS; b++) {
+            for (u32 k = 0; k < HK_LB_INS_LEN; k++) big[off++] = 'x';
+            big[off++] = '\n';
+            toks_arr[nt++] = tok32PackSide('S', TOK_SIDE_IN, off);
+        }
+        big[off++] = 'c';
+        big[off++] = '\n';
+        toks_arr[nt++] = tok32PackSide('S', TOK_SIDE_EQ, off);
+        u8csc txt = {big, big + off};
+        tok32csc toks = {toks_arr, toks_arr + nt};
+        a_cstr(uri, "diff:bigregion.c");
+        ok64 rc = hk_lb_render(uri, txt, toks);
+        if (rc != OK) {
+            fprintf(stderr, "FAIL lb(c): big-region diff render: %s\n",
+                    ok64str(rc));
+            fail(TESTFAIL);
+        }
+        u32 plus = 0;
+        call(hk_lb_plus_count, uri, txt, toks, &plus);
+        if (plus != HK_LB_BLOCKS) {
+            fprintf(stderr, "FAIL lb(c): %u of %u '+' lines rendered\n",
+                    plus, (u32)HK_LB_BLOCKS);
             fail(TESTFAIL);
         }
     }
