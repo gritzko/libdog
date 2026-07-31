@@ -24,6 +24,17 @@ if (NOT TARGET abc-core)
     add_subdirectory(abc)
 endif()
 
+#  DIS-082: abc/ sets FUZZ_*_FLAGS in its OWN directory scope, so dog/fuzz
+#  read them empty and no fuzz target could link; mirror them here.
+if (WITH_FUZZ)
+    set(FUZZ_FLAGS "-fsanitize=fuzzer")
+    set(FUZZ_CXX_FLAGS "${FUZZ_FLAGS}")
+    set(FUZZ_C_FLAGS "${FUZZ_FLAGS}")
+    set(FUZZ_LDD_FLAGS "${FUZZ_FLAGS}")
+    add_compile_options(-fsanitize=fuzzer-no-link)
+    add_link_options(-fsanitize=fuzzer-no-link)
+endif ()
+
 include_directories(.. . tok git)
 
 set(TEST_CXX_FLAGS "-g")
@@ -258,9 +269,9 @@ list(APPEND TOK_SOURCES HUNK.c)
 list(APPEND TOK_HEADERS BRAM.h NEIL.h)
 list(APPEND TOK_SOURCES BRAM.c NEIL.c)
 
-# DOG-003: columnar, HUNK-compliant weave engine
-list(APPEND TOK_HEADERS WEAVE.h)
-list(APPEND TOK_SOURCES WEAVE.c)
+# DIS-082: append-only weave (body + tokv32 index, tombs as entries)
+list(APPEND TOK_HEADERS CFOLD.h)
+list(APPEND TOK_SOURCES CFOLD.c)
 
 list(APPEND TOK_HEADERS HOME.h)
 list(APPEND TOK_SOURCES HOME.c)
@@ -316,6 +327,10 @@ target_link_libraries(dogrepack dog abc-core)
 
 add_executable(dogscan git/PSCAN.cli.c)
 target_link_libraries(dogscan dog abc-core)
+
+# DIS-082: fold files into an append-only weave and check every rev back
+add_executable(dogcfold CFOLD.cli.c)
+target_link_libraries(dogcfold dog abc-core)
 
 add_subdirectory(test)
 

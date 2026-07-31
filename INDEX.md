@@ -87,16 +87,19 @@ A `hunk` is `{ts, verb, uri, text, toks}` DATA; the renderers own all presentati
  -  `HUNKTableText`/`HUNKTableToks` — the active table's buffers for a rich multi-tok summary tail (`be status`).
  -  `HUNKu32bTokenize`/`u32sClip`/`u8sMakeURI`/`u8sFragSplit` — tokenize, clip toks, compose/split a `path#symbol:line` URI.
 
-###  WEAVE.h — one file's whole DAG history (columnar, HUNK-compatible)
+###  CFOLD.h — the APPEND-ONLY weave (DIS-082), replaces the columnar WEAVE.h
 
-A `weave` is a zero-copy view over a `'W'` blob: columns `text`('X')/`toks`('K')/`ins`('I')/`rms`('M')/`commits`('C') plus `anc`('A', DIS-043). A token's IDENTITY is `(commits[inserter], per-commit ordinal)`, hashed by `WEAVEIdHash`. ORDER is RGA (DIS-043): each token sorts after its immutable left-anchor (the `'A'` hash, in the same hash space as the identity hash); concurrent siblings sharing an anchor sort by merged commit INDEX DESC then ordinal ASC. DIS-044: that tie-break is the commit INDEX — `WEAVEMerge` builds `commits[]` in deterministic causal (topo) order, so the index is a path-independent ancestor<descendant rank — NOT the raw 60-bit hashlet (arbitrary, so a base could outrank its edits and strand a replace-edit's token). That order is path-independent, so every merge path agrees and the identity JOIN matches each shared token exactly once — no criss-cross duplication.
+One file's whole DAG history; DELETION IS AN APPENDED ENTRY, never a mutation of the deleted token, so the `'B'` BODY is byte-identical forever and a fold never re-emits history. Three streams replace the old six columns — `'B'` body bytes in append order, `'E'` a `tokv32` index, `'C'` fixed-size commit records, `'G'` the ignore-set pool. A token's identity, causal rank and blame key are all ONE number, its body offset; there is no anchor hash, inserter, remover list or side bit. Offsets are ARRIVAL-LOCAL (a weave is derived data, never exchanged); only the RGA sibling tie-break reads the canonical commit id. Two DIFFERENT properties, both asserted by `test/CFOLD01.c`: the BODY is append-only, the INDEX is parent-SORTED and REWRITTEN per commit by a one-pass merge. `test/CFOLD02.c` is the oracle harness — whole commit DAGs, every rev materialized back byte-for-byte, plus a randomized DAG sweep; `fuzz/CFOLD.c` fuzzes the same recovery on the `DWEAVE` corpus format; `test/CFOLD03.c` replays the DIS-045 blank-EOL merge on real C; `test/CFOLD04.c` is the DIS-047 scaling bench.
 
- -  `WEAVEParse`/`WEAVESerialize` (`WEAVE_TLV*`, `WEAVE_ROOT_ANCHOR`) — `'W'` codec; old readers ignore `'A'`, absent `'A'` ⇒ anchor = prev weave-order token.
- -  `WEAVENext`/`WEAVEMerge` — fold a blob (linear diff step) / RGA-union two parents keyed on identity, removers union; both write the `'A'` chain.
- -  `WEAVEIdHash` — `RAPHash(commit-id ++ ordinal)`, host-endian; shared so a stored anchor matches a token's idh directly.
- -  `WEAVEStep`/`weavetok` (`anchor`/`has_anchor`) — consume one token + its `'A'` anchor in lockstep.
- -  `WEAVEScope`/`WEAVEProduce`/`WEAVEAlive` — active-commit bitmap, bytes at any rev, tip alive bytes.
- -  `WEAVEEmitDiff`/`EmitFull`/`EmitMerged` (DOG-004) — windowed / whole-file diff (HUNK records, DIFF-003/004 `scheme`/`navver` URIs) and conflict framing, all classifying off scope BITMAPs (a token in/out by `u1At` on its inserter/removers); 16 MiB text cap folds DIFF-007 to a coarse `text`-column hunk + a `capped:` status row (never silently empty).
+ -  `tokv32`/`tokv32Z`/`CFOLDPar` (`CFOLD_TAG_ROOT`/`PAR`/`TERM`/`TOMB`) — the 64-bit (parent, child) index record; the child's TAG says INSERT (a syntax tag), TOMB or chain TERMINATOR, `par` names the parent by body offset so siblings are contiguous.
+ -  `CFOLDParse` (`CFOLD_TLV*`, `CFOLDFAIL`/`BIG`/`NOCM`/`TORN`/`PLEN`) — zero-copy view over a `'V'` blob.
+ -  `cfold`/`cfcommit`/`CFOLDNCommits`/`CFOLDCommitAt`/`CFOLDFindCommit` — the streams and one commit's `(id, body range, L, P, ignore ref)`.
+ -  `CFOLDProduce`/`CFOLDAlive`/`cfstat` — DFS materialization at any commit, checked against the recorded `P`; `cfstat.bsearch` counts the walk's binary searches, so a fork-free chain is MEASURABLY a linear scan.
+ -  `CFOLDBlame` — body offset → commit, one binary search over the `'C'` range table; `why:` needs no per-token inserter.
+ -  `CFOLDFold`/`CFOLDFoldStat`/`cffold` — fold one commit (append body + entries, merge the sorted batch into the index); the stat block reports the append-only bracket and the one-pass merge step count.
+ -  `CFOLDMerge` — a merge that carries no content: appends NOTHING, takes the later `L` and the INTERSECTED ignore-set (a commit hides only when NO parent saw it).
+ -  `CFOLDEmitDiff`/`CFOLDEmitFull` — windowed / whole-file diff between two commit INDICES as HUNK records (DIFF-003/004 URIs); byte-parity with the retired WEAVE emitters (`test/CFOLD05.c`); fenced merge renders are retired (DIS-080) — merged bytes are `CFOLDProduce` at the merge commit; no DIFF-007 coarse fallback since a >16 MiB body is refused at fold time (`CFOLDBIG`).
+ -  CLI: `dogcfold FILE...` folds each file as a successive linear commit, reports both streams per commit, and materializes every rev back.
 
 ###  BRAM.h, NEIL.h — token-level diff core (patience + EDL cleanup)
 
