@@ -575,6 +575,18 @@ static u64 dog_pup_parse_seqno(u8csc name, u8csc ext) {
     return (u64)v;
 }
 
+// DOG-027: the ONE monotonic pup_key scheme — max(RONNow, max(DATA)+1),
+// skipping the reserved ALL-ONES memtable entry; no stat-and-bump race.
+static u64 dog_pup_next_key(kv64b pups) {
+    u64 key = (u64)RONNow();
+    kv64 const *db = (kv64 const *)kv64bDataHead(pups);
+    kv64 const *de = (kv64 const *)kv64bIdleHead(pups);
+    for (kv64 const *p = db; p < de; p++)
+        if (p->key != DOG_PUP_MEM_KEY && p->key >= key) key = p->key + 1;
+    if (key == 0) key = 1;
+    return key;
+}
+
 ok64 DOGPupOpenAll(kv64b pups, path8sc dir, u8csc ext) {
     sane(pups != NULL && u8csOK(dir) && u8csOK(ext));
 
@@ -701,14 +713,8 @@ ok64 DOGPupCreate(kv64b pups, path8s dir, u8cs ext, u8cs bytes) {
     //  paths preserve strict global ordering and 60-bit fit (RONNow
     //  is ron60-bounded; the +1 bump only triggers when we're already
     //  ron60-shaped).
-    u64 new_seqno = RONNow();
-    {
-        kv64 const *db = (kv64 const *)kv64bDataHead(pups);
-        kv64 const *de = (kv64 const *)kv64bIdleHead(pups);
-        for (kv64 const *p = db; p < de; p++)
-            if (p->key >= new_seqno) new_seqno = p->key + 1;
-    }
-    if (new_seqno == 0) new_seqno = 1;
+    //  DOG-027: hoisted into dog_pup_next_key — flush/commit share it.
+    u64 new_seqno = dog_pup_next_key(pups);
     return DOGPupCreateAt(pups, dir, ext, bytes, new_seqno);
 }
 
@@ -861,6 +867,122 @@ ok64 DOGPupAllData(u8csb out, kv64b pups) {
         DOGPupData(s, pups, i);
         if (s[0] == NULL) continue;
         call(u8csbFeed1, out, s);
+    }
+    done;
+}
+
+// =============================================================
+// --- DOG-027: the memtable — a 4 KB pup the puts land in ---
+// =============================================================
+
+// DOG-027: the live memtable is the dict's trailing ALL-ONES entry, if any.
+static u8bp dog_pup_mem(kv64b pups) {
+    u32 n = (u32)kv64bDataLen(pups);
+    if (n == 0) return NULL;
+    kv64 const *last = (kv64 const *)kv64bDataHead(pups) + (n - 1);
+    if (last->key != DOG_PUP_MEM_KEY) return NULL;
+    u8bp slot = FILE_WANT_BUFS[last->val];
+    if (!slot || !slot[0]) return NULL;
+    return slot;
+}
+
+// DOG-027: create + RW-map a fresh 4 KB `<dir>/.memtable` (truncating any
+// crash leftover), dict it under the ALL-ONES key so it sorts LAST.
+static ok64 dog_pup_mem_open(u8bp *mem, kv64b pups, path8s dir) {
+    sane(mem != NULL && pups != NULL && $ok(dir));
+    if (dog_pup_mem(pups) != NULL) return DOGPUPFAIL;
+    a_cstr(mt, ".memtable");
+    a_path(mpath, dir, mt);
+    u8bp buf = NULL;
+    call(FILEMapCreate, &buf, $path(mpath), DOG_PUP_MEM_BYTES);
+    int fd = FILEBookedFD(buf);
+    if (fd < 0) { FILEUnMap(buf); return DOGPUPFAIL; }
+    kv64 kv = {.key = DOG_PUP_MEM_KEY, .val = (u64)fd};
+    try(kv64bPush, pups, &kv);
+    if (__ != OK) { FILEUnMap(buf); fail(__); }
+    *mem = buf;
+    done;
+}
+
+// DOG-027: INTERNAL sync — the typed hook runs only on non-empty DATA;
+// collapse on `force` or DATA past DOG_PUP_COLLAPSE, never on a plain read.
+static ok64 dog_pup_sync(u8bp mem, dogpupsync sync, b8 force) {
+    sane(u8bOK(mem) && sync != NULL);
+    if (u8bDataLen(mem) == 0) done;
+    b8 collapse = force || u8bDataLen(mem) > DOG_PUP_COLLAPSE;
+    call(sync, mem, collapse);
+    done;
+}
+
+// DOG-027: seal the collapsed memtable as a run — trim, optional fsync,
+// atomic rename to `<10-RON64><ext>`, re-key the dict entry in place.
+static ok64 dog_pup_mem_seal(kv64b pups, path8s dir, u8cs ext, b8 durable) {
+    sane(pups != NULL && $ok(dir) && $ok(ext));
+    u8bp mem = dog_pup_mem(pups);
+    if (!mem) return DOGPUPFAIL;
+    call(FILETrimMap, mem);
+    if (durable) {
+        int fd = FILEBookedFD(mem);
+        call(FILESync, &fd);
+    }
+    u64 key = dog_pup_next_key(pups);
+    a_path(runpath);
+    call(dog_pup_path, runpath, dir, key, ext);
+    a_cstr(mt, ".memtable");
+    a_path(mpath, dir, mt);
+    call(FILERename, $path(mpath), $path(runpath));
+    kv64 *last = (kv64 *)kv64bDataHead(pups) + (kv64bDataLen(pups) - 1);
+    last->key = key;
+    done;
+}
+
+ok64 DOGPupPut(kv64b pups, path8s dir, u8cs ext, u8csc rec, dogpupsync sync) {
+    sane(pups != NULL && $ok(dir) && $ok(ext) && u8csOK(rec) && sync != NULL);
+    u8bp mem = dog_pup_mem(pups);
+    if (!mem) call(dog_pup_mem_open, &mem, pups, dir);
+    if (u8bIdleLen(mem) < (size_t)u8csLen(rec)) {
+        //  DOG-027: full buffer — the collapse may dedup room free; if not,
+        //  flush into a run and start a fresh memtable.
+        call(dog_pup_sync, mem, sync, YES);
+        if (u8bIdleLen(mem) < (size_t)u8csLen(rec)) {
+            call(dog_pup_mem_seal, pups, dir, ext, NO);
+            call(dog_pup_mem_open, &mem, pups, dir);
+        }
+    }
+    call(u8bFeed, mem, rec);
+    done;
+}
+
+ok64 DOGPupCommit(kv64b pups, path8s dir, u8cs ext, dogpupsync sync) {
+    sane(pups != NULL && $ok(dir) && $ok(ext) && sync != NULL);
+    u8bp mem = dog_pup_mem(pups);
+    if (!mem || u8bBusyLen(mem) == 0) done;
+    call(dog_pup_sync, mem, sync, YES);
+    call(dog_pup_mem_seal, pups, dir, ext, YES);
+    done;
+}
+
+ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpupsync sync) {
+    sane(out && pups != NULL && sync != NULL);
+    u8csbReset(out);
+    u8bp mem = dog_pup_mem(pups);
+    u32 n = (u32)kv64bDataLen(pups);
+    if (mem) n--;
+    for (u32 i = 0; i < n; i++) {
+        u8cs s = {};
+        DOGPupData(s, pups, i);
+        if (s[0] == NULL) continue;
+        call(u8csbFeed1, out, s);
+    }
+    if (!mem || u8bBusyLen(mem) == 0) done;
+    call(dog_pup_sync, mem, sync, NO);
+    if (u8bPastLen(mem) > 0) {
+        a_dup(u8c, past, u8bPastC(mem));
+        call(u8csbFeed1, out, past);
+    }
+    if (u8bDataLen(mem) > 0) {
+        a_dup(u8c, data, u8bDataC(mem));
+        call(u8csbFeed1, out, data);
     }
     done;
 }

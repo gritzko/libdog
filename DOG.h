@@ -708,6 +708,28 @@ fun u64 DOGPupSeqno(kv64b pups, u32 i) {
     return base[i].key;
 }
 
+// DOG-027: the memtable IS a pup — one 4 KB `.memtable` per stack, RW-mapped;
+// PAST/DATA are regions of that mapping, its fd dicted under the ALL-ONES key.
+#define DOG_PUP_MEM_BYTES 4096
+#define DOG_PUP_COLLAPSE  512
+#define DOG_PUP_MEM_KEY   (~0ULL)
+
+// DOG-027: family-side typed hook — stable-sort (QSORT<type>InSort, never the
+// introsort) + keep-last dedup DATA; on `collapse`, fold DATA into PAST.
+typedef ok64 (*dogpupsync)(u8bp mem, b8 collapse);
+
+// DOG-027: append one record's bytes to the memtable's DATA (created lazily);
+// never sorts — a full 4 KB buffer flushes into a run under a fresh pup_key.
+ok64 DOGPupPut(kv64b pups, path8s dir, u8cs ext, u8csc rec, dogpupsync sync);
+
+// DOG-027: collapse, force-flush the tail page, trim, rename `.memtable` into
+// `<10-RON64><ext>` — atomic: a crash leaves a dot-file or a complete run.
+ok64 DOGPupCommit(kv64b pups, path8s dir, u8cs ext, dogpupsync sync);
+
+// DOG-027: query view — committed runs oldest→newest, then the memtable's
+// PAST and DATA (sync'd first) as one or two more HIT sources.  Resets `out`.
+ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpupsync sync);
+
 // Append a short human date for unix timestamp `ts` (seconds) into
 // `into`, picking the coarsest representation that still resolves
 // `now - ts` unambiguously:

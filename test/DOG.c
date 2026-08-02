@@ -14,6 +14,12 @@
 
 #include "dog/test/TESTBE.h"
 
+// DOG-027: keyed lane for the memtable tests — kv64Z compares keys only,
+// so keep-last dedup and younger-wins ties are observable in the output.
+#define X(M, name) M##kv64##name
+#include "abc/HITx.h"
+#undef X
+
 typedef struct {
     const char *input;
     const char *scheme;
@@ -1219,6 +1225,305 @@ ok64 DOGTestPupLeaks(void) {
     done;
 }
 
+// --- DOG-027: Pup memtable — put / sync / collapse / flush / commit ---
+
+// DOG-027: the kv64 family's typed sync hook — QSORTkv64InSort + keep-last
+// dedup on DATA; on collapse, HITkv64Merge folds PAST+DATA (ties to DATA).
+static ok64 dog_pupsync_kv64(u8bp mem, b8 collapse) {
+    sane(u8bOK(mem));
+    kv64 *dh = (kv64 *)mem[1];
+    kv64 *de = (kv64 *)mem[2];
+    // DOG-027: idempotence — strictly-ascending DATA is already sorted+deduped
+    b8 clean = YES;
+    for (kv64 *p = dh + 1; p < de; p++)
+        if (!kv64Z(p - 1, p)) { clean = NO; break; }
+    if (!clean) {
+        QSORTkv64InSort(dh, de);
+        kv64s d = {dh, de};
+        kv64sDedup(d);
+        call(u8bShed, mem, (size_t)(de - d[1]) * sizeof(kv64));
+    }
+    if (!collapse) done;
+    // DOG-027: no PAST yet — the sorted DATA becomes the one slice
+    if (mem[0] == mem[1]) {
+        call(u8bUsedAll, mem);
+        done;
+    }
+    a_carve(kv64, scr, DOG_PUP_MEM_BYTES / sizeof(kv64));
+    kv64cs runs[2] = {{(kv64 const *)mem[0], (kv64 const *)mem[1]},
+                      {(kv64 const *)mem[1], (kv64 const *)mem[2]}};
+    kv64css hp = {runs, runs + 2};
+    kv64 *base = kv64bIdleHead(scr);
+    kv64s into = {base, kv64bTerm(scr)};
+    call(HITkv64Merge, hp, into);
+    u8cs merged = {(u8c *)base, (u8c *)into[0]};
+    u8bReset(mem);
+    call(u8bFeed, mem, merged);
+    call(u8bUsedAll, mem);
+    done;
+}
+
+// DOG-027: put one (key,val) row through DOGPupPut.
+static ok64 dog_mem_put(kv64b pups, path8s dir, u8cs ext, u64 key, u64 val) {
+    sane(1);
+    kv64 row = {key, val};
+    u8cs rec = {(u8c *)&row, (u8c *)(&row + 1)};
+    call(DOGPupPut, pups, dir, ext, rec, dog_pupsync_kv64);
+    done;
+}
+
+// DOG-027: query the stack — AllRuns sources fed to HITkv64Merge; merged
+// rows land in `out` (head advances), source count in *nsrc.
+static ok64 dog_mem_query(kv64s out, u32 *nsrc, kv64b pups) {
+    sane(out != NULL && nsrc != NULL);
+    Bu8cs srcs = {};
+    call(u8csbAllocate, srcs, HIT_MAX_RUNS);
+    try(DOGPupAllRuns, srcs, pups, dog_pupsync_kv64);
+    nedo { u8csbFree(srcs); fail(__); }
+    u32 n = (u32)u8csbDataLen(srcs);
+    *nsrc = n;
+    kv64cs runs[HIT_MAX_RUNS];
+    u8cs *sl = u8csbDataHead(srcs);
+    for (u32 i = 0; i < n; i++) {
+        runs[i][0] = (kv64 const *)sl[i][0];
+        runs[i][1] = (kv64 const *)sl[i][1];
+    }
+    kv64css hp = {runs, runs + n};
+    try(HITkv64Merge, hp, out);
+    u8csbFree(srcs);
+    done;
+}
+
+// DOG-027: round-trip — unsorted arrivals, keep-last dup; a second read
+// sees the same rows (sync idempotent), memtable keyed ALL-ONES.
+static ok64 DOGTestPupMemRoundTrip(void) {
+    sane(1);
+    call(FILEInit);
+    char tmp[256];
+    want(TESTBEmkdtemp(tmp, sizeof tmp) == OK);
+    a_cstr(ext, ".mem.idx");
+    a_path(dir, ((u8cs){(u8 *)tmp, (u8 *)tmp + strlen(tmp)}));
+    Bkv64 pups = {};
+    call(kv64bAllocate, pups, 8);
+
+    call(dog_mem_put, pups, $path(dir), ext, 7, 70);
+    call(dog_mem_put, pups, $path(dir), ext, 3, 30);
+    call(dog_mem_put, pups, $path(dir), ext, 5, 50);
+    call(dog_mem_put, pups, $path(dir), ext, 3, 31);
+
+    kv64 got[16];
+    kv64s out = {got, got + 16};
+    u32 nsrc = 0;
+    call(dog_mem_query, out, &nsrc, pups);
+    testeqv((long long)(out[0] - got), 3LL, "%lld");
+    testeqv((long long)nsrc, 1LL, "%lld");
+    want(got[0].key == 3 && got[0].val == 31);
+    want(got[1].key == 5 && got[1].val == 50);
+    want(got[2].key == 7 && got[2].val == 70);
+
+    kv64 got2[16];
+    kv64s out2 = {got2, got2 + 16};
+    call(dog_mem_query, out2, &nsrc, pups);
+    testeqv((long long)(out2[0] - got2), 3LL, "%lld");
+    want(got2[0].val == 31 && got2[1].val == 50 && got2[2].val == 70);
+
+    want(DOGPupSeqno(pups, DOGPupCount(pups) - 1) == DOG_PUP_MEM_KEY);
+    want(DOGPupSeqno(pups, 99) == 0);
+
+    call(DOGPupClose, pups);
+    TESTBErmrf(tmp);
+    done;
+}
+
+// DOG-027: DATA past 512 collapses to ONE slice on read; smaller DATA
+// reads as TWO slices (PAST+DATA); a PAST/DATA key tie goes to DATA.
+static ok64 DOGTestPupMemCollapse(void) {
+    sane(1);
+    call(FILEInit);
+    char tmp[256];
+    want(TESTBEmkdtemp(tmp, sizeof tmp) == OK);
+    a_cstr(ext, ".mem.idx");
+    a_path(dir, ((u8cs){(u8 *)tmp, (u8 *)tmp + strlen(tmp)}));
+    Bkv64 pups = {};
+    call(kv64bAllocate, pups, 8);
+
+    // DOG-027: 40 rows = 640 B > DOG_PUP_COLLAPSE — first read collapses
+    for (u64 i = 0; i < 40; i++)
+        call(dog_mem_put, pups, $path(dir), ext, 1000 - i, i);
+    kv64 got[64];
+    kv64s out = {got, got + 64};
+    u32 nsrc = 0;
+    call(dog_mem_query, out, &nsrc, pups);
+    testeqv((long long)nsrc, 1LL, "%lld");
+    testeqv((long long)(out[0] - got), 40LL, "%lld");
+    for (int i = 1; i < 40; i++) want(got[i - 1].key < got[i].key);
+
+    call(dog_mem_put, pups, $path(dir), ext, 5000, 1);
+    call(dog_mem_put, pups, $path(dir), ext, 970, 777);
+    kv64 got2[64];
+    kv64s out2 = {got2, got2 + 64};
+    call(dog_mem_query, out2, &nsrc, pups);
+    testeqv((long long)nsrc, 2LL, "%lld");
+    testeqv((long long)(out2[0] - got2), 41LL, "%lld");
+    b8 hit = NO;
+    for (kv64 *p = got2; p < out2[0]; p++)
+        if (p->key == 970) { hit = YES; want(p->val == 777); }
+    want(hit);
+
+    // DOG-027: 32 B DATA stays two-slice — reads alone never re-collapse
+    kv64 got3[64];
+    kv64s out3 = {got3, got3 + 64};
+    call(dog_mem_query, out3, &nsrc, pups);
+    testeqv((long long)nsrc, 2LL, "%lld");
+
+    call(DOGPupClose, pups);
+    TESTBErmrf(tmp);
+    done;
+}
+
+// DOG-027: a full 4 KB buffer flushes into a run under a fresh monotonic
+// pup_key; a new `.memtable` takes over and the run is scan-visible.
+static ok64 DOGTestPupMemFlush(void) {
+    sane(1);
+    call(FILEInit);
+    char tmp[256];
+    want(TESTBEmkdtemp(tmp, sizeof tmp) == OK);
+    a_cstr(ext, ".mem.idx");
+    a_path(dir, ((u8cs){(u8 *)tmp, (u8 *)tmp + strlen(tmp)}));
+    Bkv64 pups = {};
+    call(kv64bAllocate, pups, 8);
+
+    for (u64 i = 0; i < 256; i++)
+        call(dog_mem_put, pups, $path(dir), ext, 10000 - i, i);
+    want(DOGPupCount(pups) == 1);
+    call(dog_mem_put, pups, $path(dir), ext, 42, 4242);
+    want(DOGPupCount(pups) == 2);
+    u64 runkey = DOGPupSeqno(pups, 0);
+    want(runkey != 0 && runkey != DOG_PUP_MEM_KEY);
+    want(DOGPupSeqno(pups, 1) == DOG_PUP_MEM_KEY);
+
+    // DOG-027: fresh scan sees the run, never the dot-file
+    Bkv64 fresh = {};
+    call(kv64bAllocate, fresh, 8);
+    call(DOGPupOpenAll, fresh, $path(dir), ext);
+    want(DOGPupCount(fresh) == 1);
+    want(DOGPupSeqno(fresh, 0) == runkey);
+    u8cs run = {};
+    DOGPupData(run, fresh, 0);
+    testeqv((long long)(run[1] - run[0]), (long long)(256 * sizeof(kv64)),
+            "%lld");
+    kv64 const *rr = (kv64 const *)run[0];
+    for (int i = 1; i < 256; i++) want(rr[i - 1].key < rr[i].key);
+    call(DOGPupClose, fresh);
+
+    kv64 got[300];
+    kv64s out = {got, got + 300};
+    u32 nsrc = 0;
+    call(dog_mem_query, out, &nsrc, pups);
+    testeqv((long long)nsrc, 2LL, "%lld");
+    testeqv((long long)(out[0] - got), 257LL, "%lld");
+    b8 hit = NO;
+    for (kv64 *p = got; p < out[0]; p++)
+        if (p->key == 42) { hit = YES; want(p->val == 4242); }
+    want(hit);
+
+    call(DOGPupClose, pups);
+    TESTBErmrf(tmp);
+    done;
+}
+
+// DOG-027: commit collapses, trims and renames `.memtable` into
+// `<10-RON64><ext>`; the dot-file is gone, the run is complete.
+static ok64 DOGTestPupMemCommit(void) {
+    sane(1);
+    call(FILEInit);
+    char tmp[256];
+    want(TESTBEmkdtemp(tmp, sizeof tmp) == OK);
+    a_cstr(ext, ".mem.idx");
+    a_path(dir, ((u8cs){(u8 *)tmp, (u8 *)tmp + strlen(tmp)}));
+    Bkv64 pups = {};
+    call(kv64bAllocate, pups, 8);
+
+    call(dog_mem_put, pups, $path(dir), ext, 2, 20);
+    call(dog_mem_put, pups, $path(dir), ext, 1, 10);
+    call(dog_mem_put, pups, $path(dir), ext, 1, 11);
+    call(DOGPupCommit, pups, $path(dir), ext, dog_pupsync_kv64);
+
+    want(DOGPupCount(pups) == 1);
+    u64 runkey = DOGPupSeqno(pups, 0);
+    want(runkey != 0 && runkey != DOG_PUP_MEM_KEY);
+
+    char mp[300];
+    snprintf(mp, sizeof mp, "%s/.memtable", tmp);
+    struct stat st = {};
+    want(stat(mp, &st) != 0);
+
+    Bkv64 fresh = {};
+    call(kv64bAllocate, fresh, 8);
+    call(DOGPupOpenAll, fresh, $path(dir), ext);
+    want(DOGPupCount(fresh) == 1);
+    u8cs run = {};
+    DOGPupData(run, fresh, 0);
+    testeqv((long long)(run[1] - run[0]), (long long)(2 * sizeof(kv64)),
+            "%lld");
+    kv64 const *rr = (kv64 const *)run[0];
+    want(rr[0].key == 1 && rr[0].val == 11);
+    want(rr[1].key == 2 && rr[1].val == 20);
+    call(DOGPupClose, fresh);
+
+    call(DOGPupClose, pups);
+    TESTBErmrf(tmp);
+    done;
+}
+
+// DOG-027: a crashed `.memtable` (raw dot-file of unsorted bytes) is
+// invisible to DOGPupOpenAll — only real `<10-RON64><ext>` runs load.
+static ok64 DOGTestPupMemCrashInvisible(void) {
+    sane(1);
+    call(FILEInit);
+    char tmp[256];
+    want(TESTBEmkdtemp(tmp, sizeof tmp) == OK);
+    a_cstr(ext, ".mem.idx");
+    a_path(dir, ((u8cs){(u8 *)tmp, (u8 *)tmp + strlen(tmp)}));
+
+    {
+        Bkv64 mk = {};
+        call(kv64bAllocate, mk, 4);
+        a_cstr(body, "sixteen-byte-row");
+        a_dup(u8c, b, body);
+        try(DOGPupCreateAt, mk, $path(dir), ext, b, (u64)1000);
+        nedo { DOGPupClose(mk); want(0); }
+        call(DOGPupClose, mk);
+    }
+    {
+        char mp[300];
+        snprintf(mp, sizeof mp, "%s/.memtable", tmp);
+        int fd = open(mp, O_CREAT | O_WRONLY, 0600);
+        want(fd >= 0);
+        want(write(fd, "garbage unsorted crash bytes", 28) == 28);
+        close(fd);
+    }
+
+    Bkv64 pups = {};
+    call(kv64bAllocate, pups, 8);
+    call(DOGPupOpenAll, pups, $path(dir), ext);
+    want(DOGPupCount(pups) == 1);
+    want(DOGPupSeqno(pups, 0) == 1000);
+    call(DOGPupClose, pups);
+    TESTBErmrf(tmp);
+    done;
+}
+
+ok64 DOGTestPupMem(void) {
+    sane(1);
+    call(DOGTestPupMemRoundTrip);
+    call(DOGTestPupMemCollapse);
+    call(DOGTestPupMemFlush);
+    call(DOGTestPupMemCommit);
+    call(DOGTestPupMemCrashInvisible);
+    done;
+}
+
 ok64 DOGtest() {
     sane(1);
     call(DOGTestDOGParseURI);
@@ -1236,6 +1541,7 @@ ok64 DOGtest() {
     call(DOGTestSuggestCommand);
     call(DOGTestFromBe);
     call(DOGTestPupLeaks);
+    call(DOGTestPupMem);
     done;
 }
 
