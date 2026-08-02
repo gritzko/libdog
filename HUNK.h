@@ -46,7 +46,7 @@ con ok64 HUNKTOKOOB = 0x45e5d475851860b;
 typedef struct {
     ron60   ts;    // 0 = absent
     ron60   verb;  // 0 = absent
-    u8cs    uri;   // e.g. "abc/MSET.h#MSETOpen:42"
+    u8cs    uri;   // e.g. "abc/HITx.h#HITMerge:42"
     u8cs    text;  // source text bytes
     tok32cs toks;  // packed tok32: syntax fg + diff side
 } hunk;
