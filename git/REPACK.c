@@ -57,8 +57,8 @@
 #include "dog/git/ZINF.h"
 
 //  wh128 sort + LSM-ladder templates for the index lane.  abc/dog does not
-//  instantiate either for wh128 (jab/hit.hpp does the same for the JS side);
-//  HITx's one prerequisite, wh128csSwap, comes from WHIFF.h's wh128cs block.
+//  instantiate either for wh128 (jab/hit.hpp does the same for the JS side).
+//  DOG-027: no csSwap prerequisite left — HIT swaps entry pointers now.
 #define X(M, name) M##wh128##name
 #include "abc/QSORTx.h"
 #undef X
@@ -71,7 +71,9 @@
 #define RP_LOG_INIT  (1ull << 20)   //  a fresh log maps 1 MB, then grows
 #define RP_NAME_W    10             //  `NNNNNNNNNN.keeper` digit width
 #define RP_PAGE      256            //  dirty index rows: one 4 KiB page
-#define RP_PUPS      128            //  run-stack slots (the ladder holds ~8)
+//  DOG-027: RP_PUPS is the pup REGISTRY capacity (how many run files the dict
+//  can hold); the HIT merge input cap is HIT_MAX_RUNS — different things.
+#define RP_PUPS      128            //  registry slots (the ladder holds ~8)
 #define RP_OLDLOGS   64             //  pre-existing logs mapped on demand
 #define RP_HELD      1              //  map val flag: landed record
 #define RP_HOLD      2              //  map val flag: still in the hold arena
@@ -248,9 +250,12 @@ static i64 rp_waitfind(wh128b lane, u64 hashlet) {
 //  are unlinked and the merged one lands as a single new puppy.
 static ok64 rp_compact(repack *rp, path8sc shard, u8csc ext) {
     sane(rp != NULL);
-    wh128cs stack[RP_PUPS];
+    //  DOG-027: the merge input cap is HIT's, not the registry's; past it the
+    //  shard is damaged, so say so instead of overrunning `stack` silently.
+    wh128cs stack[HIT_MAX_RUNS];
     u32 n = DOGPupCountAll(rp->runs);
-    if (n < 2 || n > RP_PUPS) done;
+    if (n > HIT_MAX_RUNS) fail(HITTOOMANY);
+    if (n < 2) done;
     for (u32 i = 0; i < n; i++) {
         u8cs bytes = {};
         DOGPupDataAll(bytes, rp->runs, i);
