@@ -16,8 +16,12 @@ The shared vocabulary every dog speaks: parse/canonicalise a CLI URI, split a `.
  -  `DOGRefDrain`/`QueryBranchOnly`/`StripProject`/`QueryProject`/`CanonQueryParse` — split a ref query.
  -  `DOGIsHashlet`/`DOGIsFullSha`/`DOGRefIsBranch` — syntactic tests: a 6..40-hex sha prefix, a full 40/64-hex object id.
  -  `DOGPathHash`/`DOGChildPathHash` (`ROOT`) — positional tree-node id: root is ron60("ROOT").
- -  `DOGPupOpenAll`/`OpenAside`/`Create`/`CreateAt`/`ThinTail`/`DOGPupClose` — open/load/append/trim/close a puppy stack.
+ -  `DOGPupOpenAll`/`OpenAside`/`Create`/`CreateAt`/`ThinTail`/`DropAt`/`DOGPupClose` — open/load/append/trim/drop one/close a puppy stack.
  -  `DOGPupCount`/`DOGPupCountAll`/`DOGPupData`/`DOGPupDataAll`/`DOGPupAllData`/`DOGPupSeqno` — read views over the stack.
+ -  `dogpuplane` (`dogpupsync` + `dogpupmerge`) — the family's typed sort/dedup/collapse + compaction-merge roles, passed DOWN on every call; nothing about the lane is ever dicted.
+ -  `DOGPupPut`/`DOGPupCommit`/`DOGPupLadder` — append a record to the `<dir>/<ext>` memtable; seal it into a run; keep the 1/8 ladder (every seal ends there).
+ -  Run names are 10-char RON64 only: `DOGPupOpenAll` UNLINKS a `<ext>` file with any other seqno width (jab's retired 8-wide JS names), so the family recomputes.
+ -  `DOGPupAllRuns` — query view: committed runs oldest→newest, then the memtable's PAST and DATA.
  -  `DOGutf8sFeedDate` — render a unix ts as a 7-column relative date (`12:34` / `Tue05` / `01Jan`) for status columns.
  -  `DOG_BE_NAME`/`DOG_REFS_NAME`/`DOG_WTLOG_NAME`/`DOG_CONFIG_NAME` — the source of truth for `.be` filenames.
 

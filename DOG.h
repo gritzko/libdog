@@ -640,6 +640,9 @@ con ok64 DOGPUPFAIL = 0x3584197993ca495;
 // different dir is a different file.  Avoiding double-scans is the
 // caller's responsibility (keeper / graf compare the target branch
 // against `home->cur_branch` and skip the shared LCA prefix).
+// DOG-027: a file that ends in `<ext>` but carries no 10-char seqno is NOT a
+// run — jab's retired JS writer padded to 8 — so it is SKIPPED, never
+// unlinked; an open leaves whatever it cannot read on disk.
 ok64 DOGPupOpenAll(kv64b pups, path8sc dir, u8csc ext);
 
 // Cross-branch load: flip the current DATA into PAST (collapse the
@@ -671,18 +674,37 @@ ok64 DOGPupCreateAt(kv64b pups, path8s dir, u8cs ext, u8cs bytes,
 // Unmap and unlink the youngest `m` puppies; trim `pups` by `m`.
 ok64 DOGPupThinTail(kv64b pups, path8s dir, u8cs ext, u32 m);
 
+// DOG-027: unmap + unlink the i-th run (oldest-first), close the dict gap.
+// The audit path for a run whose family found no marker; out-of-range fails.
+ok64 DOGPupDropAt(kv64b pups, path8s dir, u8cs ext, u32 i);
+
 // Unmap every puppy and free `pups` itself.
 ok64 DOGPupClose(kv64b pups);
+
+// DOG-027: the ONE reserved dict key — ALL-ONES, so it sorts past every ron60
+// pup_key and lives as the dict's tail.  NOTHING about the lane is ever dicted:
+// the dict holds committed runs and, on an rw stack, the memtable last.
+#define DOG_PUP_MEM_KEY   (~0ULL)
 
 // Number of live puppies in the stack — DATA only (the active leaf,
 // when callers use the PAST/DATA partition; see abc/Bx.h §PastDataS,
 // keeper/KEEP.h "Branch-aware object store").  For "every loaded
 // run" reads (cross-branch lookups, LSM merges), use `DOGPupCountAll`.
-fun u32 DOGPupCount(kv64b pups) { return (u32)kv64bDataLen(pups); }
+// DOG-027: the memtable is not a run — this bound is what keeps the
+// legacy readers (Data, AllData, ThinTail) off it.
+fun u32 DOGPupCount(kv64b pups) {
+    u32 n = (u32)kv64bDataLen(pups);
+    kv64 const *base = (kv64 const *)kv64bDataHead(pups);
+    while (n > 0 && base[n - 1].key == DOG_PUP_MEM_KEY) n--;
+    return n;
+}
 // Number of live puppies across PastData — every loaded run including
 // inherited / read-only PAST entries.  Used by cross-branch readers
 // (keeper's LSM lookups, graf's keeper-side idx scan, wire enumeration).
-fun u32 DOGPupCountAll(kv64b pups) { return (u32)kv64bPastDataLen(pups); }
+fun u32 DOGPupCountAll(kv64b pups) {
+    return (u32)kv64bPastDataLen(pups) -
+           ((u32)kv64bDataLen(pups) - DOGPupCount(pups));
+}
 
 // Byte slice of the i-th puppy's contents (lookup via FILE_WANT_BUFS).
 // Indexes into DATA only — see `DOGPupCount` caveats.  For an
@@ -702,33 +724,58 @@ void DOGPupDataAll(u8csp out, kv64b pups, u32 i);
 ok64 DOGPupAllData(u8csb out, kv64b pups);
 
 // Pup key of the i-th puppy.  Returns 0 when out-of-range.
+// DOG-027: the one reader that still reaches the memtable entry, on purpose.
 fun u64 DOGPupSeqno(kv64b pups, u32 i) {
     if (i >= kv64bDataLen(pups)) return 0;
     kv64 const *base = (kv64 const *)kv64bDataHead(pups);
     return base[i].key;
 }
 
-// DOG-027: the memtable IS a pup — one 4 KB `.memtable` per stack, RW-mapped;
+// DOG-027: the memtable IS a pup — one 4 KB `<dir>/<ext>` per stack, RW-mapped;
 // PAST/DATA are regions of that mapping, its fd dicted under the ALL-ONES key.
+// `<ext>` is per-stack, so two stacks in one dir never collide, and the bare
+// name is too short for the `<10-RON64><ext>` run scan to ever match it.
 #define DOG_PUP_MEM_BYTES 4096
 #define DOG_PUP_COLLAPSE  512
-#define DOG_PUP_MEM_KEY   (~0ULL)
 
 // DOG-027: family-side typed hook — stable-sort (QSORT<type>InSort, never the
 // introsort) + keep-last dedup DATA; on `collapse`, fold DATA into PAST.
 typedef ok64 (*dogpupsync)(u8bp mem, b8 collapse);
 
-// DOG-027: append one record's bytes to the memtable's DATA (created lazily);
-// never sorts — a full 4 KB buffer flushes into a run under a fresh pup_key.
-ok64 DOGPupPut(kv64b pups, path8s dir, u8cs ext, u8csc rec, dogpupsync sync);
+// DOG-027: family-side typed compaction merge — HIT<type>Merge over the
+// oldest-first byte slices `srcs`; `into`'s head advances past the merged
+// bytes (the ABC-015 drain convention).  Pup is generic, the lane is not.
+typedef ok64 (*dogpupmerge)(u8s into, u8css srcs);
 
-// DOG-027: collapse, force-flush the tail page, trim, rename `.memtable` into
+// DOG-027: the two typed roles a lane owes the generic Pup layer.  The caller
+// is a per-lane C instantiation (jab's pup.hpp) that statically KNOWS its lane
+// and passes this down on every call — the dict never holds a hook.
+typedef struct dogpuplane {
+    dogpupsync sync;
+    dogpupmerge merge;
+} dogpuplane;
+
+// DOG-027: append one record's bytes to the memtable's DATA (created lazily);
+// never sorts — a full 4 KB buffer flushes into a run under a fresh pup_key,
+// and that seal ends in the ladder.
+ok64 DOGPupPut(kv64b pups, path8s dir, u8cs ext, u8csc rec,
+               dogpuplane const *lane);
+
+// DOG-027: collapse, force-flush the tail page, trim, rename `<ext>` into
 // `<10-RON64><ext>` — atomic: a crash leaves a dot-file or a complete run.
-ok64 DOGPupCommit(kv64b pups, path8s dir, u8cs ext, dogpupsync sync);
+// Ends, like every seal, with the ladder (below).
+ok64 DOGPupCommit(kv64b pups, path8s dir, u8cs ext, dogpuplane const *lane);
+
+// DOG-027: the 1/8 size-tiered ladder (HIT_LADDER_DIV) over the committed
+// runs — every seal ends here, so a caller never sees the ladder's state.
+// Merges the youngest violating tail through the lane's `merge` into ONE
+// fresh run (same tmp + rename path, fresh pup_key), unlinks the sources,
+// and cascades until HITIsCompact holds.  No `merge` → no-op.
+ok64 DOGPupLadder(kv64b pups, path8s dir, u8cs ext, dogpuplane const *lane);
 
 // DOG-027: query view — committed runs oldest→newest, then the memtable's
 // PAST and DATA (sync'd first) as one or two more HIT sources.  Resets `out`.
-ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpupsync sync);
+ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpuplane const *lane);
 
 // Append a short human date for unix timestamp `ts` (seconds) into
 // `into`, picking the coarsest representation that still resolves

@@ -10,6 +10,10 @@
 #include "abc/FILE.h"
 #include "abc/PRO.h"
 
+// DOG-027: the ladder is length arithmetic with no comparator, so Pup calls
+// the plain policy in HIT.h — no element-typed HIT is instantiated here.
+#include "abc/HIT.h"
+
 // kv64 buffer ops via Bx (instantiated in abc/KV.h).
 
 // --- Canonical layout-name slices (extern'd in DOG.h) ----------------
@@ -587,6 +591,21 @@ static u64 dog_pup_next_key(kv64b pups) {
     return key;
 }
 
+// DOG-027: restore the dict's "runs first, memtable last" invariant — a push
+// lands PAST the memtable entry, so rotate it back to the end.  Stable for the
+// runs, so their oldest-first order survives.
+static void dog_pup_tail(kv64b pups) {
+    kv64 *base = (kv64 *)kv64bDataHead(pups);
+    u32 n = (u32)kv64bDataLen(pups);
+    for (u32 i = 0; i < n;) {
+        if (base[i].key != DOG_PUP_MEM_KEY) { i++; continue; }
+        kv64 t = base[i];
+        memmove(base + i, base + i + 1, (size_t)(n - i - 1) * sizeof(kv64));
+        base[n - 1] = t;
+        n--;  //  settled at the tail; the next entry slid into slot i
+    }
+}
+
 ok64 DOGPupOpenAll(kv64b pups, path8sc dir, u8csc ext) {
     sane(pups != NULL && u8csOK(dir) && u8csOK(ext));
 
@@ -608,6 +627,8 @@ ok64 DOGPupOpenAll(kv64b pups, path8sc dir, u8csc ext) {
         u8cs base = {};
         PATHu8sBase(base, u8bDataC(it.path));
         u64 sq = dog_pup_parse_seqno(base, ext);
+        //  DOG-027: anything that is not a `<10-RON64><ext>` run (a pre-ron64
+        //  name, the memtable, a stray file) is skipped, never unlinked.
         if (sq == 0) continue;
         if ($len(u8bIdleC(namebuf)) < u8csLen(base) + 1) continue;
         u64 name_off = (u64)u8bDataLen(namebuf);
@@ -648,6 +669,9 @@ ok64 DOGPupOpenAll(kv64b pups, path8sc dir, u8csc ext) {
     }
 
     kv64bFree(seqnos);
+    //  DOG-027: the runs landed past a live memtable entry — put it back at
+    //  the tail, where DOGPupCount and dog_pup_mem expect it.
+    dog_pup_tail(pups);
     done;
 }
 
@@ -701,6 +725,9 @@ ok64 DOGPupCreateAt(kv64b pups, path8s dir, u8cs ext, u8cs bytes,
     //  fd+mmap before propagating the push error.
     try(kv64bPush, pups, &kv);
     if (__ != OK) { FILEUnMap(buf); fail(__); }
+    //  DOG-027: a push lands past a live memtable entry — put that entry back
+    //  at the tail (a no-op for a stack with no memtable).
+    dog_pup_tail(pups);
     done;
 }
 
@@ -718,24 +745,31 @@ ok64 DOGPupCreate(kv64b pups, path8s dir, u8cs ext, u8cs bytes) {
     return DOGPupCreateAt(pups, dir, ext, bytes, new_seqno);
 }
 
+ok64 DOGPupDropAt(kv64b pups, path8s dir, u8cs ext, u32 i) {
+    sane(pups != NULL && $ok(dir) && $ok(ext));
+    //  DOG-027: index over RUNS, not entries — the memtable's key would unlink
+    //  a file named `~0`; the memmove below keeps it last.
+    u32 n = DOGPupCount(pups), all = (u32)kv64bDataLen(pups);
+    if (i >= n) return DOGPUPFAIL;
+    kv64 *base = (kv64 *)kv64bDataHead(pups);
+    u8bp slot = FILE_WANT_BUFS[base[i].val];
+    if (slot && slot[0]) FILEUnMap(slot);
+    a_path(ulpath);
+    call(dog_pup_path, ulpath, dir, base[i].key, ext);
+    unlink((char *)u8bDataHead(ulpath));
+    memmove(base + i, base + i + 1, (size_t)(all - i - 1) * sizeof(kv64));
+    //  Trim DATA end back by one record (kv64bShed rolls the DATA/IDLE
+    //  boundary back into DATA — no buffer-poke).
+    kv64bShed(pups, 1);
+    done;
+}
+
 ok64 DOGPupThinTail(kv64b pups, path8s dir, u8cs ext, u32 m) {
     sane(pups != NULL && $ok(dir) && $ok(ext));
-    u32 n = (u32)kv64bDataLen(pups);
+    u32 n = DOGPupCount(pups);
     if (m > n) m = n;
-    if (m == 0) done;
-    kv64 *base = (kv64 *)kv64bDataHead(pups);
-    for (u32 i = n - m; i < n; i++) {
-        u64 fd = base[i].val;
-        u64 sq = base[i].key;
-        u8bp slot = FILE_WANT_BUFS[fd];
-        if (slot && slot[0]) FILEUnMap(slot);
-        a_path(ulpath);
-        dog_pup_path(ulpath, dir, sq, ext);
-        unlink((char *)u8bDataHead(ulpath));
-    }
-    //  Trim DATA end back by m records (kv64bShed rolls the DATA/IDLE
-    //  boundary back into DATA — no buffer-poke).
-    kv64bShed(pups, m);
+    //  DOG-027: the youngest run is the last one DOGPupCount admits.
+    while (m-- > 0) call(DOGPupDropAt, pups, dir, ext, DOGPupCount(pups) - 1);
     done;
 }
 
@@ -745,6 +779,7 @@ ok64 DOGPupClose(kv64b pups) {
     kv64 *base = (kv64 *)kv64bDataHead(pups);
     u32 n = (u32)kv64bDataLen(pups);
     for (u32 i = 0; i < n; i++) {
+        //  DOG-027: every entry is an fd, the memtable's included.
         u64 fd = base[i].val;
         u8bp slot = FILE_WANT_BUFS[fd];
         if (slot && slot[0]) FILEUnMap(slot);
@@ -836,7 +871,7 @@ ok64 DOGutf8sFeedDate(u8s into, i64 ts, i64 now) {
 
 void DOGPupData(u8csp out, kv64b pups, u32 i) {
     out[0] = NULL; out[1] = NULL;
-    if (i >= kv64bDataLen(pups)) return;
+    if (i >= DOGPupCount(pups)) return;
     kv64 *base = (kv64 *)kv64bDataHead(pups);
     u64 fd = base[i].val;
     u8bp slot = FILE_WANT_BUFS[fd];
@@ -849,7 +884,8 @@ void DOGPupDataAll(u8csp out, kv64b pups, u32 i) {
     out[0] = NULL; out[1] = NULL;
     kv64s all = {};
     kv64PastDataS(pups, all);
-    size_t n = (size_t)(all[1] - all[0]);
+    //  DOG-027: the memtable entry sits at the tail of PastData too.
+    size_t n = (size_t)DOGPupCountAll(pups);
     if ((size_t)i >= n) return;
     u64 fd = all[0][i].val;
     u8bp slot = FILE_WANT_BUFS[fd];
@@ -861,7 +897,7 @@ void DOGPupDataAll(u8csp out, kv64b pups, u32 i) {
 ok64 DOGPupAllData(u8csb out, kv64b pups) {
     sane(out && pups);
     u8csbReset(out);
-    u32 n = (u32)kv64bDataLen(pups);
+    u32 n = DOGPupCount(pups);
     for (u32 i = 0; i < n; i++) {
         u8cs s = {};
         DOGPupData(s, pups, i);
@@ -886,13 +922,12 @@ static u8bp dog_pup_mem(kv64b pups) {
     return slot;
 }
 
-// DOG-027: create + RW-map a fresh 4 KB `<dir>/.memtable` (truncating any
+// DOG-027: create + RW-map a fresh 4 KB `<dir>/<ext>` (truncating any
 // crash leftover), dict it under the ALL-ONES key so it sorts LAST.
-static ok64 dog_pup_mem_open(u8bp *mem, kv64b pups, path8s dir) {
-    sane(mem != NULL && pups != NULL && $ok(dir));
+static ok64 dog_pup_mem_open(u8bp *mem, kv64b pups, path8s dir, u8cs ext) {
+    sane(mem != NULL && pups != NULL && $ok(dir) && $ok(ext));
     if (dog_pup_mem(pups) != NULL) return DOGPUPFAIL;
-    a_cstr(mt, ".memtable");
-    a_path(mpath, dir, mt);
+    a_path(mpath, dir, ext);
     u8bp buf = NULL;
     call(FILEMapCreate, &buf, $path(mpath), DOG_PUP_MEM_BYTES);
     int fd = FILEBookedFD(buf);
@@ -928,46 +963,96 @@ static ok64 dog_pup_mem_seal(kv64b pups, path8s dir, u8cs ext, b8 durable) {
     u64 key = dog_pup_next_key(pups);
     a_path(runpath);
     call(dog_pup_path, runpath, dir, key, ext);
-    a_cstr(mt, ".memtable");
-    a_path(mpath, dir, mt);
+    a_path(mpath, dir, ext);
     call(FILERename, $path(mpath), $path(runpath));
-    kv64 *last = (kv64 *)kv64bDataHead(pups) + (kv64bDataLen(pups) - 1);
-    last->key = key;
+    kv64 *base = (kv64 *)kv64bDataHead(pups);
+    base[kv64bDataLen(pups) - 1].key = key;
+    dog_pup_tail(pups);  //  a real run now — back under the memtable
     done;
 }
 
-ok64 DOGPupPut(kv64b pups, path8s dir, u8cs ext, u8csc rec, dogpupsync sync) {
-    sane(pups != NULL && $ok(dir) && $ok(ext) && u8csOK(rec) && sync != NULL);
+// DOG-027: merge the youngest `m` runs into one fresh run — the lane owns the
+// typed merge, Pup owns the tmp + rename seal and the source unlinks.
+static ok64 dog_pup_collapse(kv64b pups, path8s dir, u8cs ext,
+                             dogpuplane const *lane, u8css stack, size_t m) {
+    sane(pups != NULL && $ok(dir) && $ok(ext) && lane != NULL && m > 1);
+    size_t n = (size_t)$len(stack), total = 0;
+    for (size_t i = n - m; i < n; i++) total += (size_t)u8csLen(stack[0][i]);
+    //  Heap, not BASS: a compaction merge is unbounded by the 4 KB memtable.
+    u8b scr = {};
+    call(u8bAllocate, scr, total);
+    u8s into = {u8bIdleHead(scr), u8bTerm(scr)};
+    u8css tail = {stack[0] + (n - m), stack[0] + n};
+    try(lane->merge, into, tail);
+    nedo { u8bFree(scr); fail(__); }
+    a_dup(u8c, merged, ((u8cs){u8bIdleHead(scr), into[0]}));
+    try(DOGPupThinTail, pups, dir, ext, (u32)m);
+    then try(DOGPupCreate, pups, dir, ext, merged);
+    u8bFree(scr);
+    nedo fail(__);
+    dog_pup_tail(pups);
+    done;
+}
+
+ok64 DOGPupLadder(kv64b pups, path8s dir, u8cs ext, dogpuplane const *lane) {
+    sane(pups != NULL && $ok(dir) && $ok(ext));
+    if (lane == NULL || lane->merge == NULL) done;
+    for (;;) {
+        Bu8cs srcs = {};
+        call(u8csbAllocate, srcs, HIT_MAX_RUNS);
+        try(DOGPupAllData, srcs, pups);
+        nedo { u8csbFree(srcs); fail(__); }
+        u8cs *sl = u8csbDataHead(srcs);
+        u8css stack = {sl, sl + u8csbDataLen(srcs)};
+        //  The ladder reads run LENGTHS only — byte lengths here, element
+        //  counts in a HIT stack; HIT.h stays the one home of the 1/8 policy.
+        a_pad(u64, lens, HIT_MAX_RUNS);
+        $for(u8cs, r, stack) u64bFeed1(lens, (u64)u8csLen(*r));
+        size_t m = HITLadderOverRuns(u64bDataC(lens));
+        if (m < 2) { u8csbFree(srcs); done; }
+        try(dog_pup_collapse, pups, dir, ext, lane, stack, m);
+        u8csbFree(srcs);
+        nedo fail(__);
+    }
+}
+
+ok64 DOGPupPut(kv64b pups, path8s dir, u8cs ext, u8csc rec,
+               dogpuplane const *lane) {
+    sane(pups != NULL && $ok(dir) && $ok(ext) && u8csOK(rec));
+    if (lane == NULL || lane->sync == NULL) return DOGPUPFAIL;
     u8bp mem = dog_pup_mem(pups);
-    if (!mem) call(dog_pup_mem_open, &mem, pups, dir);
+    if (!mem) call(dog_pup_mem_open, &mem, pups, dir, ext);
     if (u8bIdleLen(mem) < (size_t)u8csLen(rec)) {
         //  DOG-027: full buffer — the collapse may dedup room free; if not,
-        //  flush into a run and start a fresh memtable.
-        call(dog_pup_sync, mem, sync, YES);
+        //  flush into a run, run the ladder, start a fresh memtable.
+        call(dog_pup_sync, mem, lane->sync, YES);
         if (u8bIdleLen(mem) < (size_t)u8csLen(rec)) {
             call(dog_pup_mem_seal, pups, dir, ext, NO);
-            call(dog_pup_mem_open, &mem, pups, dir);
+            call(DOGPupLadder, pups, dir, ext, lane);
+            call(dog_pup_mem_open, &mem, pups, dir, ext);
         }
     }
     call(u8bFeed, mem, rec);
     done;
 }
 
-ok64 DOGPupCommit(kv64b pups, path8s dir, u8cs ext, dogpupsync sync) {
-    sane(pups != NULL && $ok(dir) && $ok(ext) && sync != NULL);
+ok64 DOGPupCommit(kv64b pups, path8s dir, u8cs ext, dogpuplane const *lane) {
+    sane(pups != NULL && $ok(dir) && $ok(ext));
+    if (lane == NULL || lane->sync == NULL) return DOGPUPFAIL;
     u8bp mem = dog_pup_mem(pups);
     if (!mem || u8bBusyLen(mem) == 0) done;
-    call(dog_pup_sync, mem, sync, YES);
+    call(dog_pup_sync, mem, lane->sync, YES);
     call(dog_pup_mem_seal, pups, dir, ext, YES);
+    call(DOGPupLadder, pups, dir, ext, lane);
     done;
 }
 
-ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpupsync sync) {
-    sane(out && pups != NULL && sync != NULL);
+ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpuplane const *lane) {
+    sane(out && pups != NULL);
+    if (lane == NULL || lane->sync == NULL) return DOGPUPFAIL;
     u8csbReset(out);
     u8bp mem = dog_pup_mem(pups);
-    u32 n = (u32)kv64bDataLen(pups);
-    if (mem) n--;
+    u32 n = DOGPupCount(pups);
     for (u32 i = 0; i < n; i++) {
         u8cs s = {};
         DOGPupData(s, pups, i);
@@ -975,7 +1060,7 @@ ok64 DOGPupAllRuns(u8csb out, kv64b pups, dogpupsync sync) {
         call(u8csbFeed1, out, s);
     }
     if (!mem || u8bBusyLen(mem) == 0) done;
-    call(dog_pup_sync, mem, sync, NO);
+    call(dog_pup_sync, mem, lane->sync, NO);
     if (u8bPastLen(mem) > 0) {
         a_dup(u8c, past, u8bPastC(mem));
         call(u8csbFeed1, out, past);

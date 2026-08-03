@@ -807,7 +807,7 @@ static ok64 HUNKTestStatusBanner(void) {
     for (size_t t = 0; t < sizeof(THEMES) / sizeof(THEMES[0]); t++) {
         if (THEMESelect(THEMES[t]) != OK) fail(TESTFAIL);
 
-        const char *uri = "abc/MSET.h#MSETOpen:42";
+        const char *uri = "abc/RON.h#RONOfTime:42";
         HUNK_SLICE(us, uri);
         //  ts set, empty text/toks → status hunk.  A real (non-zero) ts
         //  exercises the date column; the exact stamp text varies with
