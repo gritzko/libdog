@@ -214,7 +214,7 @@ The per-language `.c` lexers share these: a keyword-set probe, a definition-mark
 
 ###  Tag alphabet
 
-Tags a `tok32` carries (painted by `dog/THEME.h`): `D` comment, `G` string, `L` number, `H` preproc, `R` keyword, `P` punctuation, `S` default, `W` whitespace, `U` URI. The `DEF` pass adds `N` defined name and `C` call; `F` is a filename/path column.
+Tags a `tok32` carries (painted by `dog/THEME.h`): `D` comment, `G` string, `L` number, `H` preproc, `R` keyword, `P` punctuation, `S` default, `W` whitespace, `U` URI. The `DEF` pass adds `N` defined name and `C` call; `F` is a filename/path column. `T` is the StrictMark meta-pair key quad (`Who:`, DOG-026) — one distinct kind per indexable leaf, so an index keys on the tag, not a line regex.
 
 ###  Per-language tokenizers — roster
 

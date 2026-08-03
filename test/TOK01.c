@@ -1356,6 +1356,53 @@ ok64 MKDTBlockQuadTest() {
     done;
 }
 
+//  DOG-026: `Key: value` is a meta-pair LEAF, never prose — the `Who:` quad is
+//  its own 'T' marker token and the value runs verbatim to EOL (no inline).
+ok64 MKDTMetaPairTest() {
+    sane(1);
+    TOK01Case cases[] = {
+        // the marker is a 4-char quad ('T'); the value is ONE verbatim token
+        // (the gap space rides on it, as with every quad — DOG-024)
+        {"Who: gritzko\n", "TSW"},
+        {"Due: 2026-08-05 EOD\n", "TSW"},
+        // no inline layer inside a value: emphasis / issue key / link stay flat
+        {"For: *bold* ABC-123 [link]\n", "TSW"},
+        // shape only, no key vocabulary — an unregistered key still lexes
+        {"Zzz: any key, shape only\n", "TSW"},
+        // DOG-026: the 3rd key char may be a digit — relation keys On1:, On2:
+        {"On1: DOG-025\n", "TSW"},
+        // a prefix quad stays 'R'; only the key quad is 'T'
+        {"    Who: gritzko\n", "RTSW"},
+        // prose false positives: 4-letter key, shouted key, lowercase key
+        {"Note: four letters is no key\n", "SPWSWSWSWSWSW"},
+        {"WHO: shouting is no key\n", "SPWSWSWSWSW"},
+        {"who: lowercase is no key\n", "SPWSWSWSWSW"},
+        // a 2-char key and a 4-char digit tail are off-shape
+        {"Du: x\n", "SPWSW"},
+        {"Onn1: x\n", "SPWSW"},
+        // the gap space is mandatory, and a mid-line colon opens nothing
+        {"Due:x\n", "SPSW"},
+        {"Due:2026-08-05\n", "SPLPLPLW"},
+        {"See the spec: it says so\n", "SWSWSPWSWSWSW"},
+        {"say Who: hi\n", "SWSPWSW"},
+        // the line-start escape keeps a paragraph a paragraph
+        {"Due\\: not a meta pair\n", "SPWSWSWSWSW"},
+        // a meta line TERMINATES an open paragraph run, never continues it
+        {"plain prose\nWho: gritzko\n", "SWSW" "TSW"},
+        // ticket header + meta block + prose-with-colon + the escape
+        {"#   ABC-1 [OPEN]: title\n"
+         "Now: OPEN\n"
+         "Sev: HIGH\n"
+         "\n"
+         "Note: four letters is no key\n"
+         "Due\\: not a meta pair\n",
+         "RFWGSGPWSW" "TSW" "TSW" "W" "SPWSWSWSWSWSW" "SPWSWSWSWSW"},
+    };
+    int ncases = sizeof(cases) / sizeof(cases[0]);
+    RUN_CASES(MKDTLexer, MKDT, cases, ncases);
+    done;
+}
+
 ok64 MDTEmphTest() {
     sane(1);
     // emphasis in context
@@ -1525,6 +1572,7 @@ ok64 TOK01test() {
     call(MDTIssueKeyTest);
     call(MKDTIssueKeyTest);
     call(MKDTBlockQuadTest);
+    call(MKDTMetaPairTest);
     call(MDTEmphTest);
     call(MDTCodeFenceTest);
     call(MDTFenceIsolationTest);

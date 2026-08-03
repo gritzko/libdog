@@ -23,19 +23,7 @@ ok64 MKDTLexer(MKDTstate *state);
 // Inline tokenizer (generated from MKDT.c.rl); emits G/H/L/S/P/W via cb.
 ok64 MKDTInlineLexer(MKDTstate *state);
 
-// --- Block-line classifiers ---
-//
-// These wrap the line-shape decisions MKDTLexer makes internally and are
-// exposed so renderers (e.g. the `mark` dog) can recover block structure
-// without re-deriving it.  The StrictMark grammar itself is unchanged.
-// Each takes one source line (with or without its trailing '\n').
-
-int MKDTFenceOpen(u8csc line);             // opening fence width 3/4, else 0
-b8 MKDTFenceClose(u8csc line, int flen);   // closes a fence of width flen
-int MKDTHeadingLevel(u8csc line);          // ATX level 1..4, else 0
-b8 MKDTHRule(u8csc line);                  // "----" horizontal ruler
-b8 MKDTRefDef(u8csc line);                 // "[x]: …" reference definition
-int MKDTIndentDepth(u8csc line);           // count of leading 4-space blocks
+// --- Block-line classification ---
 
 typedef enum {
     MKDT_MARK_NONE = 0,
@@ -45,25 +33,28 @@ typedef enum {
     MKDT_MARK_TODO,   // [ ] [x] [X]
 } mkdtmark;
 
-// One line's full structural classification, per the StrictMark block grammar:
-// the block stack `(INDENT|QUOTE)* LIST? LEAF?` — a run of indent/quote quads,
-// then at most one list marker, OR a whole-line leaf shape (heading / code
-// fence / ruler / reference definition).  `marker` never carries QUOTE: a
-// quote is a container, counted in `quotes` (MKDTLineMarker keeps reporting
-// QUOTE for the renderers that read one marker per line).
+// One line's structural classification, per the StrictMark block grammar
+// `(INDENT|QUOTE)* (LIST | LEAF)?`: three consecutive regions of the line.
+// Every derived fact (quad counts, marker kind, heading level, fence width,
+// …) is a stateless inquiry over these slices; nothing is cached (DOG-026).
 typedef struct {
-    int        depth;        // count of LEADING indent quads (before a quote)
-    int        quads;        // total prefix quads, indent or quote (DOG-024)
-    int        quotes;       // count of quote quads in the prefix (DOG-024)
-    const u8c *qend;         // end of the first quote quad, NULL without one
-    mkdtmark   marker;       // the list marker after the prefix, else NONE
-    int        heading;      // ATX header level 1..4, else 0
-    int        fence;        // backtick-run width (wrapper accepts only 3/4)
-    b8         fence_blank;  // the backtick run has a blank rest (a close fence)
-    b8         hrule;        // 3-4 dash ruler with a blank rest
-    b8         refdef;       // [x]: reference definition
-    const u8c *content;      // first content byte after indents + marker/header
+    u8cs quads;   // the structural prefix: indent / quote quads (DOG-024)
+    u8cs mark;    // the list-marker or leaf-markup region, empty when none
+    u8cs rest;    // the content: text / info string / value, to line end
 } mkdtblock;
+
+// --- Stateless inquiries over the recorded regions ---
+//
+// Each takes a region MKDTBlock delimited; empty/foreign slices answer 0/NO.
+int MKDTquadsCount(u8csc quads);    // total prefix quads (one tab IS a quad)
+int MKDTquadsQuotes(u8csc quads);   // count of quote quads in the prefix
+int MKDTquadsDepth(u8csc quads);    // LEADING indent quads, before any quote
+mkdtmark MKDTmarkList(u8csc mark);  // the list marker in `mark`, else NONE
+int MKDTmarkHeading(u8csc mark);    // ATX header level 1..4, else 0
+int MKDTmarkFence(u8csc mark);      // backtick-run width, else 0
+b8 MKDTmarkHRule(u8csc mark);       // 3-4 dash ruler (blank rest verified)
+b8 MKDTmarkRefDef(u8csc mark);      // [x]: reference definition
+b8 MKDTmarkMeta(u8csc mark);        // `Key:` meta-pair quad (DOG-026)
 
 // A decomposed inline span (ragel: the mkdtg machine, MKDTDecomposeSpan): the
 // StrictMark inline grammar's emphasis/link/image forms split into their parts,
@@ -78,14 +69,10 @@ typedef struct {
 // OK, with kind 0 when the token is not a recognised span.
 ok64 MKDTDecomposeSpan(mkdtspan *g, u8csc tok);
 
-// The StrictMark block grammar (ragel: MKDTB): classify one line.  Only exact
-// shapes match — markers are 4-char-wide (a single '>'/'-' padded with spaces
-// in any column, 1-3 digits then '.', or a [ ]/[x]/[X] todo); headers need the
-// gap space; anything off-grammar (e.g. "-- ") leaves marker NONE (a paragraph).
+// The StrictMark block grammar (ragel: MKDTB): split one line into regions.
+// Only exact shapes match — markers are 4-char-wide (a single '>'/'-' padded
+// with spaces in any column, 1-3 digits then '.', or a [ ]/[x]/[X] todo);
+// anything off-grammar (e.g. "-- ") leaves `mark` empty (a paragraph).
 void MKDTBlock(u8csc line, mkdtblock *b);
-
-// Classify the block marker in the 4-char group after `depth` indents.
-// *markend := end of the 4-char marker slot on a hit, else line[0]+depth*4.
-mkdtmark MKDTLineMarker(u8csc line, int depth, u8c **markend);
 
 #endif
