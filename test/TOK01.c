@@ -1356,6 +1356,72 @@ ok64 MKDTBlockQuadTest() {
     done;
 }
 
+//  DOG-024: the regions themselves — every marker is a 4-char quad, so content
+//  starts at quads+4 for EVERY marker shape, and a header's level is its count.
+ok64 MKDTBlockRegionTest() {
+    sane(1);
+    struct {
+        const char *input;
+        int quads;          //  expected prefix quads (a tab is one)
+        int level;          //  expected header level, 0 when not a header
+        mkdtmark list;      //  expected list marker
+    } cases[] = {
+        //  the ten header quads of the ruling, level = the count of '#'
+        {"#   Top\n",       0, 1, MKDT_MARK_NONE},
+        {" #  Top\n",       0, 1, MKDT_MARK_NONE},
+        {"  # Top\n",       0, 1, MKDT_MARK_NONE},
+        {"   #Top\n",       0, 1, MKDT_MARK_NONE},
+        {"##  Sub\n",       0, 2, MKDT_MARK_NONE},
+        {" ## Sub\n",       0, 2, MKDT_MARK_NONE},
+        {"  ##Sub\n",       0, 2, MKDT_MARK_NONE},
+        {"### Small\n",     0, 3, MKDT_MARK_NONE},
+        {" ###Small\n",     0, 3, MKDT_MARK_NONE},
+        {"####Smallest\n",  0, 4, MKDT_MARK_NONE},
+        //  a full quad self-delimits: the gap space is content, not markup
+        {"#### Smallest\n", 0, 4, MKDT_MARK_NONE},
+        {"#   \n",          0, 1, MKDT_MARK_NONE},
+        {"####\n",          0, 4, MKDT_MARK_NONE},
+        //  todo markers: four chars, the fifth byte is already content
+        {"-[ ]New\n",       0, 0, MKDT_MARK_TODO},
+        {"-[v]New\n",       0, 0, MKDT_MARK_TODO},
+        {"-[-]New\n",       0, 0, MKDT_MARK_TODO},
+        {"-[x]New\n",       0, 0, MKDT_MARK_TODO},
+        {"-[v] New\n",      0, 0, MKDT_MARK_TODO},
+        //  the other markers, padded in every column
+        {"-   a\n",         0, 0, MKDT_MARK_ULIST},
+        {"   -a\n",         0, 0, MKDT_MARK_ULIST},
+        {"1.  a\n",         0, 0, MKDT_MARK_OLIST},
+        {" 12.a\n",         0, 0, MKDT_MARK_OLIST},
+        //  (a quote quad is a prefix container, not a marker — see the
+        //  `>   >   ##  x` row below)
+        //  and under a prefix: content is (quads * 4) + 4 all the same
+        {"    #   Top\n",   1, 1, MKDT_MARK_NONE},
+        {"\t   #Top\n",     1, 1, MKDT_MARK_NONE},
+        {"        -[v]x\n", 2, 0, MKDT_MARK_TODO},
+        {">   >   ##  x\n", 2, 2, MKDT_MARK_NONE},
+    };
+    int ncases = (int)(sizeof(cases) / sizeof(cases[0]));
+    for (int i = 0; i < ncases; ++i) {
+        u8cs line = u8scstr(cases[i].input);
+        mkdtblock b = {};
+        MKDTBlock(line, &b);
+        int quads = MKDTquadsCount(b.quads);
+        int mark = (int)u8csLen(b.mark);
+        int level = MKDTmarkHeading(b.mark);
+        mkdtmark list = MKDTmarkList(b.mark);
+        if (quads != cases[i].quads || mark != 4 || level != cases[i].level
+            || list != cases[i].list || b.rest[0] != b.mark[1]) {
+            fprintf(stderr,
+                    "FAIL region '%s': quads %d!=%d mark %d!=4 level %d!=%d "
+                    "list %d!=%d\n",
+                    cases[i].input, quads, cases[i].quads, mark, level,
+                    cases[i].level, (int)list, (int)cases[i].list);
+            fail(TESTFAIL);
+        }
+    }
+    done;
+}
+
 //  DOG-026: `Key: value` is a meta-pair LEAF, never prose — the `Who:` quad is
 //  its own 'T' marker token and the value runs verbatim to EOL (no inline).
 ok64 MKDTMetaPairTest() {
@@ -1572,6 +1638,7 @@ ok64 TOK01test() {
     call(MDTIssueKeyTest);
     call(MKDTIssueKeyTest);
     call(MKDTBlockQuadTest);
+    call(MKDTBlockRegionTest);
     call(MKDTMetaPairTest);
     call(MDTEmphTest);
     call(MDTCodeFenceTest);
