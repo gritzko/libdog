@@ -20,6 +20,12 @@ endif()
 
 find_package(ZLIB REQUIRED)
 
+#  curl is a hard dependency of the tree dog is built in — dog's own targets
+#  link abc-core (curl-free), but the abc it descends into (or the one a
+#  parent already provided) carries CURL.c.  Declared at every root so a
+#  missing libcurl-dev is named here, whichever root you configure from.
+find_package(CURL REQUIRED)
+
 if (NOT TARGET abc-core)
     add_subdirectory(abc)
 endif()
