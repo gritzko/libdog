@@ -55,7 +55,7 @@ ok64 repack_cli() {
         log0 = (u32)strtoul((char const *)l0str[0], NULL, 10);
     }
 
-    u8b buf = {};
+    Bu8 buf = {};
     Bwh128 idx = {};
     //  The input buffer must hold one whole record; the cap is the bound
     //  that matters (a record that outgrows a log can't be stored anyway),

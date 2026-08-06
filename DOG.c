@@ -979,7 +979,7 @@ static ok64 dog_pup_collapse(kv64b pups, path8s dir, u8cs ext,
     size_t n = (size_t)$len(stack), total = 0;
     for (size_t i = n - m; i < n; i++) total += (size_t)u8csLen(stack[0][i]);
     //  Heap, not BASS: a compaction merge is unbounded by the 4 KB memtable.
-    u8b scr = {};
+    Bu8 scr = {};
     call(u8bAllocate, scr, total);
     u8s into = {u8bIdleHead(scr), u8bTerm(scr)};
     u8css tail = {stack[0] + (n - m), stack[0] + n};

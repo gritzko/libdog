@@ -148,7 +148,7 @@ ok64 scan_cli() {
     }
     scan_ctx c = {};
     Bwh128 idx = {};
-    u8b bsc = {}, dsc = {};
+    Bu8 bsc = {}, dsc = {};
     call(wh128bMap, idx, SC_SLOTS);
     call(wh128bMap, c.rows, SC_SLOTS);
     call(u8bMap, bsc, SC_SCRATCH);
