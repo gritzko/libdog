@@ -1672,8 +1672,61 @@ static ok64 DOGTestPupDropAt(void) {
     done;
 }
 
+// DOG-027: a key whose NAME is taken is stepped over, never written through.
+// Case folding can't be staged on ext4 — squatting the exact name can.
+static ok64 DOGTestPupNameTaken(void) {
+    sane(1);
+    call(FILEInit);
+    char tmp[256];
+    want(TESTBEmkdtemp(tmp, sizeof tmp) == OK);
+    a_cstr(ext, ".take.idx");
+    a_path(dir, ((u8cs){(u8 *)tmp, (u8 *)tmp + strlen(tmp)}));
+
+    //  A key above RONNow, so the next pick is exactly M+1 (DATA's max wins).
+    u64 const M = 0x0FFFFFFFFFFFF00ULL;
+    Bkv64 pups = {};
+    call(kv64bAllocate, pups, 8);
+    a_cstr(first, "sixteen-byte-row");
+    a_dup(u8c, fb, first);
+    call(DOGPupCreateAt, pups, $path(dir), ext, fb, M);
+
+    //  Squat M+1's name with bytes of our own — the run dog is about to seal.
+    a_pad(u8, name, DOG_PUP_SEQNO_W + 32);
+    call(RONu8sFeedPad, u8bIdle(name), (ok64)(M + 1), DOG_PUP_SEQNO_W);
+    call(u8bFeed, name, ext);
+    a_path(squat, $path(dir), u8bDataC(name));
+    int sfd = open((char *)u8bDataHead(squat), O_CREAT | O_WRONLY, 0600);
+    want(sfd >= 0);
+    want(write(sfd, "squatter--------", 16) == 16);
+    close(sfd);
+
+    //  The create must step to M+2 and leave the squatter's bytes alone.
+    a_cstr(second, "another-16-bytes");
+    a_dup(u8c, sb, second);
+    call(DOGPupCreate, pups, $path(dir), ext, sb);
+    want(DOGPupCount(pups) == 2);
+    want(DOGPupSeqno(pups, 0) == M);
+    want(DOGPupSeqno(pups, 1) == M + 2);
+    {
+        char back[17] = "";
+        int rfd = open((char *)u8bDataHead(squat), O_RDONLY);
+        want(rfd >= 0);
+        want(read(rfd, back, 16) == 16);
+        close(rfd);
+        want(memcmp(back, "squatter--------", 16) == 0);
+    }
+    //  A caller-pinned key on a taken name is refused, not written through.
+    want(DOGPupCreateAt(pups, $path(dir), ext, sb, M + 1) != OK);
+    want(DOGPupCount(pups) == 2);
+
+    call(DOGPupClose, pups);
+    TESTBErmrf(tmp);
+    done;
+}
+
 ok64 DOGTestPupMem(void) {
     sane(1);
+    call(DOGTestPupNameTaken);
     call(DOGTestPupLadder);
     call(DOGTestPupDropAt);
     call(DOGTestPupMemRoundTrip);

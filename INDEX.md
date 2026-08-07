@@ -21,6 +21,7 @@ The shared vocabulary every dog speaks: parse/canonicalise a CLI URI, split a `.
  -  `dogpuplane` (`dogpupsync` + `dogpupmerge`) — the family's typed sort/dedup/collapse + compaction-merge roles, passed DOWN on every call; nothing about the lane is ever dicted.
  -  `DOGPupPut`/`DOGPupCommit`/`DOGPupLadder` — append a record to the `<dir>/<ext>` memtable; seal it into a run; keep the 1/8 ladder (every seal ends there).
  -  Run names are 10-char RON64 only: `DOGPupOpenAll` UNLINKS a `<ext>` file with any other seqno width (jab's retired 8-wide JS names), so the family recomputes.
+ -  A run never overwrites a name: `DOGPupCreate` bumps its key past any file already there (RON64 is case-sensitive, APFS is not — two keys, one name); `DOGPupCreateAt` refuses instead, its key being the caller's.
  -  `DOGPupAllRuns` — query view: committed runs oldest→newest, then the memtable's PAST and DATA.
  -  `DOGutf8sFeedDate` — render a unix ts as a 7-column relative date (`12:34` / `Tue05` / `01Jan`) for status columns.
  -  `DOG_BE_NAME`/`DOG_REFS_NAME`/`DOG_WTLOG_NAME`/`DOG_CONFIG_NAME` — the source of truth for `.be` filenames.

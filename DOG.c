@@ -580,7 +580,7 @@ static u64 dog_pup_parse_seqno(u8csc name, u8csc ext) {
 }
 
 // DOG-027: the ONE monotonic pup_key scheme — max(RONNow, max(DATA)+1),
-// skipping the reserved ALL-ONES memtable entry; no stat-and-bump race.
+// skipping the reserved ALL-ONES memtable entry.
 static u64 dog_pup_next_key(kv64b pups) {
     u64 key = (u64)RONNow();
     kv64 const *db = (kv64 const *)kv64bDataHead(pups);
@@ -589,6 +589,39 @@ static u64 dog_pup_next_key(kv64b pups) {
         if (p->key != DOG_PUP_MEM_KEY && p->key >= key) key = p->key + 1;
     if (key == 0) key = 1;
     return key;
+}
+
+// DOG-027: is `key` spoken for — by a live DATA entry, or by a file already
+// sitting on the name it composes?
+static ok64 dog_pup_key_taken(b8 *out, kv64b pups, path8s dir, u8cs ext,
+                              u64 key) {
+    sane(out != NULL && pups != NULL && $ok(dir) && $ok(ext));
+    *out = YES;
+    if (key == DOG_PUP_MEM_KEY) done;       //  reserved for the memtable
+    kv64 const *db = (kv64 const *)kv64bDataHead(pups);
+    kv64 const *de = (kv64 const *)kv64bIdleHead(pups);
+    for (kv64 const *p = db; p < de; p++)
+        if (p->key == key) done;
+    a_path(probe);
+    call(dog_pup_path, probe, dir, key, ext);
+    ok64 e = FILEExists($path(probe));
+    if (e == OK) done;                      //  a file is already on the name
+    if (e != FILENONE) return e;            //  perms/IO — not ours to paper over
+    *out = NO;
+    done;
+}
+
+// DOG-027: the next key whose NAME is free — RON64 is case-sensitive, APFS is
+// not, so two keys can compose one filename and a seal would eat a live run.
+static ok64 dog_pup_free_key(u64 *out, kv64b pups, path8s dir, u8cs ext) {
+    sane(out != NULL && pups != NULL && $ok(dir) && $ok(ext));
+    u64 key = dog_pup_next_key(pups);
+    for (b8 taken = YES; ; key++) {
+        call(dog_pup_key_taken, &taken, pups, dir, ext, key);
+        if (!taken) break;
+    }
+    *out = key;
+    done;
 }
 
 // DOG-027: restore the dict's "runs first, memtable last" invariant — a push
@@ -690,13 +723,12 @@ ok64 DOGPupCreateAt(kv64b pups, path8s dir, u8cs ext, u8cs bytes,
                     u64 pup_key) {
     sane(pups != NULL && $ok(dir) && $ok(ext) && pup_key > 0);
 
-    //  Refuse on DATA-side pup_key collision (caller is meant to
-    //  DOGPupThinTail first when replacing the tail run).
+    //  DOG-027: refuse a taken key — DATA-side (ThinTail first) or a file on
+    //  its name.  The key is the CALLER's, so dog refuses; it cannot bump it.
     {
-        kv64 const *db = (kv64 const *)kv64bDataHead(pups);
-        kv64 const *de = (kv64 const *)kv64bIdleHead(pups);
-        for (kv64 const *p = db; p < de; p++)
-            if (p->key == pup_key) return DOGPUPFAIL;
+        b8 taken = NO;
+        call(dog_pup_key_taken, &taken, pups, dir, ext, pup_key);
+        if (taken) return DOGPUPFAIL;
     }
 
     a_path(idxpath);
@@ -740,8 +772,10 @@ ok64 DOGPupCreate(kv64b pups, path8s dir, u8cs ext, u8cs bytes) {
     //  paths preserve strict global ordering and 60-bit fit (RONNow
     //  is ron60-bounded; the +1 bump only triggers when we're already
     //  ron60-shaped).
-    //  DOG-027: hoisted into dog_pup_next_key — flush/commit share it.
-    u64 new_seqno = dog_pup_next_key(pups);
+    //  DOG-027: hoisted into dog_pup_next_key — flush/commit share it; then
+    //  past any name a case-folding filesystem already has a file on.
+    u64 new_seqno = 0;
+    call(dog_pup_free_key, &new_seqno, pups, dir, ext);
     return DOGPupCreateAt(pups, dir, ext, bytes, new_seqno);
 }
 
@@ -960,7 +994,8 @@ static ok64 dog_pup_mem_seal(kv64b pups, path8s dir, u8cs ext, b8 durable) {
         int fd = FILEBookedFD(mem);
         call(FILESync, &fd);
     }
-    u64 key = dog_pup_next_key(pups);
+    u64 key = 0;
+    call(dog_pup_free_key, &key, pups, dir, ext);
     a_path(runpath);
     call(dog_pup_path, runpath, dir, key, ext);
     a_path(mpath, dir, ext);

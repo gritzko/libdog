@@ -661,6 +661,8 @@ ok64 DOGPupOpenAside(kv64b pups, path8sc dir, u8csc ext);
 // max, else `max(DATA)+1` — same monotonic invariant the keeper's
 // `keep_next_pup_key` enforces, so independent writers across sub-
 // shards converge to non-overlapping key ranges.
+// DOG-027: then bumped past any key whose NAME is already on disk — RON64 is
+// case-sensitive, APFS/HFS+/NTFS are not, so two keys compose one filename.
 ok64 DOGPupCreate(kv64b pups, path8s dir, u8cs ext, u8cs bytes);
 
 // Same as DOGPupCreate but the caller picks the pup_key explicitly.
@@ -668,6 +670,8 @@ ok64 DOGPupCreate(kv64b pups, path8s dir, u8cs ext, u8cs bytes);
 // already sits in DATA (caller should DOGPupThinTail first when
 // replacing the tail).  Used by keeper to keep `.keeper.idx` and
 // `.keeper` file-ids in lockstep across branches.
+// DOG-027: refuses the same way when a FILE already holds that key's name —
+// the key is the caller's, so dog cannot bump it the way DOGPupCreate does.
 ok64 DOGPupCreateAt(kv64b pups, path8s dir, u8cs ext, u8cs bytes,
                     u64 pup_key);
 
